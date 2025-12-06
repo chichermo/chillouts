@@ -20,7 +20,8 @@ export default function StatsPage() {
 
   useEffect(() => {
     setMounted(true);
-    const data = loadData();
+    const loadDataAsync = async () => {
+      const data = await loadData();
     
     // Calcular estadísticas
     let totalChillOuts = 0;
@@ -124,15 +125,17 @@ export default function StatsPage() {
       }
     });
 
-    setStats({
-      totalChillOuts,
-      totalVR,
-      totalVL,
-      byHour,
-      byKlas,
-      byStudent,
-      recentDays: recentDays.sort((a, b) => b.date.localeCompare(a.date)),
-    });
+      setStats({
+        totalChillOuts,
+        totalVR,
+        totalVL,
+        byHour,
+        byKlas,
+        byStudent,
+        recentDays: recentDays.sort((a, b) => b.date.localeCompare(a.date)),
+      });
+    };
+    loadDataAsync();
   }, []);
 
   if (!mounted) {

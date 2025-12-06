@@ -11,13 +11,17 @@ export default function DailyListPage() {
   const [selectedDate, setSelectedDate] = useState<string>('');
 
   useEffect(() => {
-    const data = loadData();
-    const allDates = Object.keys(data.dailyRecords).sort().reverse();
-    setDates(allDates);
-    
-    if (allDates.length > 0 && !selectedDate) {
-      setSelectedDate(allDates[0]);
-    }
+    const loadDataAsync = async () => {
+      const data = await loadData();
+      const allDates = Object.keys(data.dailyRecords).sort().reverse();
+      setDates(allDates);
+      
+      if (allDates.length > 0 && !selectedDate) {
+        setSelectedDate(allDates[0]);
+      }
+    };
+    loadDataAsync();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const generateWeekDates = () => {

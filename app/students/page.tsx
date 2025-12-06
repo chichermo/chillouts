@@ -14,15 +14,18 @@ export default function StudentsPage() {
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
-    const data = loadData();
-    setStudents(data.students);
+    const loadStudents = async () => {
+      const data = await loadData();
+      setStudents(data.students);
+    };
+    loadStudents();
   }, []);
 
   const klassen = [...new Set(students.map(s => s.klas))].sort();
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (newStudent.name && newStudent.klas) {
-      const student = addStudent(newStudent);
+      const student = await addStudent(newStudent);
       setStudents([...students, student]);
       setNewStudent({ name: '', klas: '', status: 'Actief' });
       setShowSuccess(true);
@@ -32,15 +35,15 @@ export default function StudentsPage() {
     }
   };
 
-  const handleUpdate = (id: string, updates: Partial<Student>) => {
-    updateStudent(id, updates);
+  const handleUpdate = async (id: string, updates: Partial<Student>) => {
+    await updateStudent(id, updates);
     setStudents(students.map(s => s.id === id ? { ...s, ...updates } : s));
     setEditingId(null);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Weet je zeker dat je deze student wilt verwijderen?')) {
-      deleteStudent(id);
+      await deleteStudent(id);
       setStudents(students.filter(s => s.id !== id));
     }
   };

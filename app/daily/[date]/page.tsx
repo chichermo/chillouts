@@ -19,25 +19,28 @@ export default function DailyPage() {
   const [filterKlas, setFilterKlas] = useState<string>('');
 
   useEffect(() => {
-    const data = loadData();
-    setStudents(data.students.filter(s => s.status === 'Actief'));
-    
-    const existingRecord = getDailyRecord(dateStr);
-    if (existingRecord) {
-      // Migreer oude gegevens naar nieuw formaat indien nodig
-      const migratedRecord = migrateRecord(existingRecord);
-      setRecord(migratedRecord);
-    } else {
-      // Maak nieuw record aan
-      const dateObj = new Date(dateStr);
-      const newRecord: DailyRecord = {
-        date: dateStr,
-        dayName: formatDateDisplay(dateObj).split(' ')[1],
-        entries: {},
-      };
-      setRecord(newRecord);
-    }
-    setLoading(false);
+    const loadDataAsync = async () => {
+      const data = await loadData();
+      setStudents(data.students.filter(s => s.status === 'Actief'));
+      
+      const existingRecord = await getDailyRecord(dateStr);
+      if (existingRecord) {
+        // Migreer oude gegevens naar nieuw formaat indien nodig
+        const migratedRecord = migrateRecord(existingRecord);
+        setRecord(migratedRecord);
+      } else {
+        // Maak nieuw record aan
+        const dateObj = new Date(dateStr);
+        const newRecord: DailyRecord = {
+          date: dateStr,
+          dayName: formatDateDisplay(dateObj).split(' ')[1],
+          entries: {},
+        };
+        setRecord(newRecord);
+      }
+      setLoading(false);
+    };
+    loadDataAsync();
   }, [dateStr]);
 
   // Migreer oude records naar nieuw formaat
@@ -113,7 +116,7 @@ export default function DailyPage() {
     // Herbouw de array: eerst die van het type, dan de anderen
     updatedRecord.entries[studentId][hour] = [...typeEntries, ...otherEntries];
     setRecord(updatedRecord);
-    saveDailyRecord(updatedRecord);
+    saveDailyRecord(updatedRecord).catch(err => console.error('Error saving record:', err));
   };
 
   const getChillOutCount = (studentId: string, hour: number, type: ChillOutType): number => {

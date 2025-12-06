@@ -15,24 +15,27 @@ export default function WeeklyPage() {
 
   useEffect(() => {
     setMounted(true);
-    const data = loadData();
-    const allKlassen = [...new Set(data.students.map(s => s.klas))].sort();
-    setKlassen(allKlassen);
+    const loadDataAsync = async () => {
+      const data = await loadData();
+      const allKlassen = [...new Set(data.students.map(s => s.klas))].sort();
+      setKlassen(allKlassen);
 
-    // Obtener semana actual
-    const today = new Date();
-    const currentWeek = getWeekNumber(today);
-    setSelectedWeek(currentWeek);
-    
-    // Calcular totales de la semana actual
-    const weekStart = getWeekStartDate(today);
-    const totals = calculateWeeklyTotals(currentWeek, weekStart, data.dailyRecords, data.students);
-    setWeeklyTotal(totals);
+      // Obtener semana actual
+      const today = new Date();
+      const currentWeek = getWeekNumber(today);
+      setSelectedWeek(currentWeek);
+      
+      // Calcular totales de la semana actual
+      const weekStart = getWeekStartDate(today);
+      const totals = calculateWeeklyTotals(currentWeek, weekStart, data.dailyRecords, data.students);
+      setWeeklyTotal(totals);
+    };
+    loadDataAsync();
   }, []);
 
-  const handleWeekChange = (weekNumber: number) => {
+  const handleWeekChange = async (weekNumber: number) => {
     setSelectedWeek(weekNumber);
-    const data = loadData();
+    const data = await loadData();
     
     // Calcular fecha de inicio de la semana
     const today = new Date();

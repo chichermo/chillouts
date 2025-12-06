@@ -54,26 +54,32 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setMounted(true);
-    const data = loadData();
-    
-    // Verkrijg alle klassen en studenten
-    const klassen = [...new Set(data.students.map(s => s.klas))].sort();
-    const students = data.students
-      .filter(s => s.status === 'Actief')
-      .map(s => ({ id: s.id, name: s.name, klas: s.klas }));
-    
-    setAllKlassen(klassen);
-    setAllStudents(students);
-    setFilteredStudents(students);
-    
-    calculateStats(data, filters);
+    const loadDataAsync = async () => {
+      const data = await loadData();
+      
+      // Verkrijg alle klassen en studenten
+      const klassen = [...new Set(data.students.map(s => s.klas))].sort();
+      const students = data.students
+        .filter(s => s.status === 'Actief')
+        .map(s => ({ id: s.id, name: s.name, klas: s.klas }));
+      
+      setAllKlassen(klassen);
+      setAllStudents(students);
+      setFilteredStudents(students);
+      
+      calculateStats(data, filters);
+    };
+    loadDataAsync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (mounted) {
-      const data = loadData();
-      calculateStats(data, filters);
+      const loadDataAsync = async () => {
+        const data = await loadData();
+        calculateStats(data, filters);
+      };
+      loadDataAsync();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, mounted]);

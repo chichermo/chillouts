@@ -24,41 +24,44 @@ export default function Home() {
     setCurrentDate(new Date());
     
     // Cargar datos solo en el cliente
-    const data = loadData();
-    setTotalStudents(data.students.length);
-    setActiveStudents(data.students.filter(s => s.status === 'Actief').length);
-    setTotalDays(Object.keys(data.dailyRecords).length);
-    
-    // Calcular totales de chill-outs
-    let total = 0;
-    Object.values(data.dailyRecords).forEach(record => {
-      Object.values(record.entries).forEach(studentEntries => {
-        Object.values(studentEntries).forEach(entries => {
-          if (Array.isArray(entries)) {
-            total += entries.length;
-          }
+    const loadDataAsync = async () => {
+      const data = await loadData();
+      setTotalStudents(data.students.length);
+      setActiveStudents(data.students.filter(s => s.status === 'Actief').length);
+      setTotalDays(Object.keys(data.dailyRecords).length);
+      
+      // Calcular totales de chill-outs
+      let total = 0;
+      Object.values(data.dailyRecords).forEach(record => {
+        Object.values(record.entries).forEach(studentEntries => {
+          Object.values(studentEntries).forEach(entries => {
+            if (Array.isArray(entries)) {
+              total += entries.length;
+            }
+          });
         });
       });
-    });
-    setTotalChillOuts(total);
-    
-    // Chill-outs de hoy
-    const todayDate = new Date();
-    const todayStrFormatted = formatDate(todayDate);
-    const todayRecord = data.dailyRecords[todayStrFormatted];
-    if (todayRecord) {
-      let todayTotal = 0;
-      Object.values(todayRecord.entries).forEach(studentEntries => {
-        Object.values(studentEntries).forEach(entries => {
-          if (Array.isArray(entries)) {
-            todayTotal += entries.length;
-          }
+      setTotalChillOuts(total);
+      
+      // Chill-outs de hoy
+      const todayDate = new Date();
+      const todayStrFormatted = formatDate(todayDate);
+      const todayRecord = data.dailyRecords[todayStrFormatted];
+      if (todayRecord) {
+        let todayTotal = 0;
+        Object.values(todayRecord.entries).forEach(studentEntries => {
+          Object.values(studentEntries).forEach(entries => {
+            if (Array.isArray(entries)) {
+              todayTotal += entries.length;
+            }
+          });
         });
-      });
-      setTodayChillOuts(todayTotal);
-    } else {
-      setTodayChillOuts(0);
-    }
+        setTodayChillOuts(todayTotal);
+      } else {
+        setTodayChillOuts(0);
+      }
+    };
+    loadDataAsync();
   }, []);
 
   return (

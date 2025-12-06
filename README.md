@@ -8,22 +8,43 @@ Aplicación web para gestionar chill-outs de estudiantes, reemplazando el sistem
 - ✅ **Registro Diario**: Registrar chill-outs por estudiante y hora (1-7) con opciones VR/VL
 - ✅ **Cálculos Automáticos**: Total de chill-outs, VR y VL por hora y por día
 - ✅ **Vista Semanal**: Resumen de totales por clase y día de la semana
-- ✅ **Persistencia Local**: Los datos se guardan automáticamente en el navegador
+- ✅ **Reportes Detallados**: Filtros avanzados y exportación a Excel/PDF
+- ✅ **Base de Datos**: Integración con Supabase para persistencia en producción
 - ✅ **Interfaz en Holandés**: Toda la interfaz está en holandés como el Excel original
 
-## Instalación
+## Instalación Local
 
 1. Instala las dependencias:
 ```bash
 npm install
 ```
 
-2. Inicia el servidor de desarrollo:
+2. Crea un archivo `.env.local` (opcional, para desarrollo local usa localStorage):
+```bash
+NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anon_de_supabase
+```
+
+3. Inicia el servidor de desarrollo:
 ```bash
 npm run dev
 ```
 
-3. Abre [http://localhost:3000](http://localhost:3000) en tu navegador
+4. Abre [http://localhost:3000](http://localhost:3000) en tu navegador
+
+## Deployment en Producción
+
+Para desplegar en producción con base de datos, sigue la guía completa en [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### Resumen rápido:
+
+1. **Crear cuenta en Supabase** (gratis)
+2. **Ejecutar el schema SQL** (`supabase/schema.sql`) en Supabase
+3. **Obtener credenciales** de Supabase (URL y anon key)
+4. **Desplegar en Vercel** conectando tu repositorio de GitHub
+5. **Configurar variables de entorno** en Vercel:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## Uso
 
@@ -35,57 +56,51 @@ npm run dev
 ### Registro Diario
 - Ve a "Dagelijks Overzicht" y selecciona un día
 - Para cada estudiante y hora (1-7), selecciona:
-  - Vacío (sin chill-outs)
-  - 1 VR / 1 VL
-  - 2 VR / 2 VL
-  - 3 VR / 3 VL
+  - VR (máximo 1 por hora)
+  - VL (máximo 1 por hora)
+  - Chill-outs genéricos (máximo 3 totales por hora)
 - Los totales se calculan automáticamente
 
-### Vista Semanal
-- Ve a "Weekoverzicht" para ver resúmenes semanales
-- Selecciona la semana deseada
-- Ve totales por clase, día, VR, VL y promedios
-
-## Importar Datos del Excel
-
-Si deseas importar datos existentes del Excel:
-
-1. Ejecuta el script de importación:
-```bash
-python scripts/import_excel.py
-```
-
-2. Esto generará un archivo `imported_data.json`
-
-3. Para importar en la aplicación:
-   - Abre la consola del navegador (F12)
-   - Copia el contenido de `imported_data.json`
-   - Ejecuta: `localStorage.setItem('chillapp_data', CONTENIDO_JSON)`
-   - Recarga la página
+### Reportes
+- Ve a "Rapporten" para ver estadísticas y generar reportes
+- Filtra por clase, estudiante, fecha, etc.
+- Exporta a Excel o PDF con información detallada
 
 ## Estructura del Proyecto
 
 ```
 chillapp/
-├── app/              # Páginas de Next.js
-│   ├── students/     # Gestión de estudiantes
-│   ├── daily/        # Registros diarios
-│   └── weekly/       # Vista semanal
-├── lib/              # Utilidades y almacenamiento
-├── types/            # Tipos TypeScript
-└── scripts/          # Scripts de utilidad
+├── app/                    # Páginas Next.js
+│   ├── page.tsx           # Dashboard principal
+│   ├── students/          # Gestión de estudiantes
+│   ├── daily/             # Registros diarios
+│   ├── weekly/            # Vista semanal
+│   ├── stats/             # Estadísticas
+│   └── import/            # Reportes y exportación
+├── lib/
+│   ├── storage.ts         # Wrapper para storage (compatibilidad)
+│   ├── storage-db.ts      # Storage con Supabase + localStorage fallback
+│   ├── supabase.ts        # Cliente de Supabase
+│   └── utils.ts           # Utilidades
+├── components/
+│   └── Navigation.tsx     # Navegación principal
+├── types/
+│   └── index.ts           # Tipos TypeScript
+└── supabase/
+    └── schema.sql         # Schema de base de datos
 ```
 
 ## Tecnologías
 
-- **Next.js 14**: Framework React
-- **TypeScript**: Tipado estático
-- **Tailwind CSS**: Estilos
-- **LocalStorage**: Persistencia de datos
+- **Next.js 14** - Framework React
+- **TypeScript** - Tipado estático
+- **Tailwind CSS** - Estilos
+- **Supabase** - Base de datos PostgreSQL
+- **Vercel** - Hosting y deployment
+- **Chart.js** - Gráficos
+- **jsPDF** - Exportación PDF
+- **xlsx** - Exportación Excel
 
-## Notas
+## Licencia
 
-- Los datos se guardan localmente en el navegador
-- Para respaldar datos, exporta desde la consola del navegador
-- La aplicación funciona completamente offline después de la carga inicial
-
+Este proyecto es privado.
