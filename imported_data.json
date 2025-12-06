@@ -1,0 +1,1043 @@
+{
+  "students": [
+    {
+      "id": "imported_1_79980",
+      "name": "Conner Wouters",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_2_19300",
+      "name": "Dylan Abs",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_3_77214",
+      "name": "Jaden Gesquiere",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_4_91708",
+      "name": "Kaitlyn Van den Eede",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_5_70627",
+      "name": "Kayden Van den Eede",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_6_70226",
+      "name": "Leandro Degrendele",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_7_432",
+      "name": "Nasser Ayari",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_8_25272",
+      "name": "Timothy Baert",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_9_4697",
+      "name": "Virgilles Vandenbussche",
+      "klas": "1 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_10_74764",
+      "name": "Alexander Desaever",
+      "klas": "1 Lucht",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_11_52599",
+      "name": "Emmelien Verstraete",
+      "klas": "1 Lucht",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_12_12696",
+      "name": "Jeremiah Addo",
+      "klas": "1 Lucht",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_13_548",
+      "name": "Louis Dauwe",
+      "klas": "1 Lucht",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_14_84369",
+      "name": "Rik Uyttersprot",
+      "klas": "1 Lucht",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_15_54411",
+      "name": "Robbe Bellaert",
+      "klas": "1 Lucht",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_16_52770",
+      "name": "Yentl Vekemens",
+      "klas": "1 Lucht",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_17_75067",
+      "name": "Javice Vermeersch",
+      "klas": "1 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_18_6609",
+      "name": "Kenji Casier",
+      "klas": "1 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_19_69542",
+      "name": "Oumar Aidara",
+      "klas": "1 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_20_7837",
+      "name": "Shayne De Busscher",
+      "klas": "1 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_21_63104",
+      "name": "Zakaria Ghraidi",
+      "klas": "1 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_22_93720",
+      "name": "Devon Vermeire",
+      "klas": "1 Water",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_23_82929",
+      "name": "Floran De Jong",
+      "klas": "1 Water",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_24_60603",
+      "name": "Jayson Skutella",
+      "klas": "1 Water",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_25_95002",
+      "name": "Lewis Geers",
+      "klas": "1 Water",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_26_17898",
+      "name": "Mairo Depré",
+      "klas": "1 Water",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_27_15991",
+      "name": "Mathis Verbrugge",
+      "klas": "1 Water",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_28_90603",
+      "name": "Sam Claus",
+      "klas": "1 Water",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_29_9022",
+      "name": "Aisam Nouman",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_30_75444",
+      "name": "Bent Mahieu",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_31_47461",
+      "name": "Logan De Coninck",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_32_9915",
+      "name": "Luca Vandenbroucke",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_33_57318",
+      "name": "Mathis Deseyne",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_34_69396",
+      "name": "Milan Van Oosterom",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_35_53603",
+      "name": "Saartje Dewinter",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_36_57292",
+      "name": "Thibo Fermans",
+      "klas": "2 Aarde",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_37_45744",
+      "name": "Aiden Maertens",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_38_2724",
+      "name": "Alisia Van Meckeren",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_39_89132",
+      "name": "Fleur Willems",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_40_12743",
+      "name": "Jason Vandromme",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_41_32799",
+      "name": "Kenzo Maes",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_42_69901",
+      "name": "Laura Haelewyn",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_43_72132",
+      "name": "Milan Van Poecke",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_44_92166",
+      "name": "Said Alshalabi",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_45_20574",
+      "name": "Yarod Doudou",
+      "klas": "2 Vuur",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_46_99289",
+      "name": "Arno De Cock",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_47_17253",
+      "name": "Dante Dhoust",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_48_89405",
+      "name": "Diara Kerckenaere",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_49_21909",
+      "name": "Jasorou Vansieleghem",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_50_4088",
+      "name": "Jelle Verdoodt",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_51_72235",
+      "name": "Kayden Wyatt",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_52_50092",
+      "name": "Pixie Boone",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_53_18407",
+      "name": "Timo De Smedt",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_54_44977",
+      "name": "Yoran Van den Steen",
+      "klas": "3 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_55_74384",
+      "name": "Daan Vermeyen",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_56_39000",
+      "name": "Gust Goossens",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_57_12211",
+      "name": "Levi Blanckaert",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_58_14592",
+      "name": "Louis Decasstecker",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_59_37791",
+      "name": "Mathias Vandenborn",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_60_32483",
+      "name": "Thijs Loodgieter",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_61_32399",
+      "name": "Tibe Persyn",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_62_6681",
+      "name": "Xyam D'hulster",
+      "klas": "3 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_63_72507",
+      "name": "Amber Vanaudenaerde",
+      "klas": "3 MGB",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_64_75970",
+      "name": "Julie De Blauwe",
+      "klas": "3 MGB",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_65_79146",
+      "name": "Lander Parmentier",
+      "klas": "3 MGB",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_66_85872",
+      "name": "Luciano Thielemans",
+      "klas": "3 MGB",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_67_43224",
+      "name": "Brent De Clerck",
+      "klas": "3/4 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_68_48602",
+      "name": "Keano Haider",
+      "klas": "3/4 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_69_69154",
+      "name": "Noah Van Thomme",
+      "klas": "3/4 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_70_35515",
+      "name": "Owen Van Nieuwenhuyse",
+      "klas": "3/4 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_71_5514",
+      "name": "Arno Soens",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_72_92990",
+      "name": "Arthur Thermote",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_73_71751",
+      "name": "Jarred Vermeersch",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_74_66431",
+      "name": "Jayden Dieryckx",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_75_41925",
+      "name": "Jelle Devisscher",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_76_85177",
+      "name": "Jeremiah Anyan",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_77_11248",
+      "name": "Jordan Van De Laar",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_78_15550",
+      "name": "Louis Dalle",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_79_35418",
+      "name": "Maurice Deschryver",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_80_79247",
+      "name": "Owen Walgraef",
+      "klas": "3/4 Move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_81_89533",
+      "name": "Alizée Pinoy",
+      "klas": "4 FOOD",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_82_20379",
+      "name": "Jasmijn Vandendriessche",
+      "klas": "4 FOOD",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_83_97439",
+      "name": "Leor-René Biliet",
+      "klas": "4 FOOD",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_84_94643",
+      "name": "Robbe Despeghel",
+      "klas": "4 FOOD",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_85_63562",
+      "name": "Sandro Ysewyn",
+      "klas": "4 FOOD",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_86_3641",
+      "name": "Tristan Verbauwen",
+      "klas": "4 FOOD",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_87_32455",
+      "name": "Kiana Devriese",
+      "klas": "4 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_88_3072",
+      "name": "Lou Puype",
+      "klas": "4 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_89_7848",
+      "name": "Nils Hoste",
+      "klas": "4 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_90_84983",
+      "name": "Rémi De Pauw",
+      "klas": "4 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_91_44038",
+      "name": "Senne Maerschalck",
+      "klas": "4 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_92_38201",
+      "name": "Velten Vlaeminck",
+      "klas": "4 MA",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_93_57720",
+      "name": "Chloë Hauman",
+      "klas": "4 MGB",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_94_15338",
+      "name": "Jaiden Stubbe",
+      "klas": "4 MGB",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_95_85213",
+      "name": "Kjell D'Hondt",
+      "klas": "5 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_96_74534",
+      "name": "Tibe Lapaigne",
+      "klas": "5 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_97_36406",
+      "name": "David Van Quaethem",
+      "klas": "5 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_98_33374",
+      "name": "Deni Bazurkayev",
+      "klas": "5 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_99_92773",
+      "name": "Hailey Lauwereins",
+      "klas": "5 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_100_43926",
+      "name": "Jelle Deklerck",
+      "klas": "5 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_101_48894",
+      "name": "Milan Quintyn",
+      "klas": "5 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_102_36806",
+      "name": "Quinten Catoor",
+      "klas": "5 Food",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_103_30466",
+      "name": "Dylano De Grande",
+      "klas": "5 move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_104_4481",
+      "name": "Kjento Van Cleven",
+      "klas": "5 move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_105_5529",
+      "name": "Maarten Cardinaels",
+      "klas": "5 move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_106_74737",
+      "name": "Yben Tilly",
+      "klas": "5 move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_107_41933",
+      "name": "Yentl Parmentier",
+      "klas": "5 move & Play",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_108_65705",
+      "name": "Dylan Van Der Donckt",
+      "klas": "6 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_109_11744",
+      "name": "Kyano Vancompernolle",
+      "klas": "6 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_110_69067",
+      "name": "Sverre Deschachte",
+      "klas": "6 Create",
+      "status": "Actief"
+    },
+    {
+      "id": "imported_111_93181",
+      "name": "Maylin Jonckheere",
+      "klas": "6 Food",
+      "status": "Actief"
+    }
+  ],
+  "dailyRecords": {
+    "2025-09-01": {
+      "date": "2025-09-01",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-09-02": {
+      "date": "2025-09-02",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-09-03": {
+      "date": "2025-09-03",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-09-04": {
+      "date": "2025-09-04",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-09-05": {
+      "date": "2025-09-05",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-09-08": {
+      "date": "2025-09-08",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-09-09": {
+      "date": "2025-09-09",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-09-10": {
+      "date": "2025-09-10",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-09-11": {
+      "date": "2025-09-11",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-09-12": {
+      "date": "2025-09-12",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-09-15": {
+      "date": "2025-09-15",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-09-16": {
+      "date": "2025-09-16",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-09-17": {
+      "date": "2025-09-17",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-09-18": {
+      "date": "2025-09-18",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-09-19": {
+      "date": "2025-09-19",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-09-22": {
+      "date": "2025-09-22",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-09-23": {
+      "date": "2025-09-23",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-09-24": {
+      "date": "2025-09-24",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-09-25": {
+      "date": "2025-09-25",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-09-26": {
+      "date": "2025-09-26",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-09-29": {
+      "date": "2025-09-29",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-09-30": {
+      "date": "2025-09-30",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-10-01": {
+      "date": "2025-10-01",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-10-02": {
+      "date": "2025-10-02",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-10-03": {
+      "date": "2025-10-03",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-10-06": {
+      "date": "2025-10-06",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-10-07": {
+      "date": "2025-10-07",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-10-08": {
+      "date": "2025-10-08",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-10-09": {
+      "date": "2025-10-09",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-10-10": {
+      "date": "2025-10-10",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-10-13": {
+      "date": "2025-10-13",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-10-14": {
+      "date": "2025-10-14",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-10-15": {
+      "date": "2025-10-15",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-10-16": {
+      "date": "2025-10-16",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-10-17": {
+      "date": "2025-10-17",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-10-20": {
+      "date": "2025-10-20",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-10-21": {
+      "date": "2025-10-21",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-10-22": {
+      "date": "2025-10-22",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-10-23": {
+      "date": "2025-10-23",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-10-24": {
+      "date": "2025-10-24",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-11-03": {
+      "date": "2025-11-03",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-11-04": {
+      "date": "2025-11-04",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-11-05": {
+      "date": "2025-11-05",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-11-06": {
+      "date": "2025-11-06",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-11-07": {
+      "date": "2025-11-07",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-11-10": {
+      "date": "2025-11-10",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-11-12": {
+      "date": "2025-11-12",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-11-13": {
+      "date": "2025-11-13",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-11-14": {
+      "date": "2025-11-14",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-11-17": {
+      "date": "2025-11-17",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-11-18": {
+      "date": "2025-11-18",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-11-19": {
+      "date": "2025-11-19",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-11-20": {
+      "date": "2025-11-20",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-11-21": {
+      "date": "2025-11-21",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-11-24": {
+      "date": "2025-11-24",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-11-25": {
+      "date": "2025-11-25",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-11-26": {
+      "date": "2025-11-26",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-11-27": {
+      "date": "2025-11-27",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-11-28": {
+      "date": "2025-11-28",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-12-01": {
+      "date": "2025-12-01",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-12-02": {
+      "date": "2025-12-02",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-12-03": {
+      "date": "2025-12-03",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-12-04": {
+      "date": "2025-12-04",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-12-05": {
+      "date": "2025-12-05",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-12-08": {
+      "date": "2025-12-08",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-12-09": {
+      "date": "2025-12-09",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-12-10": {
+      "date": "2025-12-10",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-12-11": {
+      "date": "2025-12-11",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-12-12": {
+      "date": "2025-12-12",
+      "dayName": "Vr",
+      "entries": {}
+    },
+    "2025-12-15": {
+      "date": "2025-12-15",
+      "dayName": "Ma",
+      "entries": {}
+    },
+    "2025-12-16": {
+      "date": "2025-12-16",
+      "dayName": "Di",
+      "entries": {}
+    },
+    "2025-12-17": {
+      "date": "2025-12-17",
+      "dayName": "Wo",
+      "entries": {}
+    },
+    "2025-12-18": {
+      "date": "2025-12-18",
+      "dayName": "Do",
+      "entries": {}
+    },
+    "2025-12-19": {
+      "date": "2025-12-19",
+      "dayName": "Vr",
+      "entries": {}
+    }
+  },
+  "weeklyTotals": {}
+}
