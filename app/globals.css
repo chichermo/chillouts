@@ -21,13 +21,13 @@
 }
 
 body {
-  color: var(--color-black);
-  background: #F8F9FA;
+  color: #ffffff;
+  background: #2a2a3a;
   background-image: 
-    radial-gradient(at 0% 0%, rgba(232, 151, 163, 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(194, 224, 252, 0.12) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(172, 225, 175, 0.08) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(255, 223, 185, 0.08) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(232, 151, 163, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(194, 224, 252, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(172, 225, 175, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(255, 223, 185, 0.15) 0px, transparent 50%);
   min-height: 100vh;
   font-size: 12pt;
   font-weight: normal;
@@ -49,12 +49,12 @@ h2, .text-subtitle {
 p, span, div, .text-body {
   font-size: 12pt;
   font-family: 'Arial', sans-serif;
-  color: var(--color-black);
+  color: #ffffff;
 }
 
 /* Mejorar contraste del texto */
 .text-brand-black {
-  color: #1a1a1a;
+  color: #ffffff;
   font-weight: 500;
 }
 
@@ -64,16 +64,16 @@ p, span, div, .text-body {
   }
   
   .glass-effect {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(42, 42, 58, 0.85);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(159, 158, 168, 0.2);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   }
   
   .glass-effect-dark {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(30, 30, 45, 0.9);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(159, 158, 168, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
   
   .glow-pink {
