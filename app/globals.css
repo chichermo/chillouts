@@ -3,20 +3,52 @@
 @tailwind utilities;
 
 :root {
+  /* Paleta de colores de la guía de estilo */
+  --color-pink: #E897A3;
+  --color-green: #ACE1AF;
+  --color-orange: #FFDFB9;
+  --color-gray: #9F9EA8;
+  --color-blue: #C2E0FC;
+  --color-black: #000000;
+  
+  /* Colores para uso en componentes */
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --background-base: #C2E0FC;
+}
+
+* {
+  font-family: 'Arial', 'Arial Rounded MT Bold', sans-serif;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: #1e3a8a;
+  color: var(--color-black);
+  background: var(--color-blue);
   background-image: 
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.3) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.25) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.2) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.25) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(232, 151, 163, 0.2) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(194, 224, 252, 0.3) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(172, 225, 175, 0.2) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(255, 223, 185, 0.2) 0px, transparent 50%);
   min-height: 100vh;
+  font-size: 12pt;
+  font-weight: normal;
+}
+
+/* Tipografía según guía de estilo */
+h1, .text-title {
+  font-size: 22pt;
+  font-weight: bold;
+  font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+}
+
+h2, .text-subtitle {
+  font-size: 18pt;
+  font-weight: bold;
+  font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+}
+
+p, span, div, .text-body {
+  font-size: 12pt;
+  font-family: 'Arial', sans-serif;
 }
 
 @layer utilities {
@@ -25,18 +57,32 @@ body {
   }
   
   .glass-effect {
-    background: rgba(30, 58, 138, 0.7);
+    background: rgba(194, 224, 252, 0.85);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(159, 158, 168, 0.3);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  .glass-effect-dark {
+    background: rgba(159, 158, 168, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+  }
+  
+  .glow-pink {
+    box-shadow: 0 0 20px rgba(232, 151, 163, 0.3);
+  }
+  
+  .glow-green {
+    box-shadow: 0 0 20px rgba(172, 225, 175, 0.3);
   }
   
   .glow-blue {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 20px rgba(194, 224, 252, 0.4);
   }
   
-  .glow-indigo {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  .glow-orange {
+    box-shadow: 0 0 20px rgba(255, 223, 185, 0.3);
   }
 }
 

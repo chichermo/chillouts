@@ -12,11 +12,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="nl" suppressHydrationWarning>
-      <body className="antialiased" suppressHydrationWarning>
-        {children}
-      </body>
-    </html>
+      <html lang="nl" suppressHydrationWarning>
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+        </head>
+        <body className="antialiased font-sans" suppressHydrationWarning>
+          {children}
+        </body>
+      </html>
   );
 }
 

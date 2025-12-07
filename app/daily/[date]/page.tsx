@@ -184,7 +184,7 @@ export default function DailyPage() {
   if (loading) {
     return <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
       <Navigation />
-      <div className="text-xl text-white">Laden...</div>
+      <div className="text-xl text-brand-black">Laden...</div>
     </div>;
   }
 
@@ -215,30 +215,30 @@ export default function DailyPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header met navigatie */}
-        <div className="mb-6 glass-effect rounded-xl shadow-lg p-6 border border-white/30">
+        <div className="mb-6 glass-effect rounded-xl shadow-lg p-6 border border-brand-gray/30">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
                 {displayDate}
               </h1>
-              <p className="text-white/80">Registreer chill-outs voor deze dag</p>
+              <p className="text-brand-black/80">Registreer chill-outs voor deze dag</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateDate(-1)}
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-white"
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-brand-black"
               >
                 ← Vorige
               </button>
               <button
                 onClick={() => navigateDate(1)}
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-white"
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-brand-black"
               >
                 Volgende →
               </button>
@@ -254,11 +254,11 @@ export default function DailyPage() {
           {/* Filter per klas */}
           {klassen.length > 0 && (
             <div className="mt-4 pt-4 border-t border-white/20">
-              <label className="text-sm font-medium text-white/90 mr-3">Filter op klas:</label>
+              <label className="text-sm font-medium text-brand-black/90 mr-3">Filter op klas:</label>
               <select
                 value={filterKlas}
                 onChange={(e) => setFilterKlas(e.target.value)}
-                className="px-4 py-2 bg-white/10 border-2 border-white/30 rounded-lg text-white focus:border-white/50 focus:outline-none transition-colors"
+                className="px-4 py-2 bg-brand-blue/30 border-2 border-brand-gray/30 rounded-lg text-brand-black focus:border-white/50 focus:outline-none transition-colors"
               >
                 <option value="" className="bg-blue-900">Alle klassen</option>
                 {klassen.map(klas => (
@@ -270,39 +270,39 @@ export default function DailyPage() {
         </div>
 
         {/* Totalen per lesuur */}
-        <div className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-white/30">
-          <h2 className="text-2xl font-semibold mb-4 text-white">TOTAAL PER LESUUR</h2>
+        <div className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-brand-gray/30">
+          <h2 className="text-2xl font-semibold mb-4 text-brand-black">TOTAAL PER LESUUR</h2>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-white/10">
-                  <th className="border-2 border-white/30 p-3 font-semibold text-white"></th>
+                <tr className="bg-brand-blue/30">
+                  <th className="border-2 border-brand-gray/30 p-3 font-semibold text-brand-black"></th>
                   {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                    <th key={hour} className="border-2 border-white/30 p-3 text-center font-semibold text-white">{hour}</th>
+                    <th key={hour} className="border-2 border-brand-gray/30 p-3 text-center font-semibold text-brand-black">{hour}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-white/10 font-semibold">
-                  <td className="border-2 border-white/30 p-3 text-white">Chill-outs</td>
+                <tr className="bg-brand-blue/30 font-semibold">
+                  <td className="border-2 border-brand-gray/30 p-3 text-brand-black">Chill-outs</td>
                   {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                    <td key={hour} className="border-2 border-white/30 p-3 text-center text-lg text-white">
+                    <td key={hour} className="border-2 border-brand-gray/30 p-3 text-center text-lg text-brand-black">
                       {totals.totals[hour] || 0}
                     </td>
                   ))}
                 </tr>
-                <tr className="bg-blue-500/20">
-                  <td className="border-2 border-white/30 p-3 font-medium text-white">VR</td>
+                <tr className="bg-brand-blue/20">
+                  <td className="border-2 border-brand-gray/30 p-3 font-medium text-brand-black">VR</td>
                   {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                    <td key={hour} className="border-2 border-white/30 p-3 text-center text-lg font-semibold text-blue-200">
+                    <td key={hour} className="border-2 border-brand-gray/30 p-3 text-center text-lg font-semibold text-blue-200">
                       {totals.vr[hour] || 0}
                     </td>
                   ))}
                 </tr>
-                <tr className="bg-emerald-500/20">
-                  <td className="border-2 border-white/30 p-3 font-medium text-white">VL</td>
+                <tr className="bg-brand-green/20">
+                  <td className="border-2 border-brand-gray/30 p-3 font-medium text-brand-black">VL</td>
                   {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                    <td key={hour} className="border-2 border-white/30 p-3 text-center text-lg font-semibold text-emerald-200">
+                    <td key={hour} className="border-2 border-brand-gray/30 p-3 text-center text-lg font-semibold text-emerald-200">
                       {totals.vl[hour] || 0}
                     </td>
                   ))}
@@ -319,24 +319,24 @@ export default function DailyPage() {
             {filteredKlassen.slice(0, Math.ceil(filteredKlassen.length / 2)).map(klas => {
               const klasStudents = students.filter(s => s.klas === klas);
               return (
-                <div key={klas} className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-white/30">
+                <div key={klas} className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-brand-gray/30">
                   <h3 className="text-xl font-semibold mb-4 text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 p-3 rounded-lg border-l-4 border-yellow-400/50">
                     {klas}
                   </h3>
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-xs">
                       <thead>
-                        <tr className="bg-white/10">
-                          <th className="border border-white/30 px-2 py-1 text-left font-semibold text-xs text-white">Naam?</th>
+                        <tr className="bg-brand-blue/30">
+                          <th className="border border-brand-gray/30 px-2 py-1 text-left font-semibold text-xs text-brand-black">Naam?</th>
                           {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                            <th key={hour} className="border border-white/30 px-1 py-1 text-center font-semibold text-xs text-white">{hour}</th>
+                            <th key={hour} className="border border-brand-gray/30 px-1 py-1 text-center font-semibold text-xs text-brand-black">{hour}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {klasStudents.map(student => (
-                          <tr key={student.id} className="hover:bg-white/10 transition-colors">
-                            <td className="border border-white/30 px-2 py-1 font-medium text-xs text-white">{student.name}</td>
+                          <tr key={student.id} className="hover:bg-brand-blue/30 transition-colors">
+                            <td className="border border-brand-gray/30 px-2 py-1 font-medium text-xs text-brand-black">{student.name}</td>
                             {[1, 2, 3, 4, 5, 6, 7].map(hour => {
                               const vrCount = getChillOutCount(student.id, hour, 'VR');
                               const vlCount = getChillOutCount(student.id, hour, 'VL');
@@ -346,8 +346,8 @@ export default function DailyPage() {
                               return (
                                 <td 
                                   key={hour} 
-                                  className={`border border-white/30 px-0.5 py-0.5 transition-all ${
-                                    selectedHour === hour ? 'bg-blue-500/30 border-blue-400/50' : 'hover:bg-white/10'
+                                  className={`border border-brand-gray/30 px-0.5 py-0.5 transition-all ${
+                                    selectedHour === hour ? 'bg-brand-blue/30 border-blue-400/50' : 'hover:bg-brand-blue/30'
                                   }`}
                                   onMouseEnter={() => setSelectedHour(hour)}
                                   onMouseLeave={() => setSelectedHour(null)}
@@ -411,7 +411,7 @@ export default function DailyPage() {
                                       
                                       {/* Generieke chill-outs rij - Tot 3 mogelijk, maar respecteer maximum totaal van 3 */}
                                       <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-white/70 w-4 text-right">CO</span>
+                                        <span className="text-[9px] font-semibold text-brand-black/70 w-4 text-right">CO</span>
                                         {[1, 2, 3].map(count => {
                                           const genericCount = getGenericChillOutCount(student.id, hour);
                                           const isChecked = genericCount >= count;
@@ -445,7 +445,7 @@ export default function DailyPage() {
                                           ? 'bg-red-500/30 text-red-200' 
                                           : total >= 2
                                           ? 'bg-yellow-500/30 text-yellow-200'
-                                          : 'bg-white/20 text-white/80'
+                                          : 'bg-white/20 text-brand-black/80'
                                       }`}>
                                         {total}/3
                                       </span>
@@ -469,24 +469,24 @@ export default function DailyPage() {
             {filteredKlassen.slice(Math.ceil(filteredKlassen.length / 2)).map(klas => {
               const klasStudents = students.filter(s => s.klas === klas);
               return (
-                <div key={klas} className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-white/30">
+                <div key={klas} className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-brand-gray/30">
                   <h3 className="text-xl font-semibold mb-4 text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 p-3 rounded-lg border-l-4 border-yellow-400/50">
                     {klas}
                   </h3>
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-xs">
                       <thead>
-                        <tr className="bg-white/10">
-                          <th className="border border-white/30 px-2 py-1 text-left font-semibold text-xs text-white">Naam?</th>
+                        <tr className="bg-brand-blue/30">
+                          <th className="border border-brand-gray/30 px-2 py-1 text-left font-semibold text-xs text-brand-black">Naam?</th>
                           {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                            <th key={hour} className="border border-white/30 px-1 py-1 text-center font-semibold text-xs text-white">{hour}</th>
+                            <th key={hour} className="border border-brand-gray/30 px-1 py-1 text-center font-semibold text-xs text-brand-black">{hour}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {klasStudents.map(student => (
-                          <tr key={student.id} className="hover:bg-white/10 transition-colors">
-                            <td className="border border-white/30 px-2 py-1 font-medium text-xs text-white">{student.name}</td>
+                          <tr key={student.id} className="hover:bg-brand-blue/30 transition-colors">
+                            <td className="border border-brand-gray/30 px-2 py-1 font-medium text-xs text-brand-black">{student.name}</td>
                             {[1, 2, 3, 4, 5, 6, 7].map(hour => {
                               const vrCount = getChillOutCount(student.id, hour, 'VR');
                               const vlCount = getChillOutCount(student.id, hour, 'VL');
@@ -496,8 +496,8 @@ export default function DailyPage() {
                               return (
                                 <td 
                                   key={hour} 
-                                  className={`border border-white/30 px-0.5 py-0.5 transition-all ${
-                                    selectedHour === hour ? 'bg-blue-500/30 border-blue-400/50' : 'hover:bg-white/10'
+                                  className={`border border-brand-gray/30 px-0.5 py-0.5 transition-all ${
+                                    selectedHour === hour ? 'bg-brand-blue/30 border-blue-400/50' : 'hover:bg-brand-blue/30'
                                   }`}
                                   onMouseEnter={() => setSelectedHour(hour)}
                                   onMouseLeave={() => setSelectedHour(null)}
@@ -561,7 +561,7 @@ export default function DailyPage() {
                                       
                                       {/* Generieke chill-outs rij - Tot 3 mogelijk, maar respecteer maximum totaal van 3 */}
                                       <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-white/70 w-4 text-right">CO</span>
+                                        <span className="text-[9px] font-semibold text-brand-black/70 w-4 text-right">CO</span>
                                         {[1, 2, 3].map(count => {
                                           const genericCount = getGenericChillOutCount(student.id, hour);
                                           const isChecked = genericCount >= count;
@@ -595,7 +595,7 @@ export default function DailyPage() {
                                           ? 'bg-red-500/30 text-red-200' 
                                           : total >= 2
                                           ? 'bg-yellow-500/30 text-yellow-200'
-                                          : 'bg-white/20 text-white/80'
+                                          : 'bg-white/20 text-brand-black/80'
                                       }`}>
                                         {total}/3
                                       </span>

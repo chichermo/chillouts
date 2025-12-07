@@ -72,7 +72,7 @@ export default function WeeklyPage() {
       <div className="min-h-screen relative overflow-hidden">
         <Navigation />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-xl text-white">Laden...</div>
+          <div className="text-xl text-brand-black">Laden...</div>
         </div>
       </div>
     );
@@ -114,26 +114,26 @@ export default function WeeklyPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-6 relative z-10">
         <div className="mb-4">
-          <h1 className="text-3xl font-bold text-white">Weekoverzicht</h1>
+          <h1 className="text-3xl font-bold text-brand-black">Weekoverzicht</h1>
         </div>
 
         {/* Selector de semana y vista */}
-        <div className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-white/30">
+        <div className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-brand-gray/30">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block mb-2 text-sm text-white/90 font-medium">
+              <label className="block mb-2 text-sm text-brand-black/90 font-medium">
                 Selecteer Week:
               </label>
               <select
                 value={selectedWeek}
                 onChange={(e) => handleWeekChange(parseInt(e.target.value))}
-                className="px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md w-full text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none"
+                className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md w-full text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none"
               >
                 {weeks.map(week => (
                   <option key={week} value={week} className="bg-blue-900">
@@ -141,12 +141,12 @@ export default function WeeklyPage() {
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-sm text-white/80">
+              <p className="mt-2 text-sm text-brand-black/80">
                 Week {selectedWeek} ({weekStartStr})
               </p>
             </div>
             <div>
-              <label className="block mb-2 text-sm text-white/90 font-medium">
+              <label className="block mb-2 text-sm text-brand-black/90 font-medium">
                 Weergave:
               </label>
               <div className="flex gap-2">
@@ -155,7 +155,7 @@ export default function WeeklyPage() {
                   className={`flex-1 px-4 py-2 text-sm rounded-md font-medium transition-colors ${
                     viewMode === 'klas'
                       ? 'bg-gradient-to-r from-white to-blue-100 text-blue-900'
-                      : 'bg-white/10 text-white hover:bg-white/20'
+                      : 'bg-brand-blue/30 text-brand-black hover:bg-white/20'
                   }`}
                 >
                   Per Klas
@@ -165,7 +165,7 @@ export default function WeeklyPage() {
                   className={`flex-1 px-4 py-2 text-sm rounded-md font-medium transition-colors ${
                     viewMode === 'student'
                       ? 'bg-gradient-to-r from-white to-blue-100 text-blue-900'
-                      : 'bg-white/10 text-white hover:bg-white/20'
+                      : 'bg-brand-blue/30 text-brand-black hover:bg-white/20'
                   }`}
                 >
                   Per Student
@@ -177,22 +177,22 @@ export default function WeeklyPage() {
 
         {/* Tabla de totales por clase */}
         {viewMode === 'klas' && (
-        <div className="glass-effect p-4 rounded-lg shadow-md overflow-x-auto border border-white/30 mb-4">
-          <h2 className="text-lg font-semibold mb-3 text-white">
+        <div className="glass-effect p-4 rounded-lg shadow-md overflow-x-auto border border-brand-gray/30 mb-4">
+          <h2 className="text-lg font-semibold mb-3 text-brand-black">
             TOTALEN PER KLAS - Week {selectedWeek}
           </h2>
           
           <table className="w-full border-collapse min-w-[800px] text-sm">
             <thead>
-              <tr className="bg-white/10">
-                <th className="border border-white/30 px-2 py-2 text-left font-semibold text-white">Klas</th>
+              <tr className="bg-brand-blue/30">
+                <th className="border border-brand-gray/30 px-2 py-2 text-left font-semibold text-brand-black">Klas</th>
                 {weekDays.map(day => (
-                  <th key={day} className="border border-white/30 px-2 py-2 text-center font-semibold text-xs text-white">{day}</th>
+                  <th key={day} className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-xs text-brand-black">{day}</th>
                 ))}
-                <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">Totaal</th>
-                <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">VR</th>
-                <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">VL</th>
-                <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">Gem/Dag</th>
+                <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">Totaal</th>
+                <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">VR</th>
+                <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">VL</th>
+                <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">Gem/Dag</th>
               </tr>
             </thead>
             <tbody>
@@ -201,29 +201,29 @@ export default function WeeklyPage() {
                 const totals = klasTotals[klas];
                 
                 return (
-                  <tr key={klas} className="hover:bg-white/10">
-                    <td className="border border-white/30 px-2 py-2 font-semibold text-white">{klas}</td>
+                  <tr key={klas} className="hover:bg-brand-blue/30">
+                    <td className="border border-brand-gray/30 px-2 py-2 font-semibold text-brand-black">{klas}</td>
                     {weekDays.map(day => {
                       const dayData = klasData[day] || { total: 0, vr: 0, vl: 0 };
                       return (
-                        <td key={day} className="border border-white/30 px-2 py-2 text-center text-white">
+                        <td key={day} className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                           <div className="font-medium">{dayData.total}</div>
-                          <div className="text-xs text-white/70">
+                          <div className="text-xs text-brand-black/70">
                             {dayData.vr}/{dayData.vl}
                           </div>
                         </td>
                       );
                     })}
-                    <td className="border border-white/30 px-2 py-2 text-center font-semibold bg-white/10 text-white">
+                    <td className="border border-brand-gray/30 px-2 py-2 text-center font-semibold bg-brand-blue/30 text-brand-black">
                       {totals.total}
                     </td>
-                    <td className="border border-white/30 px-2 py-2 text-center bg-blue-500/20 text-white">
+                    <td className="border border-brand-gray/30 px-2 py-2 text-center bg-blue-500/20 text-brand-black">
                       {totals.vr}
                     </td>
-                    <td className="border border-white/30 px-2 py-2 text-center bg-emerald-500/20 text-white">
+                    <td className="border border-brand-gray/30 px-2 py-2 text-center bg-emerald-500/20 text-brand-black">
                       {totals.vl}
                     </td>
-                    <td className="border border-white/30 px-2 py-2 text-center text-white">
+                    <td className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                       {totals.avg.toFixed(1)}
                     </td>
                   </tr>
@@ -231,23 +231,23 @@ export default function WeeklyPage() {
               })}
               
               {/* Fila de totales generales */}
-              <tr className="bg-yellow-500/20 font-bold">
-                <td className="border border-white/30 px-2 py-2 text-white">TOTAAL</td>
+              <tr className="bg-brand-orange-500/20 font-bold">
+                <td className="border border-brand-gray/30 px-2 py-2 text-brand-black">TOTAAL</td>
                 {weekDays.map(day => {
                   const dayTotal = klassen.reduce((sum, klas) => {
                     const dayData = weeklyTotal.totals[klas]?.[day] || { total: 0 };
                     return sum + dayData.total;
                   }, 0);
                   return (
-                    <td key={day} className="border border-white/30 px-2 py-2 text-center text-white">
+                    <td key={day} className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                       {dayTotal}
                     </td>
                   );
                 })}
-                <td className="border border-white/30 px-2 py-2 text-center text-white">{weekTotal.total}</td>
-                <td className="border border-white/30 px-2 py-2 text-center text-white">{weekTotal.vr}</td>
-                <td className="border border-white/30 px-2 py-2 text-center text-white">{weekTotal.vl}</td>
-                <td className="border border-white/30 px-2 py-2 text-center text-white">
+                <td className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">{weekTotal.total}</td>
+                <td className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">{weekTotal.vr}</td>
+                <td className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">{weekTotal.vl}</td>
+                <td className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                   {(weekTotal.total / 5).toFixed(1)}
                 </td>
               </tr>
@@ -258,8 +258,8 @@ export default function WeeklyPage() {
 
         {/* Tabla de totales por estudiante */}
         {viewMode === 'student' && (
-        <div className="glass-effect p-4 rounded-lg shadow-md overflow-x-auto border border-white/30">
-          <h2 className="text-lg font-semibold mb-3 text-white">
+        <div className="glass-effect p-4 rounded-lg shadow-md overflow-x-auto border border-brand-gray/30">
+          <h2 className="text-lg font-semibold mb-3 text-brand-black">
             TOTALEN PER STUDENT - Week {selectedWeek}
           </h2>
           
@@ -299,42 +299,42 @@ export default function WeeklyPage() {
                 </h3>
                 <table className="w-full border-collapse min-w-[800px] text-sm mb-4">
                   <thead>
-                    <tr className="bg-white/10">
-                      <th className="border border-white/30 px-2 py-2 text-left font-semibold text-white">Student</th>
+                    <tr className="bg-brand-blue/30">
+                      <th className="border border-brand-gray/30 px-2 py-2 text-left font-semibold text-brand-black">Student</th>
                       {weekDays.map(day => (
-                        <th key={day} className="border border-white/30 px-2 py-2 text-center font-semibold text-xs text-white">{day}</th>
+                        <th key={day} className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-xs text-brand-black">{day}</th>
                       ))}
-                      <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">Totaal</th>
-                      <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">VR</th>
-                      <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">VL</th>
-                      <th className="border border-white/30 px-2 py-2 text-center font-semibold text-white">Gem/Dag</th>
+                      <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">Totaal</th>
+                      <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">VR</th>
+                      <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">VL</th>
+                      <th className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-brand-black">Gem/Dag</th>
                     </tr>
                   </thead>
                   <tbody>
                     {studentTotalsForKlas.map(({ student, totals, weekTotal, weekVR, weekVL, avg }) => (
-                      <tr key={student.id} className="hover:bg-white/10">
-                        <td className="border border-white/30 px-2 py-2 font-medium text-white">{student.name}</td>
+                      <tr key={student.id} className="hover:bg-brand-blue/30">
+                        <td className="border border-brand-gray/30 px-2 py-2 font-medium text-brand-black">{student.name}</td>
                         {weekDays.map(day => {
                           const dayData = totals[day] || { total: 0, vr: 0, vl: 0 };
                           return (
-                            <td key={day} className="border border-white/30 px-2 py-2 text-center text-white">
+                            <td key={day} className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                               <div className="font-medium">{dayData.total}</div>
-                              <div className="text-xs text-white/70">
+                              <div className="text-xs text-brand-black/70">
                                 {dayData.vr}/{dayData.vl}
                               </div>
                             </td>
                           );
                         })}
-                        <td className="border border-white/30 px-2 py-2 text-center font-semibold bg-white/10 text-white">
+                        <td className="border border-brand-gray/30 px-2 py-2 text-center font-semibold bg-brand-blue/30 text-brand-black">
                           {weekTotal}
                         </td>
-                        <td className="border border-white/30 px-2 py-2 text-center bg-blue-500/20 text-white">
+                        <td className="border border-brand-gray/30 px-2 py-2 text-center bg-blue-500/20 text-brand-black">
                           {weekVR}
                         </td>
-                        <td className="border border-white/30 px-2 py-2 text-center bg-emerald-500/20 text-white">
+                        <td className="border border-brand-gray/30 px-2 py-2 text-center bg-emerald-500/20 text-brand-black">
                           {weekVL}
                         </td>
-                        <td className="border border-white/30 px-2 py-2 text-center text-white">
+                        <td className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                           {avg.toFixed(1)}
                         </td>
                       </tr>

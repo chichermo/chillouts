@@ -76,8 +76,8 @@ export default function DailyListPage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl"></div>
       </div>
 
@@ -93,19 +93,19 @@ export default function DailyListPage() {
               </h1>
             </div>
           </div>
-          <p className="text-lg text-white/90 font-medium">Selecteer een dag om chill-outs te registreren of te bekijken</p>
+          <p className="text-lg text-brand-black/90 font-medium">Selecteer een dag om chill-outs te registreren of te bekijken</p>
         </div>
 
         {/* Selector de fecha personalizado */}
-        <div className="mb-6 glass-effect rounded-xl p-4 border border-white/30">
+        <div className="mb-6 glass-effect rounded-xl p-4 border border-brand-gray/30">
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center">
-            <label className="text-sm font-medium text-white/90">Selecteer een specifieke datum:</label>
+            <label className="text-sm font-medium text-brand-black/90">Selecteer een specifieke datum:</label>
             <div className="flex gap-2 flex-1">
               <input
                 type="date"
                 value={customDate}
                 onChange={(e) => setCustomDate(e.target.value)}
-                className="px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
                 min={formatDate(new Date(new Date().getFullYear(), 0, 1))} // Año actual desde enero
                 max={formatDate(new Date(new Date().getFullYear() + 1, 11, 31))} // Hasta fin del próximo año
               />
@@ -124,7 +124,7 @@ export default function DailyListPage() {
         <div className="mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl"></div>
-            <div className="relative glass-effect rounded-3xl p-6 md:p-8 border border-white/30">
+            <div className="relative glass-effect rounded-3xl p-6 md:p-8 border border-brand-gray/30">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white to-blue-100 flex items-center justify-center shadow-lg shadow-white/20">
@@ -132,7 +132,7 @@ export default function DailyListPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-black text-white">
+                  <h2 className="text-2xl font-black text-brand-black">
                     Deze Week
                   </h2>
                 </div>
@@ -144,7 +144,7 @@ export default function DailyListPage() {
                     // Ir al primer día de la próxima semana
                     handleDateSelect(nextWeekDates[0]);
                   }}
-                  className="px-3 py-1.5 text-sm bg-white/10 hover:bg-white/20 rounded-lg font-medium transition-colors text-white border border-white/30"
+                  className="px-3 py-1.5 text-sm bg-brand-blue/30 hover:bg-white/20 rounded-lg font-medium transition-colors text-brand-black border border-brand-gray/30"
                 >
                   Volgende Week →
                 </button>
@@ -171,30 +171,30 @@ export default function DailyListPage() {
                         isToday
                           ? 'border-white/40 hover:border-white/50'
                           : hasData
-                          ? 'border-white/30 hover:border-white/40'
-                          : 'border-white/20 hover:border-white/30'
+                          ? 'border-brand-gray/30 hover:border-white/40'
+                          : 'border-white/20 hover:border-brand-gray/30'
                       }`}>
                         <div className={`font-black text-base mb-1 ${
-                          isToday ? 'text-white' : hasData ? 'text-white' : 'text-white/80'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black' : 'text-brand-black/80'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[0]}
                         </div>
-                        <div className="text-xs text-white/70 mb-2 font-medium">{getDayName(dateObj)}</div>
+                        <div className="text-xs text-brand-black/70 mb-2 font-medium">{getDayName(dateObj)}</div>
                         <div className={`text-xs font-bold mb-1 ${
-                          isToday ? 'text-white' : hasData ? 'text-white/90' : 'text-white/70'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black/90' : 'text-brand-black/70'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[1]}
                         </div>
                         {hasData && (
-                          <div className="mt-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 border border-white/30">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="mt-2 inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20 border border-brand-gray/30">
+                            <svg className="w-3 h-3 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
                         )}
                         {isToday && (
-                          <div className="mt-2 inline-block px-2 py-0.5 rounded-full bg-white/20 border border-white/30">
-                            <span className="text-[10px] font-bold text-white uppercase tracking-wider">Vandaag</span>
+                          <div className="mt-2 inline-block px-2 py-0.5 rounded-full bg-white/20 border border-brand-gray/30">
+                            <span className="text-[10px] font-bold text-brand-black uppercase tracking-wider">Vandaag</span>
                           </div>
                         )}
                       </div>
@@ -210,7 +210,7 @@ export default function DailyListPage() {
         <div className="mb-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl"></div>
-            <div className="relative glass-effect rounded-3xl p-6 md:p-8 border border-white/30">
+            <div className="relative glass-effect rounded-3xl p-6 md:p-8 border border-brand-gray/30">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white to-emerald-100 flex items-center justify-center shadow-lg shadow-white/20">
@@ -218,7 +218,7 @@ export default function DailyListPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-black text-white">
+                  <h2 className="text-2xl font-black text-brand-black">
                     Komende Weken (4 weken)
                   </h2>
                 </div>
@@ -246,32 +246,32 @@ export default function DailyListPage() {
                         isToday
                           ? 'border-white/40 hover:border-white/50'
                           : hasData
-                          ? 'border-white/30 hover:border-white/40'
+                          ? 'border-brand-gray/30 hover:border-white/40'
                           : isPast
                           ? 'border-white/10 hover:border-white/20 opacity-70'
-                          : 'border-white/20 hover:border-white/30'
+                          : 'border-white/20 hover:border-brand-gray/30'
                       }`}>
                         <div className={`font-black text-sm mb-1 ${
-                          isToday ? 'text-white' : hasData ? 'text-white' : isPast ? 'text-white/60' : 'text-white/80'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black' : isPast ? 'text-brand-black/60' : 'text-brand-black/80'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[0]}
                         </div>
-                        <div className="text-xs text-white/70 mb-1 font-medium">{getDayName(dateObj)}</div>
+                        <div className="text-xs text-brand-black/70 mb-1 font-medium">{getDayName(dateObj)}</div>
                         <div className={`text-xs font-bold mb-1 ${
-                          isToday ? 'text-white' : hasData ? 'text-white/90' : isPast ? 'text-white/50' : 'text-white/70'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black/90' : isPast ? 'text-brand-black/50' : 'text-brand-black/70'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[1]}
                         </div>
                         {hasData && (
-                          <div className="mt-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 border border-white/30">
-                            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="mt-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/20 border border-brand-gray/30">
+                            <svg className="w-2.5 h-2.5 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
                         )}
                         {isToday && (
-                          <div className="mt-1 inline-block px-1.5 py-0.5 rounded-full bg-white/20 border border-white/30">
-                            <span className="text-[9px] font-bold text-white uppercase">Nu</span>
+                          <div className="mt-1 inline-block px-1.5 py-0.5 rounded-full bg-white/20 border border-brand-gray/30">
+                            <span className="text-[9px] font-bold text-brand-black uppercase">Nu</span>
                           </div>
                         )}
                       </div>
@@ -288,18 +288,18 @@ export default function DailyListPage() {
           <div className="mb-8">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl"></div>
-              <div className="relative glass-effect rounded-3xl p-6 md:p-8 border border-white/30">
+              <div className="relative glass-effect rounded-3xl p-6 md:p-8 border border-brand-gray/30">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white to-indigo-100 flex items-center justify-center shadow-lg shadow-white/20">
                     <svg className="w-6 h-6 text-indigo-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-black text-white">
+                  <h2 className="text-2xl font-black text-brand-black">
                     Alle Dagen met Registraties
                   </h2>
-                  <div className="ml-auto px-3 py-1 rounded-full bg-white/20 border border-white/30">
-                    <span className="text-sm font-bold text-white">{dates.length}</span>
+                  <div className="ml-auto px-3 py-1 rounded-full bg-white/20 border border-brand-gray/30">
+                    <span className="text-sm font-bold text-brand-black">{dates.length}</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -313,17 +313,17 @@ export default function DailyListPage() {
                         className="group relative overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-xl blur-lg group-hover:opacity-75 transition-opacity"></div>
-                        <div className="relative glass-effect rounded-xl p-3 border border-white/30 hover:border-white/40 transition-all duration-300 text-center group-hover:scale-105">
-                          <div className={`font-black text-sm mb-1 ${isToday ? 'text-white' : 'text-white/90'}`}>
+                        <div className="relative glass-effect rounded-xl p-3 border border-brand-gray/30 hover:border-white/40 transition-all duration-300 text-center group-hover:scale-105">
+                          <div className={`font-black text-sm mb-1 ${isToday ? 'text-brand-black' : 'text-brand-black/90'}`}>
                             {formatDateDisplay(dateObj).split(' ')[0]}
                           </div>
-                          <div className="text-xs text-white/70 mb-1 font-medium">{getDayName(dateObj)}</div>
-                          <div className={`text-xs font-bold ${isToday ? 'text-white' : 'text-white/80'}`}>
+                          <div className="text-xs text-brand-black/70 mb-1 font-medium">{getDayName(dateObj)}</div>
+                          <div className={`text-xs font-bold ${isToday ? 'text-brand-black' : 'text-brand-black/80'}`}>
                             {formatDateDisplay(dateObj).split(' ')[1]}
                           </div>
                           {isToday && (
-                            <div className="mt-2 inline-block px-1.5 py-0.5 rounded-full bg-white/20 border border-white/30">
-                              <span className="text-[9px] font-bold text-white uppercase">Nu</span>
+                            <div className="mt-2 inline-block px-1.5 py-0.5 rounded-full bg-white/20 border border-brand-gray/30">
+                              <span className="text-[9px] font-bold text-brand-black uppercase">Nu</span>
                             </div>
                           )}
                         </div>
@@ -342,12 +342,12 @@ export default function DailyListPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 rounded-3xl blur-xl"></div>
             <div className="relative glass-effect rounded-3xl p-8 border border-white/20 text-center">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/30 to-white/20 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <p className="text-white font-medium text-lg mb-2">Geen dagelijkse registraties gevonden</p>
-              <p className="text-white/70 text-sm">Ga naar een specifieke dag om te beginnen</p>
+              <p className="text-brand-black font-medium text-lg mb-2">Geen dagelijkse registraties gevonden</p>
+              <p className="text-brand-black/70 text-sm">Ga naar een specifieke dag om te beginnen</p>
             </div>
           </div>
         )}

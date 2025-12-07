@@ -137,8 +137,8 @@ export default function StudentsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -146,23 +146,23 @@ export default function StudentsPage() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
             Beheer van Studenten
           </h1>
-          <p className="text-sm text-white/80">
+          <p className="text-sm text-brand-black/80">
             Wijzig studenten hier. De dagelijkse bladen worden automatisch bijgewerkt.
           </p>
         </div>
 
         {/* Formulario para agregar estudiante */}
-        <div className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-white/30">
-          <h2 className="text-lg font-semibold mb-3 text-white flex items-center">
+        <div className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-brand-gray/30">
+          <h2 className="text-lg font-semibold mb-3 text-brand-black flex items-center">
             <span className="bg-white/20 rounded p-1.5 mr-2">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </span>
             Nieuwe Student Toevoegen
           </h2>
           {showSuccess && (
-            <div className="mb-3 p-2 bg-emerald-500/20 border border-emerald-400/50 text-emerald-200 rounded text-sm">
+            <div className="mb-3 p-2 bg-brand-green-500/20 border border-emerald-400/50 text-brand-green-200 rounded text-sm">
               ✓ Student succesvol toegevoegd!
             </div>
           )}
@@ -173,7 +173,7 @@ export default function StudentsPage() {
               value={newStudent.name}
               onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
               onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
-              className="px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+              className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
             />
             <div className="relative">
               {showNewKlasInput ? (
@@ -190,7 +190,7 @@ export default function StudentsPage() {
                         setNewStudent({ ...newStudent, klas: '' });
                       }
                     }}
-                    className="flex-1 px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                    className="flex-1 px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
                     autoFocus
                   />
                   <button
@@ -200,7 +200,7 @@ export default function StudentsPage() {
                       setNewKlasName('');
                       setNewStudent({ ...newStudent, klas: '' });
                     }}
-                    className="px-2 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    className="px-2 py-2 text-sm bg-gray-600 text-brand-black rounded-md hover:bg-gray-700 transition-colors"
                     title="Annuleren"
                   >
                     ×
@@ -210,17 +210,17 @@ export default function StudentsPage() {
                 <select
                   value={newStudent.klas || ''}
                   onChange={(e) => handleKlasSelect(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                  className="w-full px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
                 >
-                  <option value="" className="bg-blue-900">Selecteer klas...</option>
+                  <option value="" className="bg-brand-gray">Selecteer klas...</option>
                   {klassen.map(klas => (
-                    <option key={klas} value={klas} className="bg-blue-900">{klas}</option>
+                    <option key={klas} value={klas} className="bg-brand-gray">{klas}</option>
                   ))}
-                  <option value="__NEW__" className="bg-blue-900 font-semibold">+ Nieuwe klas aanmaken</option>
+                  <option value="__NEW__" className="bg-brand-gray font-semibold">+ Nieuwe klas aanmaken</option>
                 </select>
               )}
               {newStudent.klas && findExistingKlas(newStudent.klas) && newStudent.klas !== findExistingKlas(newStudent.klas) && (
-                <div className="absolute top-full left-0 mt-1 text-xs text-yellow-300 bg-yellow-500/20 px-2 py-1 rounded">
+                <div className="absolute top-full left-0 mt-1 text-xs text-brand-orange-300 bg-brand-orange-500/20 px-2 py-1 rounded">
                   Gebruikt bestaande klas: {findExistingKlas(newStudent.klas)}
                 </div>
               )}
@@ -228,10 +228,10 @@ export default function StudentsPage() {
             <select
               value={newStudent.status}
               onChange={(e) => setNewStudent({ ...newStudent, status: e.target.value as 'Actief' | 'Inactief' })} 
-              className="px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+              className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
             >
-              <option value="Actief" className="bg-blue-900">Actief</option>
-              <option value="Inactief" className="bg-blue-900">Inactief</option>
+              <option value="Actief" className="bg-brand-gray">Actief</option>
+              <option value="Inactief" className="bg-brand-gray">Inactief</option>
             </select>
             <button
               onClick={handleAdd}
@@ -243,61 +243,61 @@ export default function StudentsPage() {
         </div>
 
         {/* Filtro por clase */}
-        <div className="mb-4 glass-effect p-3 rounded-lg shadow-sm border border-white/30">
-          <label className="mr-2 text-sm text-white/90 font-medium">Filter op klas:</label>
+        <div className="mb-4 glass-effect p-3 rounded-lg shadow-sm border border-brand-gray/30">
+          <label className="mr-2 text-sm text-brand-black/90 font-medium">Filter op klas:</label>
           <select
             value={filterKlas}
             onChange={(e) => setFilterKlas(e.target.value)}
-            className="px-3 py-1.5 text-sm bg-white/10 border border-white/30 rounded-md text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+            className="px-3 py-1.5 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
           >
-            <option value="" className="bg-blue-900">Alle klassen</option>
+            <option value="" className="bg-brand-gray">Alle klassen</option>
             {klassen.map(klas => (
-              <option key={klas} value={klas} className="bg-blue-900">{klas}</option>
+              <option key={klas} value={klas} className="bg-brand-gray">{klas}</option>
             ))}
           </select>
         </div>
 
         {/* Lista de estudiantes por clase */}
         {Object.keys(groupedStudents).sort().map(klas => (
-          <div key={klas} className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-white/30">
-            <h2 className="text-lg font-semibold mb-3 text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 px-3 py-2 rounded-md border-l-3 border-yellow-400/50">
+          <div key={klas} className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-brand-gray/30">
+            <h2 className="text-lg font-semibold mb-3 text-brand-orange-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 px-3 py-2 rounded-md border-l-3 border-yellow-400/50">
               {klas}
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/20 bg-white/10">
-                    <th className="text-left px-3 py-2 font-semibold text-white">Naam</th>
-                    <th className="text-left px-3 py-2 font-semibold text-white">Klas</th>
-                    <th className="text-left px-3 py-2 font-semibold text-white">Status</th>
-                    <th className="text-left px-3 py-2 font-semibold text-white">Acties</th>
+                  <tr className="border-b border-white/20 bg-brand-blue/30">
+                    <th className="text-left px-3 py-2 font-semibold text-brand-black">Naam</th>
+                    <th className="text-left px-3 py-2 font-semibold text-brand-black">Klas</th>
+                    <th className="text-left px-3 py-2 font-semibold text-brand-black">Status</th>
+                    <th className="text-left px-3 py-2 font-semibold text-brand-black">Acties</th>
                   </tr>
                 </thead>
                 <tbody>
                   {groupedStudents[klas].map(student => (
-                    <tr key={student.id} className="border-b border-white/10 hover:bg-white/10 transition-colors">
-                      <td className="px-3 py-2 font-medium text-white">
+                    <tr key={student.id} className="border-b border-white/10 hover:bg-brand-blue/30 transition-colors">
+                      <td className="px-3 py-2 font-medium text-brand-black">
                         {editingId === student.id ? (
                           <input
                             type="text"
                             value={student.name}
                             onChange={(e) => handleUpdate(student.id, { name: e.target.value })}
-                            className="w-full px-2 py-1 text-sm bg-white/10 border border-white/30 rounded text-white focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
+                            className="w-full px-2 py-1 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
                             autoFocus
                           />
                         ) : (
                           student.name
                         )}
                       </td>
-                      <td className="px-3 py-2 text-white">
+                      <td className="px-3 py-2 text-brand-black">
                         {editingId === student.id ? (
                           <select
                             value={student.klas}
                             onChange={(e) => handleUpdate(student.id, { klas: e.target.value })}
-                            className="w-full px-2 py-1 text-sm bg-white/10 border border-white/30 rounded text-white focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
+                            className="w-full px-2 py-1 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
                           >
                             {klassen.map(klas => (
-                              <option key={klas} value={klas} className="bg-blue-900">{klas}</option>
+                              <option key={klas} value={klas} className="bg-brand-gray">{klas}</option>
                             ))}
                           </select>
                         ) : (
@@ -309,18 +309,18 @@ export default function StudentsPage() {
                           <select
                             value={student.status}
                             onChange={(e) => handleUpdate(student.id, { status: e.target.value as 'Actief' | 'Inactief' })}
-                            className="px-2 py-1 text-sm bg-white/10 border border-white/30 rounded text-white focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
+                            className="px-2 py-1 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
                           >
-                            <option value="Actief" className="bg-blue-900">Actief</option>
-                            <option value="Inactief" className="bg-blue-900">Inactief</option>
+                            <option value="Actief" className="bg-brand-gray">Actief</option>
+                            <option value="Inactief" className="bg-brand-gray">Inactief</option>
                           </select>
                         ) : (
                           <button
                             onClick={() => handleUpdate(student.id, { status: student.status === 'Actief' ? 'Inactief' : 'Actief' })}
                             className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                               student.status === 'Actief' 
-                                ? 'bg-emerald-500/30 text-emerald-200 hover:bg-emerald-500/40' 
-                                : 'bg-white/20 text-white/80 hover:bg-white/30'
+                                ? 'bg-brand-green-500/30 text-brand-green-200 hover:bg-brand-green-500/40' 
+                                : 'bg-white/20 text-brand-black/80 hover:bg-white/30'
                             }`}
                           >
                             {student.status}
@@ -331,7 +331,7 @@ export default function StudentsPage() {
                         {editingId === student.id ? (
                           <button
                             onClick={() => setEditingId(null)}
-                            className="px-3 py-1 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-700 font-medium transition-colors"
+                            className="px-3 py-1 text-sm bg-brand-green-600 text-brand-black rounded hover:bg-brand-green-700 font-medium transition-colors"
                           >
                             ✓
                           </button>
@@ -339,14 +339,14 @@ export default function StudentsPage() {
                           <div className="flex gap-1.5">
                             <button
                               onClick={() => setEditingId(student.id)}
-                              className="px-2.5 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 font-medium transition-colors"
+                              className="px-2.5 py-1 text-xs bg-brand-blue text-brand-black rounded hover:bg-blue-600 font-medium transition-colors"
                               title="Bewerken"
                             >
                               ✎
                             </button>
                             <button
                               onClick={() => handleDelete(student.id)}
-                              className="px-2.5 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 font-medium transition-colors"
+                              className="px-2.5 py-1 text-xs bg-brand-pink-500 text-brand-black rounded hover:bg-brand-pink-600 font-medium transition-colors"
                               title="Verwijderen"
                             >
                               ×
@@ -363,7 +363,7 @@ export default function StudentsPage() {
         ))}
 
         {Object.keys(groupedStudents).length === 0 && (
-          <div className="glass-effect p-4 rounded-lg shadow-sm text-center text-sm text-white/70 border border-white/30">
+          <div className="glass-effect p-4 rounded-lg shadow-sm text-center text-sm text-brand-black/70 border border-brand-gray/30">
             Geen studenten gevonden. Voeg een student toe om te beginnen.
           </div>
         )}

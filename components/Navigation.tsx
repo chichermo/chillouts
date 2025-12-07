@@ -66,26 +66,26 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="bg-blue-900 shadow-md border-b border-white/20 sticky top-0 z-50 backdrop-blur-lg bg-opacity-95">
+    <nav className="bg-brand-gray shadow-md border-b border-brand-gray/30 sticky top-0 z-50 backdrop-blur-lg bg-opacity-95">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-18">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group flex-shrink-0">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-white to-blue-100 rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              <div className="relative bg-gradient-to-br from-white to-blue-100 rounded-xl p-2.5 group-hover:scale-110 transition-transform shadow-lg shadow-white/20">
-                <svg className="w-7 h-7 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="absolute inset-0 bg-brand-blue rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+              <div className="relative bg-brand-blue rounded-xl p-2.5 group-hover:scale-110 transition-transform shadow-lg">
+                <svg className="w-7 h-7 text-brand-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
             <div className="hidden sm:block">
-              <span className="text-2xl font-black bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent tracking-tight" suppressHydrationWarning>
+              <span className="text-title font-rounded text-brand-black tracking-tight" suppressHydrationWarning>
                 Chill-outs
               </span>
-              <div className="text-xs font-semibold text-white/70 tracking-wider">BEHEER</div>
+              <div className="text-xs font-semibold text-brand-gray tracking-wider">BEHEER</div>
             </div>
-            <span className="text-2xl font-black bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent sm:hidden" suppressHydrationWarning>
+            <span className="text-title font-rounded text-brand-black sm:hidden" suppressHydrationWarning>
               CO
             </span>
           </Link>
@@ -100,19 +100,19 @@ export default function Navigation() {
                   href={link.href}
                   className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 relative group overflow-hidden ${
                     isActive
-                      ? 'bg-gradient-to-r from-white to-blue-100 text-blue-900 shadow-lg shadow-white/30 scale-105'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
+                      ? 'bg-brand-blue text-brand-black shadow-lg scale-105'
+                      : 'text-brand-black/70 hover:text-brand-black hover:bg-brand-blue/30'
                   }`}
                 >
                   {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-blue-100/20"></div>
+                    <div className="absolute inset-0 bg-brand-blue/20"></div>
                   )}
-                  <span className={`relative z-10 ${isActive ? 'text-blue-900' : 'text-white/70 group-hover:text-white'}`}>
+                  <span className={`relative z-10 ${isActive ? 'text-brand-black' : 'text-brand-black/70 group-hover:text-brand-black'}`}>
                     {link.icon}
                   </span>
-                  <span className="relative z-10">{link.label}</span>
+                  <span className="relative z-10 text-body">{link.label}</span>
                   {!isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-white to-blue-100 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-blue transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                   )}
                 </Link>
               );
@@ -122,7 +122,7 @@ export default function Navigation() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition-all duration-200"
+            className="md:hidden p-2.5 rounded-xl text-brand-black/70 hover:bg-brand-blue/30 hover:text-brand-black transition-all duration-200"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -139,7 +139,7 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/20 py-3 bg-blue-900/95 backdrop-blur-lg">
+          <div className="md:hidden border-t border-brand-gray/30 py-3 bg-brand-gray/95 backdrop-blur-lg">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
               return (
@@ -149,14 +149,14 @@ export default function Navigation() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 mx-2 mb-1 ${
                     isActive
-                      ? 'bg-gradient-to-r from-white to-blue-100 text-blue-900 shadow-lg shadow-white/30'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                      ? 'bg-brand-blue text-brand-black shadow-lg'
+                      : 'text-brand-black/70 hover:bg-brand-blue/30 hover:text-brand-black'
                   }`}
                 >
-                  <span className={`${isActive ? 'text-blue-900' : 'text-white/70'}`}>
+                  <span className={`${isActive ? 'text-brand-black' : 'text-brand-black/70'}`}>
                     {link.icon}
                   </span>
-                  <span>{link.label}</span>
+                  <span className="text-body">{link.label}</span>
                 </Link>
               );
             })}

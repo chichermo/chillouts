@@ -514,7 +514,7 @@ export default function ReportsPage() {
       <div className="min-h-screen relative overflow-hidden">
         <Navigation />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-xl text-white">Laden...</div>
+          <div className="text-xl text-brand-black">Laden...</div>
         </div>
       </div>
     );
@@ -531,21 +531,21 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header met export knoppen */}
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Rapporten & Export</h1>
-            <p className="text-white/80">Visualiseer statistieken en exporteer rapporten</p>
+            <h1 className="text-4xl font-bold text-brand-black mb-2">Rapporten & Export</h1>
+            <p className="text-brand-black/80">Visualiseer statistieken en exporteer rapporten</p>
           </div>
           <div className="flex gap-3">
             <button
               onClick={exportToExcel}
-              className="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-semibold transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-brand-green text-brand-black rounded-lg hover:bg-emerald-600 font-semibold transition-colors flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -554,7 +554,7 @@ export default function ReportsPage() {
             </button>
             <button
               onClick={exportToPDF}
-              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-red-500 text-brand-black rounded-lg hover:bg-red-600 font-semibold transition-colors flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -565,13 +565,13 @@ export default function ReportsPage() {
         </div>
 
         {/* Filter sectie */}
-        <div className="glass-effect rounded-lg p-6 border border-white/30 mb-8">
+        <div className="glass-effect rounded-lg p-6 border border-brand-gray/30 mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">Filters</h2>
+            <h2 className="text-xl font-bold text-brand-black">Filters</h2>
             {hasActiveFilters && (
               <button
                 onClick={resetFilters}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm transition-colors"
+                className="px-4 py-2 bg-gray-600 text-brand-black rounded-lg hover:bg-gray-700 text-sm transition-colors"
               >
                 Reset Filters
               </button>
@@ -580,11 +580,11 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Klas filter */}
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Klas</label>
+              <label className="block text-sm font-medium text-brand-black/80 mb-2">Klas</label>
               <select
                 value={filters.klas}
                 onChange={(e) => setFilters(prev => ({ ...prev, klas: e.target.value, student: '' }))}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-brand-blue/30 border border-white/20 rounded-lg text-brand-black focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Alle klassen</option>
                 {allKlassen.map(klas => (
@@ -595,12 +595,12 @@ export default function ReportsPage() {
 
             {/* Student filter */}
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Student</label>
+              <label className="block text-sm font-medium text-brand-black/80 mb-2">Student</label>
               <select
                 value={filters.student}
                 onChange={(e) => setFilters(prev => ({ ...prev, student: e.target.value }))}
                 disabled={!filters.klas}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 bg-brand-blue/30 border border-white/20 rounded-lg text-brand-black focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Alle studenten</option>
                 {filteredStudents.map(student => (
@@ -611,36 +611,36 @@ export default function ReportsPage() {
 
             {/* Van datum */}
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Van Datum</label>
+              <label className="block text-sm font-medium text-brand-black/80 mb-2">Van Datum</label>
               <input
                 type="date"
                 value={filters.dateFrom}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-brand-blue/30 border border-white/20 rounded-lg text-brand-black focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Tot datum */}
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Tot Datum</label>
+              <label className="block text-sm font-medium text-brand-black/80 mb-2">Tot Datum</label>
               <input
                 type="date"
                 value={filters.dateTo}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
                 min={filters.dateFrom}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-brand-blue/30 border border-white/20 rounded-lg text-brand-black focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Gegenereerd door */}
             <div>
-              <label className="block text-sm font-medium text-white/80 mb-2">Gegenereerd door</label>
+              <label className="block text-sm font-medium text-brand-black/80 mb-2">Gegenereerd door</label>
               <input
                 type="text"
                 value={filters.generatedBy}
                 onChange={(e) => setFilters(prev => ({ ...prev, generatedBy: e.target.value }))}
                 placeholder="Naam van gebruiker"
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-brand-blue/30 border border-white/20 rounded-lg text-brand-black placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -648,60 +648,60 @@ export default function ReportsPage() {
 
         {/* Hoofdstatistieken */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="glass-effect rounded-lg p-6 border border-white/30">
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-white/70 uppercase">Totaal</p>
+              <p className="text-xs font-medium text-brand-black/70 uppercase">Totaal</p>
               <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
                 <svg className="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
             </div>
-            <p className="text-3xl font-black text-white">{stats.totalChillOuts}</p>
-            <p className="text-xs text-white/60 mt-1">chill-outs</p>
+            <p className="text-3xl font-black text-brand-black">{stats.totalChillOuts}</p>
+            <p className="text-xs text-brand-black/60 mt-1">chill-outs</p>
           </div>
 
-          <div className="glass-effect rounded-lg p-6 border border-white/30">
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-white/70 uppercase">VR</p>
-              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+              <p className="text-xs font-medium text-brand-black/70 uppercase">VR</p>
+              <div className="w-10 h-10 rounded-lg bg-brand-blue/20 flex items-center justify-center">
                 <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
             </div>
             <p className="text-3xl font-black text-blue-200">{stats.totalVR}</p>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-brand-black/60 mt-1">
               {stats.totalChillOuts > 0 ? Math.round((stats.totalVR / stats.totalChillOuts) * 100) : 0}%
             </p>
           </div>
 
-          <div className="glass-effect rounded-lg p-6 border border-white/30">
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-white/70 uppercase">VL</p>
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <p className="text-xs font-medium text-brand-black/70 uppercase">VL</p>
+              <div className="w-10 h-10 rounded-lg bg-brand-green/20 flex items-center justify-center">
                 <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
             </div>
             <p className="text-3xl font-black text-emerald-200">{stats.totalVL}</p>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-brand-black/60 mt-1">
               {stats.totalChillOuts > 0 ? Math.round((stats.totalVL / stats.totalChillOuts) * 100) : 0}%
             </p>
           </div>
 
-          <div className="glass-effect rounded-lg p-6 border border-white/30">
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-white/70 uppercase">Generiek</p>
+              <p className="text-xs font-medium text-brand-black/70 uppercase">Generiek</p>
               <div className="w-10 h-10 rounded-lg bg-gray-500/20 flex items-center justify-center">
                 <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <p className="text-3xl font-black text-white/90">{stats.totalGeneric}</p>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-3xl font-black text-brand-black/90">{stats.totalGeneric}</p>
+            <p className="text-xs text-brand-black/60 mt-1">
               {stats.totalChillOuts > 0 ? Math.round((stats.totalGeneric / stats.totalChillOuts) * 100) : 0}%
             </p>
           </div>
@@ -711,8 +711,8 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Distributie grafiek */}
           {pieData.length > 0 && (
-            <div className="glass-effect rounded-lg p-6 border border-white/30">
-              <h2 className="text-xl font-bold mb-4 text-white">Distributie Chill-outs</h2>
+            <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
+              <h2 className="text-xl font-bold mb-4 text-brand-black">Distributie Chill-outs</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -737,8 +737,8 @@ export default function ReportsPage() {
           )}
 
           {/* Grafiek per lesuur */}
-          <div className="glass-effect rounded-lg p-6 border border-white/30">
-            <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Lesuur</h2>
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
+            <h2 className="text-xl font-bold mb-4 text-brand-black">Chill-outs per Lesuur</h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stats.byHour}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -754,8 +754,8 @@ export default function ReportsPage() {
           </div>
 
           {/* Grafiek per klas */}
-          <div className="glass-effect rounded-lg p-6 border border-white/30">
-            <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
+            <h2 className="text-xl font-bold mb-4 text-brand-black">Chill-outs per Klas</h2>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stats.byKlas.slice(0, 10)} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -772,8 +772,8 @@ export default function ReportsPage() {
 
           {/* Dagelijkse trend grafiek */}
           {stats.byDay.length > 0 && (
-            <div className="glass-effect rounded-lg p-6 border border-white/30">
-              <h2 className="text-xl font-bold mb-4 text-white">Tendens</h2>
+            <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
+              <h2 className="text-xl font-bold mb-4 text-brand-black">Tendens</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={stats.byDay}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -792,37 +792,37 @@ export default function ReportsPage() {
 
         {/* Gedetailleerde tabel per klas */}
         {stats.byKlas.length > 0 && (
-          <div className="glass-effect rounded-lg p-6 border border-white/30 mb-8">
-            <h2 className="text-xl font-bold mb-4 text-white">Statistieken per Klas</h2>
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30 mb-8">
+            <h2 className="text-xl font-bold mb-4 text-brand-black">Statistieken per Klas</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/20 bg-white/10">
-                    <th className="px-4 py-3 text-left font-semibold text-white">Klas</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Generiek</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Percentage</th>
+                  <tr className="border-b border-white/20 bg-brand-blue/30">
+                    <th className="px-4 py-3 text-left font-semibold text-brand-black">Klas</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">Totaal</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">VR</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">VL</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">Generiek</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">Percentage</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.byKlas.map((klas, index) => (
-                    <tr key={klas.klas} className="border-b border-white/10 hover:bg-white/10 transition-colors">
-                      <td className="px-4 py-3 font-medium text-white">{klas.klas}</td>
-                      <td className="px-4 py-3 text-center text-white">{klas.total}</td>
+                    <tr key={klas.klas} className="border-b border-white/10 hover:bg-brand-blue/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-brand-black">{klas.klas}</td>
+                      <td className="px-4 py-3 text-center text-brand-black">{klas.total}</td>
                       <td className="px-4 py-3 text-center text-blue-200">{klas.vr}</td>
                       <td className="px-4 py-3 text-center text-emerald-200">{klas.vl}</td>
-                      <td className="px-4 py-3 text-center text-white/80">{klas.generic}</td>
+                      <td className="px-4 py-3 text-center text-brand-black/80">{klas.generic}</td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <div className="w-24 bg-white/10 rounded-full h-2 overflow-hidden">
+                          <div className="w-24 bg-brand-blue/30 rounded-full h-2 overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
                               style={{ width: `${klas.percentage}%` }}
                             />
                           </div>
-                          <span className="text-white font-semibold">{klas.percentage}%</span>
+                          <span className="text-brand-black font-semibold">{klas.percentage}%</span>
                         </div>
                       </td>
                     </tr>
@@ -835,31 +835,31 @@ export default function ReportsPage() {
 
         {/* Tabel per student */}
         {stats.byStudent.length > 0 && (
-          <div className="glass-effect rounded-lg p-6 border border-white/30">
-            <h2 className="text-xl font-bold mb-4 text-white">Statistieken per Student</h2>
+          <div className="glass-effect rounded-lg p-6 border border-brand-gray/30">
+            <h2 className="text-xl font-bold mb-4 text-brand-black">Statistieken per Student</h2>
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-blue-900/50 backdrop-blur">
                   <tr className="border-b border-white/20">
-                    <th className="px-4 py-3 text-left font-semibold text-white">Naam</th>
-                    <th className="px-4 py-3 text-left font-semibold text-white">Klas</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Generiek</th>
+                    <th className="px-4 py-3 text-left font-semibold text-brand-black">Naam</th>
+                    <th className="px-4 py-3 text-left font-semibold text-brand-black">Klas</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">Totaal</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">VR</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">VL</th>
+                    <th className="px-4 py-3 text-center font-semibold text-brand-black">Generiek</th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.byStudent.map((student) => (
-                    <tr key={`${student.klas}-${student.name}`} className="border-b border-white/10 hover:bg-white/10 transition-colors">
-                      <td className="px-4 py-2 font-medium text-white">{student.name}</td>
+                    <tr key={`${student.klas}-${student.name}`} className="border-b border-white/10 hover:bg-brand-blue/30 transition-colors">
+                      <td className="px-4 py-2 font-medium text-brand-black">{student.name}</td>
                       <td className="px-4 py-2">
-                        <span className="px-2 py-0.5 bg-white/20 rounded text-xs text-white">{student.klas}</span>
+                        <span className="px-2 py-0.5 bg-white/20 rounded text-xs text-brand-black">{student.klas}</span>
                       </td>
-                      <td className="px-4 py-2 text-center font-semibold text-white">{student.total}</td>
+                      <td className="px-4 py-2 text-center font-semibold text-brand-black">{student.total}</td>
                       <td className="px-4 py-2 text-center text-blue-200 font-medium">{student.vr}</td>
                       <td className="px-4 py-2 text-center text-emerald-200 font-medium">{student.vl}</td>
-                      <td className="px-4 py-2 text-center text-white/80">{student.generic}</td>
+                      <td className="px-4 py-2 text-center text-brand-black/80">{student.generic}</td>
                     </tr>
                   ))}
                 </tbody>
