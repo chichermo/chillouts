@@ -3,9 +3,14 @@ import { AppData, Student, DailyRecord } from '@/types';
 
 // Función helper para usar Supabase o localStorage como fallback
 async function loadFromSupabase(): Promise<AppData | null> {
-  if (!isSupabaseEnabled) return null;
+  if (!isSupabaseEnabled) {
+    console.log('Supabase no está habilitado');
+    return null;
+  }
 
   try {
+    console.log('Cargando datos de Supabase...');
+    
     // Cargar estudiantes
     const { data: students, error: studentsError } = await supabase!
       .from('students')
@@ -13,14 +18,24 @@ async function loadFromSupabase(): Promise<AppData | null> {
       .order('klas', { ascending: true })
       .order('name', { ascending: true });
 
-    if (studentsError) throw studentsError;
+    if (studentsError) {
+      console.error('Error cargando estudiantes:', studentsError);
+      throw studentsError;
+    }
+
+    console.log(`Estudiantes cargados de Supabase: ${students?.length || 0}`);
 
     // Cargar registros diarios
     const { data: dailyRecordsData, error: recordsError } = await supabase!
       .from('daily_records')
       .select('*');
 
-    if (recordsError) throw recordsError;
+    if (recordsError) {
+      console.error('Error cargando registros:', recordsError);
+      throw recordsError;
+    }
+
+    console.log(`Registros cargados de Supabase: ${dailyRecordsData?.length || 0}`);
 
     // Convertir registros diarios al formato esperado
     const dailyRecords: { [date: string]: DailyRecord } = {};
@@ -32,11 +47,14 @@ async function loadFromSupabase(): Promise<AppData | null> {
       };
     });
 
-    return {
+    const result = {
       students: students || [],
       dailyRecords,
       weeklyTotals: {}, // Se calcula dinámicamente
     };
+
+    console.log('Datos cargados exitosamente de Supabase');
+    return result;
   } catch (error) {
     console.error('Error loading from Supabase:', error);
     return null;
