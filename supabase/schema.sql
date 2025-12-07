@@ -49,3 +49,28 @@ CREATE POLICY "Allow all operations on students" ON students
 CREATE POLICY "Allow all operations on daily_records" ON daily_records
     FOR ALL USING (true) WITH CHECK (true);
 
+-- Tabla de auditoría
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id TEXT PRIMARY KEY,
+  action TEXT NOT NULL CHECK (action IN ('created', 'deleted', 'updated')),
+  student_id TEXT NOT NULL,
+  student_name TEXT NOT NULL,
+  student_klas TEXT NOT NULL,
+  student_data JSONB,
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  reverted BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- Índices para auditoría
+CREATE INDEX IF NOT EXISTS idx_audit_logs_student_id ON audit_logs(student_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_reverted ON audit_logs(reverted);
+
+-- Habilitar RLS para audit_logs
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+
+-- Política de seguridad para audit_logs
+CREATE POLICY "Allow all operations on audit_logs" ON audit_logs
+    FOR ALL USING (true) WITH CHECK (true);
+

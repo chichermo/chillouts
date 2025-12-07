@@ -174,3 +174,82 @@ export function calculateWeeklyTotals(
   };
 }
 
+export function calculateWeeklyTotalsByStudent(
+  weekNumber: number,
+  startDate: Date,
+  dailyRecords: { [date: string]: DailyRecord },
+  students: Student[]
+): { [studentId: string]: { name: string; klas: string; totals: { [day: string]: { total: number; vr: number; vl: number } } } } {
+  const studentTotals: { [studentId: string]: { name: string; klas: string; totals: { [day: string]: { total: number; vr: number; vl: number } } } } = {};
+  const weekDays = ['Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag'];
+  
+  // Inicializar estructura para cada estudiante
+  students.forEach(student => {
+    studentTotals[student.id] = {
+      name: student.name,
+      klas: student.klas,
+      totals: {},
+    };
+    weekDays.forEach(day => {
+      studentTotals[student.id].totals[day] = { total: 0, vr: 0, vl: 0 };
+    });
+  });
+
+  // Calcular totales por estudiante y día
+  for (let i = 0; i < 5; i++) {
+    const currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + i);
+    const dateStr = formatDate(currentDate);
+    const record = dailyRecords[dateStr];
+    
+    if (record) {
+      const dayName = weekDays[i];
+      
+      // Procesar cada estudiante
+      students.forEach(student => {
+        const studentEntries = record.entries[student.id] || {};
+        let studentTotal = 0;
+        let studentVR = 0;
+        let studentVL = 0;
+        
+        Object.values(studentEntries).forEach(entries => {
+          // Manejar tanto formato antiguo (objeto) como nuevo formato (array)
+          if (Array.isArray(entries)) {
+            entries.forEach(entry => {
+              if (entry) {
+                studentTotal += 1;
+                if (entry.type === 'VR') {
+                  studentVR += 1;
+                } else if (entry.type === 'VL') {
+                  studentVL += 1;
+                }
+              }
+            });
+          } else if (entries && !Array.isArray(entries)) {
+            // Formato antiguo (compatibilidad)
+            const oldEntry = entries as { count: number; type: ChillOutType | null };
+            if (oldEntry.count > 0) {
+              studentTotal += oldEntry.count;
+              if (oldEntry.type === 'VR') {
+                studentVR += oldEntry.count;
+              } else if (oldEntry.type === 'VL') {
+                studentVL += oldEntry.count;
+              }
+            }
+          }
+        });
+        
+        if (studentTotals[student.id]) {
+          studentTotals[student.id].totals[dayName] = {
+            total: studentTotal,
+            vr: studentVR,
+            vl: studentVL,
+          };
+        }
+      });
+    }
+  }
+
+  return studentTotals;
+}
+

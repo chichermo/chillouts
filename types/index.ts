@@ -44,3 +44,14 @@ export interface AppData {
   weeklyTotals: { [weekNumber: number]: WeeklyTotal };
 }
 
+export interface AuditLog {
+  id: string;
+  action: 'created' | 'deleted' | 'updated';
+  studentId: string;
+  studentName: string;
+  studentKlas: string;
+  studentData: Student | null; // Datos completos del estudiante (para revertir)
+  timestamp: string;
+  reverted: boolean;
+}
+

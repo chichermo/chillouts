@@ -21,6 +21,16 @@ export default function StudentsPage() {
       setStudents(data.students);
     };
     loadStudents();
+    
+    // Escuchar eventos de actualización desde otras páginas (ej: auditoría)
+    const handleStudentsUpdate = () => {
+      loadStudents();
+    };
+    window.addEventListener('studentsUpdated', handleStudentsUpdate);
+    
+    return () => {
+      window.removeEventListener('studentsUpdated', handleStudentsUpdate);
+    };
   }, []);
 
   const klassen = [...new Set(students.map(s => s.klas))].sort();
@@ -103,8 +113,12 @@ export default function StudentsPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm('Weet je zeker dat je deze student wilt verwijderen?')) {
-      await deleteStudent(id);
-      setStudents(students.filter(s => s.id !== id));
+      try {
+        await deleteStudent(id);
+        setStudents(students.filter(s => s.id !== id));
+      } catch (error: any) {
+        alert(`Fout bij verwijderen: ${error.message}`);
+      }
     }
   };
 

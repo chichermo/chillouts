@@ -8,5 +8,7 @@ export {
   deleteStudent,
   saveDailyRecord,
   getDailyRecord,
+  getAuditLogs,
+  revertAuditLog,
 } from './storage-db';
 
