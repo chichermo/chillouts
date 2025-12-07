@@ -80,13 +80,21 @@ async function saveToSupabase(data: AppData): Promise<boolean> {
 
 // Funciones principales que usan Supabase si está disponible, sino localStorage
 export async function loadData(): Promise<AppData> {
-  // Intentar cargar de Supabase primero
+  // Intentar cargar de Supabase primero si está habilitado
   if (isSupabaseEnabled) {
-    const supabaseData = await loadFromSupabase();
-    if (supabaseData) return supabaseData;
+    try {
+      const supabaseData = await loadFromSupabase();
+      // Si Supabase devuelve datos (aunque estén vacíos), usarlos
+      // Esto asegura que en producción siempre use Supabase
+      if (supabaseData !== null) {
+        return supabaseData;
+      }
+    } catch (error) {
+      console.error('Error loading from Supabase, falling back to localStorage:', error);
+    }
   }
 
-  // Fallback a localStorage
+  // Fallback a localStorage (solo en desarrollo o si Supabase falla)
   if (typeof window === 'undefined') {
     return {
       students: [],
