@@ -137,8 +137,8 @@ export default function StudentsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-white/60 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/60 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -146,7 +146,7 @@ export default function StudentsPage() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
             Beheer van Studenten
           </h1>
-          <p className="text-sm text-brand-black/80">
+          <p className="text-sm text-brand-black/90">
             Wijzig studenten hier. De dagelijkse bladen worden automatisch bijgewerkt.
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function StudentsPage() {
               value={newStudent.name}
               onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
               onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
-              className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+              className="px-3 py-2 text-sm bg-white/60 border border-brand-gray/30 rounded-md text-brand-black placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
             />
             <div className="relative">
               {showNewKlasInput ? (
@@ -190,7 +190,7 @@ export default function StudentsPage() {
                         setNewStudent({ ...newStudent, klas: '' });
                       }
                     }}
-                    className="flex-1 px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                    className="flex-1 px-3 py-2 text-sm bg-white/60 border border-brand-gray/30 rounded-md text-brand-black placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
                     autoFocus
                   />
                   <button
@@ -210,7 +210,7 @@ export default function StudentsPage() {
                 <select
                   value={newStudent.klas || ''}
                   onChange={(e) => handleKlasSelect(e.target.value)}
-                  className="w-full px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                  className="w-full px-3 py-2 text-sm bg-white/60 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
                 >
                   <option value="" className="bg-brand-gray">Selecteer klas...</option>
                   {klassen.map(klas => (
@@ -228,7 +228,7 @@ export default function StudentsPage() {
             <select
               value={newStudent.status}
               onChange={(e) => setNewStudent({ ...newStudent, status: e.target.value as 'Actief' | 'Inactief' })} 
-              className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+              className="px-3 py-2 text-sm bg-white/60 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
             >
               <option value="Actief" className="bg-brand-gray">Actief</option>
               <option value="Inactief" className="bg-brand-gray">Inactief</option>
@@ -248,7 +248,7 @@ export default function StudentsPage() {
           <select
             value={filterKlas}
             onChange={(e) => setFilterKlas(e.target.value)}
-            className="px-3 py-1.5 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+            className="px-3 py-1.5 text-sm bg-white/60 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
           >
             <option value="" className="bg-brand-gray">Alle klassen</option>
             {klassen.map(klas => (
@@ -266,7 +266,7 @@ export default function StudentsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/20 bg-brand-blue/30">
+                  <tr className="border-b border-white/20 bg-white/60">
                     <th className="text-left px-3 py-2 font-semibold text-brand-black">Naam</th>
                     <th className="text-left px-3 py-2 font-semibold text-brand-black">Klas</th>
                     <th className="text-left px-3 py-2 font-semibold text-brand-black">Status</th>
@@ -275,14 +275,14 @@ export default function StudentsPage() {
                 </thead>
                 <tbody>
                   {groupedStudents[klas].map(student => (
-                    <tr key={student.id} className="border-b border-white/10 hover:bg-brand-blue/30 transition-colors">
+                    <tr key={student.id} className="border-b border-white/10 hover:bg-white/60 transition-colors">
                       <td className="px-3 py-2 font-medium text-brand-black">
                         {editingId === student.id ? (
                           <input
                             type="text"
                             value={student.name}
                             onChange={(e) => handleUpdate(student.id, { name: e.target.value })}
-                            className="w-full px-2 py-1 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
+                            className="w-full px-2 py-1 text-sm bg-white/60 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
                             autoFocus
                           />
                         ) : (
@@ -294,7 +294,7 @@ export default function StudentsPage() {
                           <select
                             value={student.klas}
                             onChange={(e) => handleUpdate(student.id, { klas: e.target.value })}
-                            className="w-full px-2 py-1 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
+                            className="w-full px-2 py-1 text-sm bg-white/60 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
                           >
                             {klassen.map(klas => (
                               <option key={klas} value={klas} className="bg-brand-gray">{klas}</option>
@@ -309,7 +309,7 @@ export default function StudentsPage() {
                           <select
                             value={student.status}
                             onChange={(e) => handleUpdate(student.id, { status: e.target.value as 'Actief' | 'Inactief' })}
-                            className="px-2 py-1 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
+                            className="px-2 py-1 text-sm bg-white/60 border border-brand-gray/30 rounded text-brand-black focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
                           >
                             <option value="Actief" className="bg-brand-gray">Actief</option>
                             <option value="Inactief" className="bg-brand-gray">Inactief</option>
@@ -320,7 +320,7 @@ export default function StudentsPage() {
                             className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                               student.status === 'Actief' 
                                 ? 'bg-brand-green-500/30 text-brand-green-200 hover:bg-brand-green-500/40' 
-                                : 'bg-white/20 text-brand-black/80 hover:bg-white/30'
+                                : 'bg-white/20 text-brand-black/90 hover:bg-white/30'
                             }`}
                           >
                             {student.status}
@@ -363,7 +363,7 @@ export default function StudentsPage() {
         ))}
 
         {Object.keys(groupedStudents).length === 0 && (
-          <div className="glass-effect p-4 rounded-lg shadow-sm text-center text-sm text-brand-black/70 border border-brand-gray/30">
+          <div className="glass-effect p-4 rounded-lg shadow-sm text-center text-sm text-brand-black/85 border border-brand-gray/30">
             Geen studenten gevonden. Voeg een student toe om te beginnen.
           </div>
         )}

@@ -114,8 +114,8 @@ export default function WeeklyPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-white/60 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/60 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-6 relative z-10">
@@ -133,7 +133,7 @@ export default function WeeklyPage() {
               <select
                 value={selectedWeek}
                 onChange={(e) => handleWeekChange(parseInt(e.target.value))}
-                className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md w-full text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none"
+                className="px-3 py-2 text-sm bg-white/60 border border-brand-gray/30 rounded-md w-full text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none"
               >
                 {weeks.map(week => (
                   <option key={week} value={week} className="bg-blue-900">
@@ -141,7 +141,7 @@ export default function WeeklyPage() {
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-sm text-brand-black/80">
+              <p className="mt-2 text-sm text-brand-black/90">
                 Week {selectedWeek} ({weekStartStr})
               </p>
             </div>
@@ -155,7 +155,7 @@ export default function WeeklyPage() {
                   className={`flex-1 px-4 py-2 text-sm rounded-md font-medium transition-colors ${
                     viewMode === 'klas'
                       ? 'bg-gradient-to-r from-white to-blue-100 text-blue-900'
-                      : 'bg-brand-blue/30 text-brand-black hover:bg-white/20'
+                      : 'bg-white/60 text-brand-black hover:bg-white/20'
                   }`}
                 >
                   Per Klas
@@ -165,7 +165,7 @@ export default function WeeklyPage() {
                   className={`flex-1 px-4 py-2 text-sm rounded-md font-medium transition-colors ${
                     viewMode === 'student'
                       ? 'bg-gradient-to-r from-white to-blue-100 text-blue-900'
-                      : 'bg-brand-blue/30 text-brand-black hover:bg-white/20'
+                      : 'bg-white/60 text-brand-black hover:bg-white/20'
                   }`}
                 >
                   Per Student
@@ -184,7 +184,7 @@ export default function WeeklyPage() {
           
           <table className="w-full border-collapse min-w-[800px] text-sm">
             <thead>
-              <tr className="bg-brand-blue/30">
+              <tr className="bg-white/60">
                 <th className="border border-brand-gray/30 px-2 py-2 text-left font-semibold text-brand-black">Klas</th>
                 {weekDays.map(day => (
                   <th key={day} className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-xs text-brand-black">{day}</th>
@@ -201,20 +201,20 @@ export default function WeeklyPage() {
                 const totals = klasTotals[klas];
                 
                 return (
-                  <tr key={klas} className="hover:bg-brand-blue/30">
+                  <tr key={klas} className="hover:bg-white/60">
                     <td className="border border-brand-gray/30 px-2 py-2 font-semibold text-brand-black">{klas}</td>
                     {weekDays.map(day => {
                       const dayData = klasData[day] || { total: 0, vr: 0, vl: 0 };
                       return (
                         <td key={day} className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                           <div className="font-medium">{dayData.total}</div>
-                          <div className="text-xs text-brand-black/70">
+                          <div className="text-xs text-brand-black/85">
                             {dayData.vr}/{dayData.vl}
                           </div>
                         </td>
                       );
                     })}
-                    <td className="border border-brand-gray/30 px-2 py-2 text-center font-semibold bg-brand-blue/30 text-brand-black">
+                    <td className="border border-brand-gray/30 px-2 py-2 text-center font-semibold bg-white/60 text-brand-black">
                       {totals.total}
                     </td>
                     <td className="border border-brand-gray/30 px-2 py-2 text-center bg-blue-500/20 text-brand-black">
@@ -299,7 +299,7 @@ export default function WeeklyPage() {
                 </h3>
                 <table className="w-full border-collapse min-w-[800px] text-sm mb-4">
                   <thead>
-                    <tr className="bg-brand-blue/30">
+                    <tr className="bg-white/60">
                       <th className="border border-brand-gray/30 px-2 py-2 text-left font-semibold text-brand-black">Student</th>
                       {weekDays.map(day => (
                         <th key={day} className="border border-brand-gray/30 px-2 py-2 text-center font-semibold text-xs text-brand-black">{day}</th>
@@ -312,20 +312,20 @@ export default function WeeklyPage() {
                   </thead>
                   <tbody>
                     {studentTotalsForKlas.map(({ student, totals, weekTotal, weekVR, weekVL, avg }) => (
-                      <tr key={student.id} className="hover:bg-brand-blue/30">
+                      <tr key={student.id} className="hover:bg-white/60">
                         <td className="border border-brand-gray/30 px-2 py-2 font-medium text-brand-black">{student.name}</td>
                         {weekDays.map(day => {
                           const dayData = totals[day] || { total: 0, vr: 0, vl: 0 };
                           return (
                             <td key={day} className="border border-brand-gray/30 px-2 py-2 text-center text-brand-black">
                               <div className="font-medium">{dayData.total}</div>
-                              <div className="text-xs text-brand-black/70">
+                              <div className="text-xs text-brand-black/85">
                                 {dayData.vr}/{dayData.vl}
                               </div>
                             </td>
                           );
                         })}
-                        <td className="border border-brand-gray/30 px-2 py-2 text-center font-semibold bg-brand-blue/30 text-brand-black">
+                        <td className="border border-brand-gray/30 px-2 py-2 text-center font-semibold bg-white/60 text-brand-black">
                           {weekTotal}
                         </td>
                         <td className="border border-brand-gray/30 px-2 py-2 text-center bg-blue-500/20 text-brand-black">

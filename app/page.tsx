@@ -85,7 +85,7 @@ export default function Home() {
               </h1>
             </div>
           </div>
-          <p className="text-subtitle text-brand-black/90 max-w-3xl mx-auto font-medium">
+          <p className="text-subtitle text-brand-black max-w-3xl mx-auto font-medium">
             Beheer en volg chill-outs voor alle studenten op een eenvoudige en efficiënte manier
           </p>
         </div>
@@ -103,7 +103,7 @@ export default function Home() {
                     </svg>
                   </div>
                 </div>
-                <p className="text-xs font-semibold text-brand-black/70 mb-1 uppercase tracking-wider">Studenten</p>
+                <p className="text-xs font-semibold text-brand-black/80 mb-1 uppercase tracking-wider">Studenten</p>
                 <p className="text-3xl font-black text-brand-black mb-1">{mounted ? totalStudents : '...'}</p>
                 <p className="text-xs text-brand-blue font-medium">{mounted ? `${activeStudents} actief` : ''}</p>
               </div>
@@ -121,7 +121,7 @@ export default function Home() {
                     </svg>
                   </div>
                 </div>
-                <p className="text-xs font-semibold text-brand-black/70 mb-1 uppercase tracking-wider">Dagen</p>
+                <p className="text-xs font-semibold text-brand-black/80 mb-1 uppercase tracking-wider">Dagen</p>
                 <p className="text-3xl font-black text-brand-black mb-1">{mounted ? totalDays : '...'}</p>
                 <p className="text-xs text-brand-blue-200 font-medium">geregistreerd</p>
               </div>
@@ -139,9 +139,9 @@ export default function Home() {
                     </svg>
                   </div>
                 </div>
-                <p className="text-xs font-semibold text-brand-black/70 mb-1 uppercase tracking-wider">Totaal</p>
+                <p className="text-xs font-semibold text-brand-black/80 mb-1 uppercase tracking-wider">Totaal</p>
                 <p className="text-3xl font-black text-brand-black mb-1">{mounted ? totalChillOuts : '...'}</p>
-                <p className="text-xs text-brand-black/80 font-medium">chill-outs</p>
+                <p className="text-xs text-brand-black/90 font-medium">chill-outs</p>
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function Home() {
                     </svg>
                   </div>
                 </div>
-                <p className="text-xs font-semibold text-brand-black/70 mb-1 uppercase tracking-wider">Vandaag</p>
+                <p className="text-xs font-semibold text-brand-black/80 mb-1 uppercase tracking-wider">Vandaag</p>
                 <p className="text-3xl font-black text-brand-black mb-1">{mounted ? todayChillOuts : '...'}</p>
                 <p className="text-xs text-brand-green-200 font-medium">chill-outs</p>
               </div>
@@ -189,7 +189,7 @@ export default function Home() {
                 <h2 className="text-2xl font-black text-brand-black mb-3 group-hover:text-blue-100 transition-colors">
                   Beheer Studenten
                 </h2>
-                <p className="text-brand-black/80 text-sm leading-relaxed">
+                <p className="text-brand-black/90 text-sm leading-relaxed">
                   Wijzig studenten hier. De dagelijkse bladen worden automatisch bijgewerkt.
                 </p>
               </div>
@@ -216,7 +216,7 @@ export default function Home() {
                 <h2 className="text-2xl font-black text-brand-black mb-3 group-hover:text-brand-blue-100 transition-colors">
                   Vandaag ({dayName})
                 </h2>
-                <p className="text-brand-black/80 text-sm leading-relaxed">
+                <p className="text-brand-black/90 text-sm leading-relaxed">
                   Registreer chill-outs voor vandaag snel en eenvoudig.
                 </p>
               </div>
@@ -243,7 +243,7 @@ export default function Home() {
                 <h2 className="text-2xl font-black text-brand-black mb-3 group-hover:text-brand-black transition-colors">
                   Dagelijks Overzicht
                 </h2>
-                <p className="text-brand-black/80 text-sm leading-relaxed">
+                <p className="text-brand-black/90 text-sm leading-relaxed">
                   Bekijk en bewerk registraties per dag met overzichtelijke tabellen.
                 </p>
               </div>
@@ -270,7 +270,7 @@ export default function Home() {
                 <h2 className="text-2xl font-black text-brand-black mb-3 group-hover:text-brand-green-100 transition-colors">
                   Weekoverzicht
                 </h2>
-                <p className="text-brand-black/80 text-sm leading-relaxed">
+                <p className="text-brand-black/90 text-sm leading-relaxed">
                   Bekijk totalen per week en klas met gedetailleerde statistieken.
                 </p>
               </div>
@@ -297,7 +297,7 @@ export default function Home() {
                 <h2 className="text-2xl font-black text-brand-black mb-3 group-hover:text-blue-100 transition-colors">
                   Statistieken
                 </h2>
-                <p className="text-brand-black/80 text-sm leading-relaxed">
+                <p className="text-brand-black/90 text-sm leading-relaxed">
                   Bekijk gedetailleerde statistieken en trends over alle chill-outs.
                 </p>
               </div>

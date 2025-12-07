@@ -155,8 +155,8 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-white/60 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/60 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-6 relative z-10">
@@ -164,7 +164,7 @@ export default function StatsPage() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
             Statistieken
           </h1>
-          <p className="text-sm text-brand-black/80">Overzicht van alle chill-outs en trends</p>
+          <p className="text-sm text-brand-black/90">Overzicht van alle chill-outs en trends</p>
         </div>
 
         {/* Estadísticas principales */}
@@ -172,7 +172,7 @@ export default function StatsPage() {
           <div className="glass-effect rounded-lg shadow-md p-4 border-t-3 border-white/50">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-brand-black/70">Totaal Chill-outs</p>
+                <p className="text-xs font-medium text-brand-black/85">Totaal Chill-outs</p>
                 <p className="text-2xl font-bold text-brand-black">{stats.totalChillOuts}</p>
               </div>
               <div className="bg-white/20 rounded-full p-2">
@@ -185,7 +185,7 @@ export default function StatsPage() {
           <div className="glass-effect rounded-lg shadow-md p-4 border-t-3 border-blue-400/50">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-brand-black/70">Totaal VR</p>
+                <p className="text-xs font-medium text-brand-black/85">Totaal VR</p>
                 <p className="text-2xl font-bold text-blue-200">{stats.totalVR}</p>
                 <p className="text-xs text-brand-black/60 mt-0.5">
                   {stats.totalChillOuts > 0 ? Math.round((stats.totalVR / stats.totalChillOuts) * 100) : 0}%
@@ -201,7 +201,7 @@ export default function StatsPage() {
           <div className="glass-effect rounded-lg shadow-md p-4 border-t-3 border-emerald-400/50">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-brand-black/70">Totaal VL</p>
+                <p className="text-xs font-medium text-brand-black/85">Totaal VL</p>
                 <p className="text-2xl font-bold text-emerald-200">{stats.totalVL}</p>
                 <p className="text-xs text-brand-black/60 mt-0.5">
                   {stats.totalChillOuts > 0 ? Math.round((stats.totalVL / stats.totalChillOuts) * 100) : 0}%
@@ -244,7 +244,7 @@ export default function StatsPage() {
                         />
                       </div>
                     </div>
-                    <div className="flex gap-4 mt-1 text-xs text-brand-black/80">
+                    <div className="flex gap-4 mt-1 text-xs text-brand-black/90">
                       <span>VR: {hourData.vr}</span>
                       <span>VL: {hourData.vl}</span>
                     </div>
@@ -281,7 +281,7 @@ export default function StatsPage() {
                         />
                       </div>
                     </div>
-                    <div className="flex gap-4 mt-1 text-xs text-brand-black/80">
+                    <div className="flex gap-4 mt-1 text-xs text-brand-black/90">
                       <span>VR: {klasData.vr}</span>
                       <span>VL: {klasData.vl}</span>
                     </div>
@@ -298,8 +298,8 @@ export default function StatsPage() {
             <h2 className="text-lg font-bold mb-3 text-brand-black">Recente Dagen</h2>
             <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
               {stats.recentDays.map(day => (
-                <div key={day.date} className="text-center p-3 bg-brand-blue/30 rounded-md">
-                  <p className="text-xs font-medium text-brand-black/80 mb-1">
+                <div key={day.date} className="text-center p-3 bg-white/60 rounded-md">
+                  <p className="text-xs font-medium text-brand-black/90 mb-1">
                     {formatDateDisplay(new Date(day.date)).split(' ')[0]}
                   </p>
                   <p className="text-xl font-bold text-brand-black">{day.total}</p>
@@ -320,7 +320,7 @@ export default function StatsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/20 bg-brand-blue/30">
+                  <tr className="border-b border-white/20 bg-white/60">
                     <th className="px-3 py-2 text-left font-semibold text-brand-black">Naam</th>
                     <th className="px-3 py-2 text-left font-semibold text-brand-black">Klas</th>
                     <th className="px-3 py-2 text-center font-semibold text-brand-black">Totaal</th>
@@ -343,7 +343,7 @@ export default function StatsPage() {
                       const student = stats.byStudent[studentId];
                       const genericCount = student.total - student.vr - student.vl;
                       return (
-                        <tr key={studentId} className="border-b border-white/10 hover:bg-brand-blue/30 transition-colors">
+                        <tr key={studentId} className="border-b border-white/10 hover:bg-white/60 transition-colors">
                           <td className="px-3 py-2 font-medium text-brand-black">{student.name}</td>
                           <td className="px-3 py-2">
                             <span className="px-2 py-0.5 bg-white/20 rounded text-xs text-brand-black">{student.klas}</span>
@@ -351,7 +351,7 @@ export default function StatsPage() {
                           <td className="px-3 py-2 text-center font-semibold text-brand-black">{student.total}</td>
                           <td className="px-3 py-2 text-center text-blue-200 font-medium">{student.vr}</td>
                           <td className="px-3 py-2 text-center text-emerald-200 font-medium">{student.vl}</td>
-                          <td className="px-3 py-2 text-center text-brand-black/80">{genericCount}</td>
+                          <td className="px-3 py-2 text-center text-brand-black/90">{genericCount}</td>
                         </tr>
                       );
                     })}

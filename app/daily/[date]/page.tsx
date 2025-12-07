@@ -215,8 +215,8 @@ export default function DailyPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-white/60 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/60 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -227,7 +227,7 @@ export default function DailyPage() {
               <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
                 {displayDate}
               </h1>
-              <p className="text-brand-black/80">Registreer chill-outs voor deze dag</p>
+              <p className="text-brand-black/90">Registreer chill-outs voor deze dag</p>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -258,7 +258,7 @@ export default function DailyPage() {
               <select
                 value={filterKlas}
                 onChange={(e) => setFilterKlas(e.target.value)}
-                className="px-4 py-2 bg-brand-blue/30 border-2 border-brand-gray/30 rounded-lg text-brand-black focus:border-white/50 focus:outline-none transition-colors"
+                className="px-4 py-2 bg-white/60 border-2 border-brand-gray/30 rounded-lg text-brand-black focus:border-white/50 focus:outline-none transition-colors"
               >
                 <option value="" className="bg-blue-900">Alle klassen</option>
                 {klassen.map(klas => (
@@ -275,7 +275,7 @@ export default function DailyPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-brand-blue/30">
+                <tr className="bg-white/60">
                   <th className="border-2 border-brand-gray/30 p-3 font-semibold text-brand-black"></th>
                   {[1, 2, 3, 4, 5, 6, 7].map(hour => (
                     <th key={hour} className="border-2 border-brand-gray/30 p-3 text-center font-semibold text-brand-black">{hour}</th>
@@ -283,7 +283,7 @@ export default function DailyPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-brand-blue/30 font-semibold">
+                <tr className="bg-white/60 font-semibold">
                   <td className="border-2 border-brand-gray/30 p-3 text-brand-black">Chill-outs</td>
                   {[1, 2, 3, 4, 5, 6, 7].map(hour => (
                     <td key={hour} className="border-2 border-brand-gray/30 p-3 text-center text-lg text-brand-black">
@@ -326,7 +326,7 @@ export default function DailyPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-xs">
                       <thead>
-                        <tr className="bg-brand-blue/30">
+                        <tr className="bg-white/60">
                           <th className="border border-brand-gray/30 px-2 py-1 text-left font-semibold text-xs text-brand-black">Naam?</th>
                           {[1, 2, 3, 4, 5, 6, 7].map(hour => (
                             <th key={hour} className="border border-brand-gray/30 px-1 py-1 text-center font-semibold text-xs text-brand-black">{hour}</th>
@@ -335,7 +335,7 @@ export default function DailyPage() {
                       </thead>
                       <tbody>
                         {klasStudents.map(student => (
-                          <tr key={student.id} className="hover:bg-brand-blue/30 transition-colors">
+                          <tr key={student.id} className="hover:bg-white/60 transition-colors">
                             <td className="border border-brand-gray/30 px-2 py-1 font-medium text-xs text-brand-black">{student.name}</td>
                             {[1, 2, 3, 4, 5, 6, 7].map(hour => {
                               const vrCount = getChillOutCount(student.id, hour, 'VR');
@@ -347,7 +347,7 @@ export default function DailyPage() {
                                 <td 
                                   key={hour} 
                                   className={`border border-brand-gray/30 px-0.5 py-0.5 transition-all ${
-                                    selectedHour === hour ? 'bg-brand-blue/30 border-blue-400/50' : 'hover:bg-brand-blue/30'
+                                    selectedHour === hour ? 'bg-white/60 border-blue-400/50' : 'hover:bg-white/60'
                                   }`}
                                   onMouseEnter={() => setSelectedHour(hour)}
                                   onMouseLeave={() => setSelectedHour(null)}
@@ -411,7 +411,7 @@ export default function DailyPage() {
                                       
                                       {/* Generieke chill-outs rij - Tot 3 mogelijk, maar respecteer maximum totaal van 3 */}
                                       <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-brand-black/70 w-4 text-right">CO</span>
+                                        <span className="text-[9px] font-semibold text-brand-black/85 w-4 text-right">CO</span>
                                         {[1, 2, 3].map(count => {
                                           const genericCount = getGenericChillOutCount(student.id, hour);
                                           const isChecked = genericCount >= count;
@@ -445,7 +445,7 @@ export default function DailyPage() {
                                           ? 'bg-red-500/30 text-red-200' 
                                           : total >= 2
                                           ? 'bg-yellow-500/30 text-yellow-200'
-                                          : 'bg-white/20 text-brand-black/80'
+                                          : 'bg-white/20 text-brand-black/90'
                                       }`}>
                                         {total}/3
                                       </span>
@@ -476,7 +476,7 @@ export default function DailyPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-xs">
                       <thead>
-                        <tr className="bg-brand-blue/30">
+                        <tr className="bg-white/60">
                           <th className="border border-brand-gray/30 px-2 py-1 text-left font-semibold text-xs text-brand-black">Naam?</th>
                           {[1, 2, 3, 4, 5, 6, 7].map(hour => (
                             <th key={hour} className="border border-brand-gray/30 px-1 py-1 text-center font-semibold text-xs text-brand-black">{hour}</th>
@@ -485,7 +485,7 @@ export default function DailyPage() {
                       </thead>
                       <tbody>
                         {klasStudents.map(student => (
-                          <tr key={student.id} className="hover:bg-brand-blue/30 transition-colors">
+                          <tr key={student.id} className="hover:bg-white/60 transition-colors">
                             <td className="border border-brand-gray/30 px-2 py-1 font-medium text-xs text-brand-black">{student.name}</td>
                             {[1, 2, 3, 4, 5, 6, 7].map(hour => {
                               const vrCount = getChillOutCount(student.id, hour, 'VR');
@@ -497,7 +497,7 @@ export default function DailyPage() {
                                 <td 
                                   key={hour} 
                                   className={`border border-brand-gray/30 px-0.5 py-0.5 transition-all ${
-                                    selectedHour === hour ? 'bg-brand-blue/30 border-blue-400/50' : 'hover:bg-brand-blue/30'
+                                    selectedHour === hour ? 'bg-white/60 border-blue-400/50' : 'hover:bg-white/60'
                                   }`}
                                   onMouseEnter={() => setSelectedHour(hour)}
                                   onMouseLeave={() => setSelectedHour(null)}
@@ -561,7 +561,7 @@ export default function DailyPage() {
                                       
                                       {/* Generieke chill-outs rij - Tot 3 mogelijk, maar respecteer maximum totaal van 3 */}
                                       <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-brand-black/70 w-4 text-right">CO</span>
+                                        <span className="text-[9px] font-semibold text-brand-black/85 w-4 text-right">CO</span>
                                         {[1, 2, 3].map(count => {
                                           const genericCount = getGenericChillOutCount(student.id, hour);
                                           const isChecked = genericCount >= count;
@@ -595,7 +595,7 @@ export default function DailyPage() {
                                           ? 'bg-red-500/30 text-red-200' 
                                           : total >= 2
                                           ? 'bg-yellow-500/30 text-yellow-200'
-                                          : 'bg-white/20 text-brand-black/80'
+                                          : 'bg-white/20 text-brand-black/90'
                                       }`}>
                                         {total}/3
                                       </span>

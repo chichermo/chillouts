@@ -66,7 +66,7 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="bg-brand-gray shadow-md border-b border-brand-gray/30 sticky top-0 z-50 backdrop-blur-lg bg-opacity-95">
+    <nav className="bg-white shadow-md border-b border-brand-gray/20 sticky top-0 z-50 backdrop-blur-lg bg-opacity-98">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-18">
           {/* Logo */}
@@ -101,13 +101,13 @@ export default function Navigation() {
                   className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 relative group overflow-hidden ${
                     isActive
                       ? 'bg-brand-blue text-brand-black shadow-lg scale-105'
-                      : 'text-brand-black/70 hover:text-brand-black hover:bg-brand-blue/30'
+                      : 'text-brand-black/85 hover:text-brand-black hover:bg-brand-blue/20'
                   }`}
                 >
                   {isActive && (
                     <div className="absolute inset-0 bg-brand-blue/20"></div>
                   )}
-                  <span className={`relative z-10 ${isActive ? 'text-brand-black' : 'text-brand-black/70 group-hover:text-brand-black'}`}>
+                  <span className={`relative z-10 ${isActive ? 'text-brand-black' : 'text-brand-black/85 group-hover:text-brand-black'}`}>
                     {link.icon}
                   </span>
                   <span className="relative z-10 text-body">{link.label}</span>
@@ -122,7 +122,7 @@ export default function Navigation() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2.5 rounded-xl text-brand-black/70 hover:bg-brand-blue/30 hover:text-brand-black transition-all duration-200"
+            className="md:hidden p-2.5 rounded-xl text-brand-black/85 hover:bg-brand-blue/30 hover:text-brand-black transition-all duration-200"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -139,7 +139,7 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-brand-gray/30 py-3 bg-brand-gray/95 backdrop-blur-lg">
+          <div className="md:hidden border-t border-brand-gray/20 py-3 bg-white/98 backdrop-blur-lg">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
               return (
@@ -150,10 +150,10 @@ export default function Navigation() {
                   className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 mx-2 mb-1 ${
                     isActive
                       ? 'bg-brand-blue text-brand-black shadow-lg'
-                      : 'text-brand-black/70 hover:bg-brand-blue/30 hover:text-brand-black'
+                      : 'text-brand-black/85 hover:bg-brand-blue/20 hover:text-brand-black'
                   }`}
                 >
-                  <span className={`${isActive ? 'text-brand-black' : 'text-brand-black/70'}`}>
+                  <span className={`${isActive ? 'text-brand-black' : 'text-brand-black/85'}`}>
                     {link.icon}
                   </span>
                   <span className="text-body">{link.label}</span>

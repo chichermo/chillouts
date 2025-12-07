@@ -76,8 +76,8 @@ export default function DailyListPage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-white/60 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/60 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl"></div>
       </div>
 
@@ -105,7 +105,7 @@ export default function DailyListPage() {
                 type="date"
                 value={customDate}
                 onChange={(e) => setCustomDate(e.target.value)}
-                className="px-3 py-2 text-sm bg-brand-blue/30 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                className="px-3 py-2 text-sm bg-white/60 border border-brand-gray/30 rounded-md text-brand-black focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
                 min={formatDate(new Date(new Date().getFullYear(), 0, 1))} // Año actual desde enero
                 max={formatDate(new Date(new Date().getFullYear() + 1, 11, 31))} // Hasta fin del próximo año
               />
@@ -144,7 +144,7 @@ export default function DailyListPage() {
                     // Ir al primer día de la próxima semana
                     handleDateSelect(nextWeekDates[0]);
                   }}
-                  className="px-3 py-1.5 text-sm bg-brand-blue/30 hover:bg-white/20 rounded-lg font-medium transition-colors text-brand-black border border-brand-gray/30"
+                  className="px-3 py-1.5 text-sm bg-white/60 hover:bg-white/20 rounded-lg font-medium transition-colors text-brand-black border border-brand-gray/30"
                 >
                   Volgende Week →
                 </button>
@@ -175,13 +175,13 @@ export default function DailyListPage() {
                           : 'border-white/20 hover:border-brand-gray/30'
                       }`}>
                         <div className={`font-black text-base mb-1 ${
-                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black' : 'text-brand-black/80'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black' : 'text-brand-black/90'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[0]}
                         </div>
-                        <div className="text-xs text-brand-black/70 mb-2 font-medium">{getDayName(dateObj)}</div>
+                        <div className="text-xs text-brand-black/85 mb-2 font-medium">{getDayName(dateObj)}</div>
                         <div className={`text-xs font-bold mb-1 ${
-                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black/90' : 'text-brand-black/70'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black/90' : 'text-brand-black/85'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[1]}
                         </div>
@@ -252,13 +252,13 @@ export default function DailyListPage() {
                           : 'border-white/20 hover:border-brand-gray/30'
                       }`}>
                         <div className={`font-black text-sm mb-1 ${
-                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black' : isPast ? 'text-brand-black/60' : 'text-brand-black/80'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black' : isPast ? 'text-brand-black/60' : 'text-brand-black/90'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[0]}
                         </div>
-                        <div className="text-xs text-brand-black/70 mb-1 font-medium">{getDayName(dateObj)}</div>
+                        <div className="text-xs text-brand-black/85 mb-1 font-medium">{getDayName(dateObj)}</div>
                         <div className={`text-xs font-bold mb-1 ${
-                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black/90' : isPast ? 'text-brand-black/50' : 'text-brand-black/70'
+                          isToday ? 'text-brand-black' : hasData ? 'text-brand-black/90' : isPast ? 'text-brand-black/50' : 'text-brand-black/85'
                         }`}>
                           {formatDateDisplay(dateObj).split(' ')[1]}
                         </div>
@@ -317,8 +317,8 @@ export default function DailyListPage() {
                           <div className={`font-black text-sm mb-1 ${isToday ? 'text-brand-black' : 'text-brand-black/90'}`}>
                             {formatDateDisplay(dateObj).split(' ')[0]}
                           </div>
-                          <div className="text-xs text-brand-black/70 mb-1 font-medium">{getDayName(dateObj)}</div>
-                          <div className={`text-xs font-bold ${isToday ? 'text-brand-black' : 'text-brand-black/80'}`}>
+                          <div className="text-xs text-brand-black/85 mb-1 font-medium">{getDayName(dateObj)}</div>
+                          <div className={`text-xs font-bold ${isToday ? 'text-brand-black' : 'text-brand-black/90'}`}>
                             {formatDateDisplay(dateObj).split(' ')[1]}
                           </div>
                           {isToday && (
@@ -347,7 +347,7 @@ export default function DailyListPage() {
                 </svg>
               </div>
               <p className="text-brand-black font-medium text-lg mb-2">Geen dagelijkse registraties gevonden</p>
-              <p className="text-brand-black/70 text-sm">Ga naar een specifieke dag om te beginnen</p>
+              <p className="text-brand-black/85 text-sm">Ga naar een specifieke dag om te beginnen</p>
             </div>
           </div>
         )}

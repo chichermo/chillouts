@@ -85,8 +85,8 @@ export default function AuditPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-brand-blue/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-brand-blue/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-white/60 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/60 rounded-full blur-3xl"></div>
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
@@ -94,7 +94,7 @@ export default function AuditPage() {
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
             Audit Logboek
           </h1>
-          <p className="text-sm text-brand-black/80">
+          <p className="text-sm text-brand-black/90">
             Overzicht van alle wijzigingen aan studenten. Je kunt acties terugdraaien indien nodig.
           </p>
         </div>
@@ -105,13 +105,13 @@ export default function AuditPage() {
           </div>
         ) : logs.length === 0 ? (
           <div className="glass-effect p-8 rounded-lg shadow-md border border-brand-gray/30 text-center">
-            <p className="text-brand-black/70">Geen audit logs gevonden.</p>
+            <p className="text-brand-black/85">Geen audit logs gevonden.</p>
           </div>
         ) : (
           <div className="glass-effect p-4 rounded-lg shadow-md border border-brand-gray/30 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/20 bg-brand-blue/30">
+                <tr className="border-b border-white/20 bg-white/60">
                   <th className="text-left px-3 py-2 font-semibold text-brand-black">Datum/Tijd</th>
                   <th className="text-left px-3 py-2 font-semibold text-brand-black">Actie</th>
                   <th className="text-left px-3 py-2 font-semibold text-brand-black">Student</th>
@@ -124,7 +124,7 @@ export default function AuditPage() {
                 {logs.map((log) => (
                   <tr
                     key={log.id}
-                    className={`border-b border-white/10 hover:bg-brand-blue/30 transition-colors ${
+                    className={`border-b border-white/10 hover:bg-white/60 transition-colors ${
                       log.reverted ? 'opacity-50' : ''
                     }`}
                   >
