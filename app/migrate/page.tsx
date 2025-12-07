@@ -45,10 +45,12 @@ export default function MigratePage() {
         setStatus(`📝 Migrando ${data.students.length} estudiantes...`);
         let successCount = 0;
 
+        // Usar PATCH directamente para hacer UPSERT (insertar o actualizar)
         for (const student of data.students) {
           try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/students`, {
-              method: 'POST',
+            // Usar PATCH con el id en la query para hacer UPSERT
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/students?id=eq.${student.id}`, {
+              method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
                 'apikey': SUPABASE_KEY,
@@ -59,14 +61,14 @@ export default function MigratePage() {
             });
 
             if (response.ok) {
-              successCount++;
-              setProgress(prev => ({ ...prev, students: successCount }));
-            } else {
-              const errorText = await response.text();
-              if (errorText.includes('duplicate') || response.status === 409) {
-                // Intentar actualizar
-                const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/students?id=eq.${student.id}`, {
-                  method: 'PATCH',
+              // Si el PATCH no encontró el registro, intentar POST
+              if (response.status === 204 || response.status === 200) {
+                successCount++;
+                setProgress(prev => ({ ...prev, students: successCount }));
+              } else {
+                // Intentar POST si el PATCH no funcionó
+                const postResponse = await fetch(`${SUPABASE_URL}/rest/v1/students`, {
+                  method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
                     'apikey': SUPABASE_KEY,
@@ -75,13 +77,34 @@ export default function MigratePage() {
                   },
                   body: JSON.stringify(student)
                 });
-                if (updateResponse.ok) {
+                if (postResponse.ok || postResponse.status === 201) {
                   successCount++;
                   setProgress(prev => ({ ...prev, students: successCount }));
                 } else {
-                  errors.push(`Error actualizando ${student.name}`);
+                  errors.push(`Error con ${student.name}: ya existe o error desconocido`);
                 }
+              }
+            } else {
+              // Si PATCH falla, intentar POST
+              const postResponse = await fetch(`${SUPABASE_URL}/rest/v1/students`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'apikey': SUPABASE_KEY,
+                  'Authorization': `Bearer ${SUPABASE_KEY}`,
+                  'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(student)
+              });
+              if (postResponse.ok || postResponse.status === 201) {
+                successCount++;
+                setProgress(prev => ({ ...prev, students: successCount }));
+              } else if (postResponse.status === 409) {
+                // Ya existe, considerar como éxito
+                successCount++;
+                setProgress(prev => ({ ...prev, students: successCount }));
               } else {
+                const errorText = await postResponse.text();
                 errors.push(`Error con ${student.name}: ${errorText.substring(0, 50)}`);
               }
             }
@@ -107,8 +130,9 @@ export default function MigratePage() {
               entries: record.entries
             };
 
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/daily_records`, {
-              method: 'POST',
+            // Usar PATCH primero para hacer UPSERT
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/daily_records?date=eq.${record.date}`, {
+              method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
                 'apikey': SUPABASE_KEY,
@@ -118,13 +142,13 @@ export default function MigratePage() {
               body: JSON.stringify(recordData)
             });
 
-            if (response.ok) {
+            if (response.ok || response.status === 204) {
               successCount++;
               setProgress(prev => ({ ...prev, records: successCount }));
-            } else if (response.status === 409) {
-              // Actualizar si ya existe
-              const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/daily_records?date=eq.${record.date}`, {
-                method: 'PATCH',
+            } else {
+              // Si PATCH no funcionó, intentar POST
+              const postResponse = await fetch(`${SUPABASE_URL}/rest/v1/daily_records`, {
+                method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                   'apikey': SUPABASE_KEY,
@@ -133,15 +157,17 @@ export default function MigratePage() {
                 },
                 body: JSON.stringify(recordData)
               });
-              if (updateResponse.ok) {
+              if (postResponse.ok || postResponse.status === 201) {
+                successCount++;
+                setProgress(prev => ({ ...prev, records: successCount }));
+              } else if (postResponse.status === 409) {
+                // Ya existe, considerar como éxito
                 successCount++;
                 setProgress(prev => ({ ...prev, records: successCount }));
               } else {
-                errors.push(`Error actualizando registro ${record.date}`);
+                const errorText = await postResponse.text();
+                errors.push(`Error con registro ${record.date}: ${errorText.substring(0, 50)}`);
               }
-            } else {
-              const errorText = await response.text();
-              errors.push(`Error con registro ${record.date}: ${errorText.substring(0, 50)}`);
             }
           } catch (error: any) {
             errors.push(`Error con registro ${record.date}: ${error.message}`);
