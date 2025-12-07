@@ -12,6 +12,8 @@ export default function StudentsPage() {
   const [newStudent, setNewStudent] = useState<{ name: string; klas: string; status: 'Actief' | 'Inactief' }>({ name: '', klas: '', status: 'Actief' });
   const [filterKlas, setFilterKlas] = useState<string>('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showNewKlasInput, setShowNewKlasInput] = useState(false);
+  const [newKlasName, setNewKlasName] = useState('');
 
   useEffect(() => {
     const loadStudents = async () => {
@@ -23,16 +25,74 @@ export default function StudentsPage() {
 
   const klassen = [...new Set(students.map(s => s.klas))].sort();
 
-  const handleAdd = async () => {
-    if (newStudent.name && newStudent.klas) {
-      const student = await addStudent(newStudent);
-      setStudents([...students, student]);
-      setNewStudent({ name: '', klas: '', status: 'Actief' });
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+  // Normalizar nombre de clase para evitar duplicados
+  const normalizeKlasName = (name: string): string => {
+    return name.trim();
+  };
+
+  // Buscar clase existente (case-insensitive)
+  const findExistingKlas = (name: string): string | null => {
+    const normalized = normalizeKlasName(name);
+    const found = klassen.find(k => normalizeKlasName(k).toLowerCase() === normalized.toLowerCase());
+    return found || null;
+  };
+
+  const handleKlasSelect = (value: string) => {
+    if (value === '__NEW__') {
+      setShowNewKlasInput(true);
+      setNewStudent({ ...newStudent, klas: '' });
     } else {
-      alert('Vul alstublieft naam en klas in.');
+      setShowNewKlasInput(false);
+      setNewKlasName('');
+      setNewStudent({ ...newStudent, klas: value });
     }
+  };
+
+  const handleNewKlasInput = (value: string) => {
+    setNewKlasName(value);
+    // Verificar si ya existe una clase similar
+    const existing = findExistingKlas(value);
+    if (existing) {
+      setNewStudent({ ...newStudent, klas: existing });
+    } else {
+      setNewStudent({ ...newStudent, klas: normalizeKlasName(value) });
+    }
+  };
+
+  const handleAdd = async () => {
+    if (!newStudent.name) {
+      alert('Vul alstublieft de naam in.');
+      return;
+    }
+
+    let finalKlas = newStudent.klas.trim();
+    
+    // Si está escribiendo una nueva clase, usar ese valor
+    if (showNewKlasInput && newKlasName.trim()) {
+      finalKlas = normalizeKlasName(newKlasName);
+      // Verificar si ya existe
+      const existing = findExistingKlas(finalKlas);
+      if (existing) {
+        finalKlas = existing; // Usar la clase existente
+      }
+    }
+
+    if (!finalKlas) {
+      alert('Selecteer een klas of voer een nieuwe klas naam in.');
+      return;
+    }
+
+    const student = await addStudent({
+      ...newStudent,
+      klas: finalKlas
+    });
+    
+    setStudents([...students, student]);
+    setNewStudent({ name: '', klas: '', status: 'Actief' });
+    setNewKlasName('');
+    setShowNewKlasInput(false);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
   };
 
   const handleUpdate = async (id: string, updates: Partial<Student>) => {
@@ -101,14 +161,56 @@ export default function StudentsPage() {
               onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
               className="px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
             />
-            <input
-              type="text"
-              placeholder="Klas (bijv. 1 Aarde) *"
-              value={newStudent.klas}
-              onChange={(e) => setNewStudent({ ...newStudent, klas: e.target.value })}
-              onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
-              className="px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
-            />
+            <div className="relative">
+              {showNewKlasInput ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Nieuwe klas naam *"
+                    value={newKlasName}
+                    onChange={(e) => handleNewKlasInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
+                    onBlur={() => {
+                      if (!newKlasName.trim()) {
+                        setShowNewKlasInput(false);
+                        setNewStudent({ ...newStudent, klas: '' });
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white placeholder-white/50 focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewKlasInput(false);
+                      setNewKlasName('');
+                      setNewStudent({ ...newStudent, klas: '' });
+                    }}
+                    className="px-2 py-2 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    title="Annuleren"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={newStudent.klas || ''}
+                  onChange={(e) => handleKlasSelect(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-white/10 border border-white/30 rounded-md text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none transition-colors"
+                >
+                  <option value="" className="bg-blue-900">Selecteer klas...</option>
+                  {klassen.map(klas => (
+                    <option key={klas} value={klas} className="bg-blue-900">{klas}</option>
+                  ))}
+                  <option value="__NEW__" className="bg-blue-900 font-semibold">+ Nieuwe klas aanmaken</option>
+                </select>
+              )}
+              {newStudent.klas && findExistingKlas(newStudent.klas) && newStudent.klas !== findExistingKlas(newStudent.klas) && (
+                <div className="absolute top-full left-0 mt-1 text-xs text-yellow-300 bg-yellow-500/20 px-2 py-1 rounded">
+                  Gebruikt bestaande klas: {findExistingKlas(newStudent.klas)}
+                </div>
+              )}
+            </div>
             <select
               value={newStudent.status}
               onChange={(e) => setNewStudent({ ...newStudent, status: e.target.value as 'Actief' | 'Inactief' })} 
@@ -175,12 +277,15 @@ export default function StudentsPage() {
                       </td>
                       <td className="px-3 py-2 text-white">
                         {editingId === student.id ? (
-                          <input
-                            type="text"
+                          <select
                             value={student.klas}
                             onChange={(e) => handleUpdate(student.id, { klas: e.target.value })}
                             className="w-full px-2 py-1 text-sm bg-white/10 border border-white/30 rounded text-white focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
-                          />
+                          >
+                            {klassen.map(klas => (
+                              <option key={klas} value={klas} className="bg-blue-900">{klas}</option>
+                            ))}
+                          </select>
                         ) : (
                           <span className="px-2 py-0.5 bg-white/20 rounded text-xs">{student.klas}</span>
                         )}
