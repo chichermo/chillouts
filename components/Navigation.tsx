@@ -2,12 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Logo from './Logo';
+import { logout, getUsername } from '@/lib/auth';
 
 export default function Navigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
   
   const navLinks = [
     { 
@@ -107,6 +114,18 @@ export default function Navigation() {
                 </Link>
               );
             })}
+            
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 text-white/70 hover:text-white hover:bg-red-500/20 border border-red-500/30"
+              title="Uitloggen"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden lg:inline">Uitloggen</span>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -150,6 +169,20 @@ export default function Navigation() {
                 </Link>
               );
             })}
+            
+            {/* Logout Button Mobile */}
+            <button
+              onClick={() => {
+                handleLogout();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 mx-2 mb-1 text-white/70 hover:bg-red-500/20 hover:text-white border border-red-500/30"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Uitloggen</span>
+            </button>
           </div>
         )}
       </div>

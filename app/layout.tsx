@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthGuard from "@/components/AuthGuard";
 
 export const metadata: Metadata = {
   title: "Chill-outs Beheer",
@@ -17,7 +18,7 @@ export default function RootLayout({
           <link rel="preconnect" href="https://fonts.googleapis.com" />
         </head>
         <body className="antialiased font-sans" suppressHydrationWarning>
-          {children}
+          <AuthGuard>{children}</AuthGuard>
         </body>
       </html>
   );
