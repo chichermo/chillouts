@@ -19,6 +19,7 @@ interface FilterState {
   dateFrom: string;
   dateTo: string;
   generatedBy: string;
+  hour: string; // Filtro de hora (1-7 o vacío para todas)
 }
 
 export default function ReportsPage() {
@@ -40,6 +41,15 @@ export default function ReportsPage() {
     dateFrom: '',
     dateTo: '',
     generatedBy: '',
+    hour: '',
+  });
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
+    klas: '',
+    student: '',
+    dateFrom: '',
+    dateTo: '',
+    generatedBy: '',
+    hour: '',
   });
   const [allStudents, setAllStudents] = useState<{ id: string; name: string; klas: string }[]>([]);
   const [allKlassen, setAllKlassen] = useState<string[]>([]);
@@ -67,6 +77,8 @@ export default function ReportsPage() {
       setAllStudents(students);
       setFilteredStudents(students);
       
+      // Inicializar appliedFilters con los mismos valores que filters
+      setAppliedFilters({ ...filters });
       calculateStats(data, filters);
     };
     loadDataAsync();
@@ -77,12 +89,12 @@ export default function ReportsPage() {
     if (mounted) {
       const loadDataAsync = async () => {
         const data = await loadData();
-        calculateStats(data, filters);
+        calculateStats(data, appliedFilters);
       };
       loadDataAsync();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, mounted]);
+  }, [appliedFilters, mounted]);
 
   useEffect(() => {
     if (filters.klas) {
@@ -109,13 +121,16 @@ export default function ReportsPage() {
     
     const byHourData: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } = {};
     const byKlasData: { [klas: string]: { total: number; vr: number; vl: number; generic: number } } = {};
-    const byStudentData: { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number; generic: number } } = {};
+    const byStudentData: { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number; generic: number; byHour?: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } } } = {};
     const byDayData: { [date: string]: { total: number; vr: number; vl: number; generic: number } } = {};
 
     // Initialiseer lesuren
     for (let hour = 1; hour <= 7; hour++) {
       byHourData[hour] = { total: 0, vr: 0, vl: 0, generic: 0 };
     }
+    
+    // Si hay filtro de hora, inicializar estructura por estudiante por hora
+    const filterHour = currentFilters.hour ? parseInt(currentFilters.hour) : null;
 
     // Initialiseer klassen (alleen die in filters)
     const studentsToProcess = data.students.filter((student: any) => {
@@ -148,13 +163,16 @@ export default function ReportsPage() {
       const record = data.dailyRecords[date];
       const totals = calculateDailyTotals(record, studentsToProcess);
       
+      // Si hay filtro de hora, solo procesar esa hora
+      const hoursToProcess = filterHour ? [filterHour] : [1, 2, 3, 4, 5, 6, 7];
+      
       let dayTotal = 0;
       let dayVR = 0;
       let dayVL = 0;
       let dayGeneric = 0;
 
-      // Per lesuur
-      for (let hour = 1; hour <= 7; hour++) {
+      // Per lesuur (solo procesar horas según filtro)
+      hoursToProcess.forEach(hour => {
         const hourTotal = totals.totals[hour] || 0;
         const hourVR = totals.vr[hour] || 0;
         const hourVL = totals.vl[hour] || 0;
@@ -169,14 +187,16 @@ export default function ReportsPage() {
         dayVR += hourVR;
         dayVL += hourVL;
         dayGeneric += hourGeneric;
-      }
+      });
 
-      // Per klas en per student
+      // Per klas en per student (solo procesar horas según filtro)
       studentsToProcess.forEach((student: any) => {
         const studentEntries = record.entries[student.id] || {};
-        Object.values(studentEntries).forEach(entries => {
-          if (Array.isArray(entries)) {
-            entries.forEach(entry => {
+        hoursToProcess.forEach(hour => {
+          const entries = studentEntries[hour];
+          if (entries) {
+            const entriesArray = Array.isArray(entries) ? entries : [];
+            entriesArray.forEach((entry: any) => {
               if (entry) {
                 byKlasData[student.klas].total += 1;
                 byStudentData[student.id].total += 1;
@@ -256,7 +276,7 @@ export default function ReportsPage() {
     return {
       date: dateStr,
       day: dayName,
-      generatedBy: filters.generatedBy || 'Systeem',
+      generatedBy: appliedFilters.generatedBy || 'Systeem',
     };
   };
 
@@ -274,23 +294,24 @@ export default function ReportsPage() {
       ['Gegenereerd door:', header.generatedBy],
       [''],
       ['Filter Instellingen'],
-      ['Klas filter:', filters.klas || 'Alle klassen'],
-      ['Student filter:', filters.student ? filteredStudents.find(s => s.id === filters.student)?.name || '' : 'Alle studenten'],
-      ['Van datum:', filters.dateFrom || 'Geen'],
-      ['Tot datum:', filters.dateTo || 'Geen'],
+      ['Klas filter:', appliedFilters.klas || 'Alle klassen'],
+      ['Student filter:', appliedFilters.student ? filteredStudents.find(s => s.id === appliedFilters.student)?.name || '' : 'Alle studenten'],
+      ['Lesuur filter:', appliedFilters.hour ? `Lesuur ${appliedFilters.hour}` : 'Alle lesuren'],
+      ['Van datum:', appliedFilters.dateFrom || 'Geen'],
+      ['Tot datum:', appliedFilters.dateTo || 'Geen'],
       [''],
       ['Algemeen Overzicht'],
       ['Totaal Chill-outs', stats.totalChillOuts],
       ['Totaal VR', stats.totalVR],
       ['Totaal VL', stats.totalVL],
-      ['Totaal Generiek', stats.totalGeneric],
+      ['Totaal Overig', stats.totalGeneric],
       [''],
       ['Per Lesuur'],
-      ['Lesuur', 'Totaal', 'VR', 'VL', 'Generiek'],
+      ['Lesuur', 'Totaal', 'VR', 'VL', 'Overig'],
       ...stats.byHour.map(h => [h.hour, h.total, h.vr, h.vl, h.generic]),
       [''],
       ['Per Klas'],
-      ['Klas', 'Totaal', 'VR', 'VL', 'Generiek', 'Percentage'],
+      ['Klas', 'Totaal', 'VR', 'VL', 'Overig', 'Percentage'],
       ...stats.byKlas.map(k => [k.klas, k.total, k.vr, k.vl, k.generic, `${k.percentage}%`]),
     ];
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
@@ -298,7 +319,7 @@ export default function ReportsPage() {
 
     // Blad 2: Per Student
     const studentData = [
-      ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Generiek'],
+      ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Overig'],
       ...stats.byStudent.map(s => [s.name, s.klas, s.total, s.vr, s.vl, s.generic]),
     ];
     const studentSheet = XLSX.utils.aoa_to_sheet(studentData);
@@ -306,7 +327,7 @@ export default function ReportsPage() {
 
     // Blad 3: Per Dag
     const dayData = [
-      ['Datum', 'Totaal', 'VR', 'VL', 'Generiek'],
+      ['Datum', 'Totaal', 'VR', 'VL', 'Overig'],
       ...stats.byDay.map(d => [d.date, d.total, d.vr, d.vl, d.generic]),
     ];
     const daySheet = XLSX.utils.aoa_to_sheet(dayData);
@@ -344,15 +365,19 @@ export default function ReportsPage() {
       doc.setTextColor(100, 100, 100);
       doc.text('Filter Instellingen:', 14, yPos);
       yPos += 6;
-      doc.text(`Klas: ${filters.klas || 'Alle klassen'}`, 14, yPos);
+      doc.text(`Klas: ${appliedFilters.klas || 'Alle klassen'}`, 14, yPos);
       yPos += 6;
-      if (filters.student) {
-        const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
+      if (appliedFilters.student) {
+        const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
         doc.text(`Student: ${studentName}`, 14, yPos);
         yPos += 6;
       }
-      if (filters.dateFrom || filters.dateTo) {
-        doc.text(`Periode: ${filters.dateFrom || 'Begin'} - ${filters.dateTo || 'Einde'}`, 14, yPos);
+      if (appliedFilters.hour) {
+        doc.text(`Lesuur: ${appliedFilters.hour}`, 14, yPos);
+        yPos += 6;
+      }
+      if (appliedFilters.dateFrom || appliedFilters.dateTo) {
+        doc.text(`Periode: ${appliedFilters.dateFrom || 'Begin'} - ${appliedFilters.dateTo || 'Einde'}`, 14, yPos);
         yPos += 6;
       }
       yPos += 5;
@@ -369,7 +394,7 @@ export default function ReportsPage() {
       yPos += 7;
       doc.text(`Totaal VL: ${stats.totalVL}`, 14, yPos);
       yPos += 7;
-      doc.text(`Totaal Generiek: ${stats.totalGeneric}`, 14, yPos);
+      doc.text(`Totaal Overig: ${stats.totalGeneric}`, 14, yPos);
       yPos += 10;
 
       // Helper functie om tabellen handmatig te maken
@@ -423,7 +448,7 @@ export default function ReportsPage() {
         doc.text('Per Klas', 14, yPos);
         yPos += 10;
         
-        const klasHeaders = ['Klas', 'Totaal', 'VR', 'VL', 'Generiek', 'Percentage'];
+        const klasHeaders = ['Klas', 'Totaal', 'VR', 'VL', 'Overig', 'Percentage'];
         const klasRows = stats.byKlas.map(k => [
           k.klas.length > 15 ? k.klas.substring(0, 15) + '...' : k.klas,
           k.total.toString(),
@@ -442,7 +467,7 @@ export default function ReportsPage() {
         doc.text('Top Studenten', 14, yPos);
         yPos += 10;
         
-        const studentHeaders = ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Generiek'];
+        const studentHeaders = ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Overig'];
         const studentRows = stats.byStudent
           .sort((a, b) => b.total - a.total)
           .slice(0, 20)
@@ -479,7 +504,7 @@ export default function ReportsPage() {
       yPos += 10;
       doc.text(`Totaal VL: ${stats.totalVL}`, 14, yPos);
       yPos += 10;
-      doc.text(`Totaal Generiek: ${stats.totalGeneric}`, 14, yPos);
+      doc.text(`Totaal Overig: ${stats.totalGeneric}`, 14, yPos);
       yPos += 15;
       
       doc.setFontSize(14);
@@ -487,7 +512,7 @@ export default function ReportsPage() {
       yPos += 10;
       doc.setFontSize(10);
       stats.byKlas.forEach(k => {
-        doc.text(`${k.klas}: Totaal=${k.total}, VR=${k.vr}, VL=${k.vl}, Generiek=${k.generic} (${k.percentage}%)`, 14, yPos);
+        doc.text(`${k.klas}: Totaal=${k.total}, VR=${k.vr}, VL=${k.vl}, Overig=${k.generic} (${k.percentage}%)`, 14, yPos);
         yPos += 7;
         if (yPos > 280) {
           doc.addPage();
@@ -499,14 +524,21 @@ export default function ReportsPage() {
     }
   };
 
+  const applyFilters = () => {
+    setAppliedFilters({ ...filters });
+  };
+
   const resetFilters = () => {
-    setFilters({
+    const emptyFilters = {
       klas: '',
       student: '',
       dateFrom: '',
       dateTo: '',
       generatedBy: '',
-    });
+      hour: '',
+    };
+    setFilters(emptyFilters);
+    setAppliedFilters(emptyFilters);
   };
 
   if (!mounted) {
@@ -523,10 +555,10 @@ export default function ReportsPage() {
   const pieData = [
     { name: 'VR', value: stats.totalVR, color: COLORS.vr },
     { name: 'VL', value: stats.totalVL, color: COLORS.vl },
-    { name: 'Generiek', value: stats.totalGeneric, color: COLORS.generic },
+    { name: 'Overig', value: stats.totalGeneric, color: COLORS.generic },
   ].filter(item => item.value > 0);
 
-  const hasActiveFilters = filters.klas || filters.student || filters.dateFrom || filters.dateTo;
+  const hasActiveFilters = appliedFilters.klas || appliedFilters.student || appliedFilters.dateFrom || appliedFilters.dateTo || appliedFilters.hour;
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -609,6 +641,21 @@ export default function ReportsPage() {
               </select>
             </div>
 
+            {/* Lesuur (Hora) filter */}
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-2">Lesuur</label>
+              <select
+                value={filters.hour}
+                onChange={(e) => setFilters(prev => ({ ...prev, hour: e.target.value }))}
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Alle lesuren</option>
+                {[1, 2, 3, 4, 5, 6, 7].map(hour => (
+                  <option key={hour} value={hour.toString()} className="bg-blue-900">Lesuur {hour}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Van datum */}
             <div>
               <label className="block text-sm font-medium text-white/90 mb-2">Van Datum</label>
@@ -643,6 +690,19 @@ export default function ReportsPage() {
                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+          
+          {/* Botón Aplicar Filtros */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={applyFilters}
+              className="px-6 py-2 bg-brand-blue text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters Toepassen
+            </button>
           </div>
         </div>
 
@@ -693,7 +753,7 @@ export default function ReportsPage() {
 
           <div className="glass-effect rounded-lg p-6 border border-white/20">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-white/85 uppercase">Generiek</p>
+              <p className="text-xs font-medium text-white/85 uppercase">Overig</p>
               <div className="w-10 h-10 rounded-lg bg-gray-500/20 flex items-center justify-center">
                 <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -748,7 +808,7 @@ export default function ReportsPage() {
                 <Legend />
                 <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
                 <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
-                <Bar dataKey="generic" fill={COLORS.generic} name="Generiek" />
+                <Bar dataKey="generic" fill={COLORS.generic} name="Overig" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -765,7 +825,7 @@ export default function ReportsPage() {
                 <Legend />
                 <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
                 <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
-                <Bar dataKey="generic" fill={COLORS.generic} name="Generiek" />
+                <Bar dataKey="generic" fill={COLORS.generic} name="Overig" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -802,7 +862,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Generiek</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">Overig</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">Percentage</th>
                   </tr>
                 </thead>
@@ -846,7 +906,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Generiek</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">Overig</th>
                   </tr>
                 </thead>
                 <tbody>

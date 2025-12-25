@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
 import { login, isAuthenticated } from '@/lib/auth';
+import { AUTH_USERNAME, AUTH_PASSWORD } from '@/lib/auth';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -27,7 +28,8 @@ export default function LoginPage() {
     // Simular un pequeño delay para mejor UX
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    if (login(username, password)) {
+    const success = await login(username, password);
+    if (success) {
       // Redirigir a la página principal
       router.push('/');
     } else {

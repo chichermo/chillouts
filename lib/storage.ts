@@ -10,5 +10,7 @@ export {
   getDailyRecord,
   getAuditLogs,
   revertAuditLog,
+  renameKlas,
+  deleteKlas,
 } from './storage-db';
 

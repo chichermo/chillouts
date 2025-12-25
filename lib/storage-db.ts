@@ -300,6 +300,47 @@ async function logAuditAction(params: {
   }
 }
 
+// Funciones para gestionar clases
+export async function renameKlas(oldKlasName: string, newKlasName: string): Promise<void> {
+  const data = await loadData();
+  
+  // Actualizar todos los estudiantes con la clase antigua
+  data.students.forEach(student => {
+    if (student.klas === oldKlasName) {
+      student.klas = newKlasName;
+    }
+  });
+  
+  await saveData(data);
+  
+  // Disparar evento para actualizar otras páginas
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('studentsUpdated'));
+  }
+}
+
+export async function deleteKlas(klasName: string): Promise<{ success: boolean; message: string }> {
+  const data = await loadData();
+  
+  // Verificar si hay estudiantes en esta clase
+  const studentsInKlas = data.students.filter(s => s.klas === klasName);
+  
+  if (studentsInKlas.length > 0) {
+    return {
+      success: false,
+      message: `Deze klas heeft nog ${studentsInKlas.length} student(en). Verwijder eerst alle studenten uit deze klas.`
+    };
+  }
+  
+  // Si no hay estudiantes, la clase se elimina automáticamente al no tener referencias
+  // No necesitamos hacer nada más ya que las clases se derivan de los estudiantes
+  
+  return {
+    success: true,
+    message: 'Klas succesvol verwijderd.'
+  };
+}
+
 export async function getAuditLogs(): Promise<AuditLog[]> {
   if (isSupabaseEnabled) {
     try {

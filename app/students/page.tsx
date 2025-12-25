@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student } from '@/types';
-import { loadData, addStudent, updateStudent, deleteStudent, saveData } from '@/lib/storage';
+import { loadData, addStudent, updateStudent, deleteStudent, saveData, renameKlas, deleteKlas } from '@/lib/storage';
+import { sortKlassen } from '@/lib/utils';
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -14,6 +15,8 @@ export default function StudentsPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showNewKlasInput, setShowNewKlasInput] = useState(false);
   const [newKlasName, setNewKlasName] = useState('');
+  const [editingKlas, setEditingKlas] = useState<string | null>(null);
+  const [newKlasNameForEdit, setNewKlasNameForEdit] = useState('');
 
   useEffect(() => {
     const loadStudents = async () => {
@@ -33,7 +36,7 @@ export default function StudentsPage() {
     };
   }, []);
 
-  const klassen = [...new Set(students.map(s => s.klas))].sort();
+  const klassen = sortKlassen([...new Set(students.map(s => s.klas))]);
 
   // Normalizar nombre de clase para evitar duplicados
   const normalizeKlasName = (name: string): string => {
@@ -118,6 +121,48 @@ export default function StudentsPage() {
         setStudents(students.filter(s => s.id !== id));
       } catch (error: any) {
         alert(`Fout bij verwijderen: ${error.message}`);
+      }
+    }
+  };
+
+  const handleRenameKlas = async (oldName: string, newName: string) => {
+    if (!newName.trim()) {
+      alert('Voer een geldige klas naam in.');
+      return;
+    }
+    
+    if (oldName === newName) {
+      setEditingKlas(null);
+      return;
+    }
+    
+    try {
+      await renameKlas(oldName, newName);
+      const data = await loadData();
+      setStudents(data.students);
+      setEditingKlas(null);
+      setNewKlasNameForEdit('');
+    } catch (error: any) {
+      alert(`Fout bij hernoemen: ${error.message}`);
+    }
+  };
+
+  const handleDeleteKlas = async (klasName: string) => {
+    const studentsInKlas = students.filter(s => s.klas === klasName);
+    
+    if (studentsInKlas.length > 0) {
+      alert(`Deze klas heeft nog ${studentsInKlas.length} student(en). Verwijder eerst alle studenten uit deze klas.`);
+      return;
+    }
+    
+    if (confirm(`Weet je zeker dat je de klas "${klasName}" wilt verwijderen?`)) {
+      const result = await deleteKlas(klasName);
+      if (result.success) {
+        alert(result.message);
+        const data = await loadData();
+        setStudents(data.students);
+      } else {
+        alert(result.message);
       }
     }
   };
@@ -260,9 +305,69 @@ export default function StudentsPage() {
         {/* Lista de estudiantes por clase */}
         {Object.keys(groupedStudents).sort().map(klas => (
           <div key={klas} className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-white/20">
-            <h2 className="text-lg font-semibold mb-3 text-brand-orange-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 px-3 py-2 rounded-md border-l-3 border-yellow-400/50">
-              {klas}
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              {editingKlas === klas ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="text"
+                    value={newKlasNameForEdit}
+                    onChange={(e) => setNewKlasNameForEdit(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRenameKlas(klas, newKlasNameForEdit);
+                      } else if (e.key === 'Escape') {
+                        setEditingKlas(null);
+                        setNewKlasNameForEdit('');
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 text-sm bg-white/10 border border-white/20 rounded-md text-white focus:outline-none focus:border-white/50 focus:ring-1 focus:ring-white/50"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => handleRenameKlas(klas, newKlasNameForEdit)}
+                    className="px-3 py-2 text-sm bg-brand-green-600 text-white rounded hover:bg-brand-green-700 font-medium transition-colors"
+                    title="Opslaan"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingKlas(null);
+                      setNewKlasNameForEdit('');
+                    }}
+                    className="px-3 py-2 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 font-medium transition-colors"
+                    title="Annuleren"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-lg font-semibold text-brand-orange-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 px-3 py-2 rounded-md border-l-3 border-yellow-400/50">
+                    {klas}
+                  </h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingKlas(klas);
+                        setNewKlasNameForEdit(klas);
+                      }}
+                      className="px-2.5 py-1 text-xs bg-brand-blue text-white rounded hover:bg-blue-600 font-medium transition-colors"
+                      title="Klas hernoemen"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => handleDeleteKlas(klas)}
+                      className="px-2.5 py-1 text-xs bg-brand-pink-500 text-white rounded hover:bg-brand-pink-600 font-medium transition-colors"
+                      title="Klas verwijderen"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

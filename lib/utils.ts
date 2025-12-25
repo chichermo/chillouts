@@ -253,3 +253,35 @@ export function calculateWeeklyTotalsByStudent(
   return studentTotals;
 }
 
+// Función para ordenar clases de manera inteligente (1ste jaar, 2de jaar, etc.)
+export function sortKlassen(klassen: string[]): string[] {
+  const sorted = [...klassen].sort((a, b) => {
+    // Extraer números de patrones como "1ste jaar", "2de jaar", etc.
+    const getYearNumber = (klas: string): number => {
+      const match = klas.match(/(\d+)(ste|de|e)\s+jaar/i);
+      if (match) {
+        return parseInt(match[1], 10);
+      }
+      // Si no coincide con el patrón, devolver un número muy alto para ponerlo al final
+      return 9999;
+    };
+    
+    const yearA = getYearNumber(a);
+    const yearB = getYearNumber(b);
+    
+    // Si ambos tienen año, ordenar por año
+    if (yearA !== 9999 && yearB !== 9999) {
+      return yearA - yearB;
+    }
+    
+    // Si solo uno tiene año, el que tiene año va primero
+    if (yearA !== 9999) return -1;
+    if (yearB !== 9999) return 1;
+    
+    // Si ninguno tiene año, ordenar alfabéticamente
+    return a.localeCompare(b, 'nl');
+  });
+  
+  return sorted;
+}
+
