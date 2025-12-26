@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createUser } from '@/lib/users';
+import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
 interface UserData {
   username: string;
@@ -15,6 +23,47 @@ function generatePassword(length: number = 10): string {
   }
   return password;
 }
+
+// Hash de contraseña usando Node.js crypto (funciona en servidor)
+async function hashPassword(password: string): Promise<string> {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Definir permisos por rol
+const ROLE_PERMISSIONS: Record<string, any> = {
+  admin: {
+    dagelijks: true,
+    weekoverzicht: true,
+    statistieken: true,
+    rapporten: true,
+    students: true,
+    audit: true,
+  },
+  full_access: {
+    dagelijks: true,
+    weekoverzicht: true,
+    statistieken: true,
+    rapporten: true,
+    students: true,
+    audit: false,
+  },
+  dagelijks_access: {
+    dagelijks: true,
+    weekoverzicht: true,
+    statistieken: true,
+    rapporten: true,
+    students: false,
+    audit: false,
+  },
+  reports_access: {
+    dagelijks: false,
+    weekoverzicht: true,
+    statistieken: true,
+    rapporten: true,
+    students: false,
+    audit: false,
+  },
+};
 
 const users: UserData[] = [
   // Full Access
@@ -74,14 +123,66 @@ const users: UserData[] = [
 ];
 
 export async function POST(request: Request) {
+  if (!supabase) {
+    return NextResponse.json(
+      { success: false, error: 'Supabase is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY' },
+      { status: 500 }
+    );
+  }
+
   try {
     const credentials: Array<{ username: string; password: string; role: string }> = [];
     const errors: Array<{ username: string; error: string }> = [];
 
     for (const userData of users) {
       const password = generatePassword(10);
+      const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const passwordHash = await hashPassword(password);
+      const permissions = ROLE_PERMISSIONS[userData.role] || ROLE_PERMISSIONS.reports_access;
+
       try {
-        await createUser(userData.username, password, userData.role);
+        const { data, error } = await supabase
+          .from('users')
+          .insert({
+            id: userId,
+            username: userData.username,
+            password_hash: passwordHash,
+            role: userData.role,
+            permissions: permissions,
+            active: true,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          // Si el usuario ya existe, intentar actualizar
+          if (error.code === '23505') {
+            const { error: updateError } = await supabase
+              .from('users')
+              .update({
+                password_hash: passwordHash,
+                role: userData.role,
+                permissions: permissions,
+                active: true,
+              })
+              .eq('username', userData.username);
+
+            if (updateError) {
+              errors.push({
+                username: userData.username,
+                error: updateError.message || 'Unknown error',
+              });
+              continue;
+            }
+          } else {
+            errors.push({
+              username: userData.username,
+              error: error.message || 'Unknown error',
+            });
+            continue;
+          }
+        }
+
         credentials.push({
           username: userData.username,
           password: password,

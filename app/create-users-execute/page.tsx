@@ -20,7 +20,7 @@ export default function CreateUsersExecutePage() {
   }, [router]);
 
   const handleExecute = async () => {
-    if (!confirm('¿Estás seguro de que quieres crear TODOS los usuarios? Esto solo debe hacerse una vez.')) {
+    if (!confirm('Weet je zeker dat je ALLE gebruikers wilt aanmaken? Dit mag maar EEN KEER worden uitgevoerd.')) {
       return;
     }
 
@@ -44,10 +44,10 @@ export default function CreateUsersExecutePage() {
         setCredentials(data.credentials || []);
         setErrors(data.errors || []);
       } else {
-        setErrors([{ username: 'General', error: data.error || 'Error desconocido' }]);
+        setErrors([{ username: 'Algemeen', error: data.error || 'Onbekende fout' }]);
       }
     } catch (error: any) {
-      setErrors([{ username: 'General', error: error.message || 'Error de conexión' }]);
+      setErrors([{ username: 'Algemeen', error: error.message || 'Verbindingsfout' }]);
     } finally {
       setExecuting(false);
     }
@@ -57,7 +57,7 @@ export default function CreateUsersExecutePage() {
     if (credentials.length === 0) return;
 
     const content = credentials.map(c => 
-      `Usuario: ${c.username}\nContraseña: ${c.password}\nRol: ${c.role}\n`
+      `Gebruikersnaam: ${c.username}\nWachtwoord: ${c.password}\nRol: ${c.role}\n`
     ).join('\n---\n\n');
 
     const blob = new Blob([content], { type: 'text/plain' });
@@ -87,9 +87,9 @@ export default function CreateUsersExecutePage() {
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2 text-white">Crear Todos los Usuarios</h1>
+          <h1 className="text-3xl font-bold mb-2 text-white">Alle Gebruikers Aanmaken</h1>
           <p className="text-sm text-white/90">
-            ⚠️ Esta acción creará todos los usuarios en la base de datos. Solo debe ejecutarse UNA VEZ.
+            ⚠️ Deze actie maakt alle gebruikers aan in de database. Dit mag maar EEN KEER worden uitgevoerd.
           </p>
         </div>
 
@@ -101,12 +101,12 @@ export default function CreateUsersExecutePage() {
           }`}>
             <p className="font-semibold">
               {result.success 
-                ? `✓ Se crearon ${result.created} de ${result.total} usuarios exitosamente`
-                : '✗ Error al crear usuarios'}
+                ? `✓ ${result.created} van ${result.total} gebruikers succesvol aangemaakt`
+                : '✗ Fout bij het aanmaken van gebruikers'}
             </p>
             {result.errors && result.errors.length > 0 && (
               <p className="mt-2 text-sm">
-                Errores: {result.errors.length} usuario(s) no se pudieron crear
+                Fouten: {result.errors.length} gebruiker(s) konden niet worden aangemaakt
               </p>
             )}
           </div>
@@ -114,7 +114,7 @@ export default function CreateUsersExecutePage() {
 
         {errors.length > 0 && (
           <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 text-red-200 rounded-lg">
-            <h3 className="font-semibold mb-2">Errores:</h3>
+            <h3 className="font-semibold mb-2">Fouten:</h3>
             <ul className="list-disc list-inside text-sm">
               {errors.map((err, idx) => (
                 <li key={idx}>{err.username}: {err.error}</li>
@@ -125,14 +125,14 @@ export default function CreateUsersExecutePage() {
 
         <div className="glass-effect rounded-lg p-6 border border-white/20 mb-6">
           <p className="text-white mb-4">
-            Este proceso creará 53 usuarios con contraseñas generadas automáticamente.
+            Dit proces maakt 53 gebruikers aan met automatisch gegenereerde wachtwoorden.
           </p>
           <button
             onClick={handleExecute}
             disabled={executing || credentials.length > 0}
             className="px-6 py-3 bg-brand-green text-white rounded-lg hover:bg-emerald-600 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {executing ? 'Creando usuarios...' : credentials.length > 0 ? 'Usuarios ya creados' : 'Crear Todos los Usuarios'}
+            {executing ? 'Gebruikers aanmaken...' : credentials.length > 0 ? 'Gebruikers al aangemaakt' : 'Alle Gebruikers Aanmaken'}
           </button>
         </div>
 
@@ -140,20 +140,20 @@ export default function CreateUsersExecutePage() {
           <div className="glass-effect rounded-lg p-6 border border-white/20">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-white">
-                Usuarios Creados ({credentials.length})
+                Gebruikers Aangemaakt ({credentials.length})
               </h2>
               <div className="flex gap-2">
                 <button
                   onClick={downloadCredentials}
                   className="px-4 py-2 bg-brand-blue text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors"
                 >
-                  Descargar TXT
+                  Download TXT
                 </button>
                 <button
                   onClick={downloadJSON}
                   className="px-4 py-2 bg-brand-orange text-white rounded-lg hover:bg-orange-600 font-semibold transition-colors"
                 >
-                  Descargar JSON
+                  Download JSON
                 </button>
               </div>
             </div>
@@ -161,8 +161,8 @@ export default function CreateUsersExecutePage() {
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-blue-900/50 backdrop-blur">
                   <tr className="border-b border-white/20">
-                    <th className="px-4 py-3 text-left font-semibold text-white">Usuario</th>
-                    <th className="px-4 py-3 text-left font-semibold text-white">Contraseña</th>
+                    <th className="px-4 py-3 text-left font-semibold text-white">Gebruikersnaam</th>
+                    <th className="px-4 py-3 text-left font-semibold text-white">Wachtwoord</th>
                     <th className="px-4 py-3 text-left font-semibold text-white">Rol</th>
                   </tr>
                 </thead>
