@@ -1,5 +1,5 @@
 // Utilidades de autenticación
-import { authenticateUser, getUserByUsername, type User } from './users';
+import { authenticateUser, getUserByUsername, hasPermission as checkPermission, type User, type UserPermissions } from './users';
 
 // Mantener compatibilidad con el usuario Admin inicial
 export const AUTH_USERNAME = 'Admin';
@@ -77,5 +77,10 @@ export function logout(): void {
 export function getUsername(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('username');
+}
+
+// Re-exportar hasPermission para mantener consistencia en las importaciones
+export function hasPermission(user: User | null, permission: keyof UserPermissions): boolean {
+  return checkPermission(user, permission);
 }
 
