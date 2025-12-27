@@ -12,7 +12,7 @@ interface UserData {
   role: 'admin' | 'full_access' | 'dagelijks_access' | 'reports_access';
 }
 
-// Generar contraseña aleatoria
+// Genereer willekeurig wachtwoord
 function generatePassword(length: number = 10): string {
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*';
   let password = '';
@@ -106,8 +106,8 @@ export default function CreateUsersPage() {
           role: userData.role,
         });
       } catch (error: any) {
-        console.error(`Error creando ${userData.username}:`, error);
-        // Continuar con el siguiente usuario
+        console.error(`Fout bij aanmaken van ${userData.username}:`, error);
+        // Doorgaan met volgende gebruiker
       }
     }
 
@@ -117,7 +117,7 @@ export default function CreateUsersPage() {
 
   const downloadCredentials = () => {
     const content = credentials.map(c => 
-      `Usuario: ${c.username}\nContraseña: ${c.password}\nRol: ${c.role}\n`
+      `Gebruikersnaam: ${c.username}\nWachtwoord: ${c.password}\nRol: ${c.role}\n`
     ).join('\n---\n\n');
 
     const blob = new Blob([content], { type: 'text/plain' });

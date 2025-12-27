@@ -14,7 +14,7 @@ interface UserData {
   role: 'admin' | 'full_access' | 'dagelijks_access' | 'reports_access';
 }
 
-// Generar contraseña aleatoria
+// Genereer willekeurig wachtwoord
 function generatePassword(length: number = 10): string {
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*';
   let password = '';
@@ -24,12 +24,12 @@ function generatePassword(length: number = 10): string {
   return password;
 }
 
-// Hash de contraseña usando Node.js crypto (funciona en servidor)
+// Hash wachtwoord met Node.js crypto (werkt op server)
 async function hashPassword(password: string): Promise<string> {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
 
-// Definir permisos por rol
+// Definieer permissies per rol
 const ROLE_PERMISSIONS: Record<string, any> = {
   admin: {
     dagelijks: true,
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
           .single();
 
         if (error) {
-          // Si el usuario ya existe, intentar actualizar
+          // Als gebruiker al bestaat, probeer bij te werken
           if (error.code === '23505') {
             const { error: updateError } = await supabase
               .from('users')
