@@ -1,20 +1,9 @@
-// Script para crear usuarios directamente usando la función createUser
-// Funciona tanto con Supabase como con localStorage (cliente)
+// Script para generar SQL y credenciales de usuarios
+// Ejecuta el SQL en Supabase y guarda las credenciales generadas
 
-require('dotenv').config({ path: '.env.local' });
-
-const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-// Si Supabase está configurado, usarlo
-const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
 
 // Hash de contraseña
 function hashPassword(password) {
@@ -124,107 +113,78 @@ const users = [
   { username: 'pieter-jan.vanhollebeke', role: 'reports_access' },
 ];
 
-async function createUsers() {
-  if (!supabase) {
-    console.log('⚠️  Supabase no está configurado.');
-    console.log('   Crea un archivo .env.local con:');
-    console.log('   NEXT_PUBLIC_SUPABASE_URL=tu_url');
-    console.log('   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_key');
-    console.log('');
-    console.log('   O usa la interfaz web en /create-users-execute después de configurar Supabase.');
-    return;
-  }
+// Generar credenciales y SQL
+const credentials = [];
+const sqlStatements = [];
 
-  const credentials = [];
-  const errors = [];
+users.forEach((userData) => {
+  const password = generatePassword(10);
+  const passwordHash = hashPassword(password);
+  const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const permissions = JSON.stringify(ROLE_PERMISSIONS[userData.role] || ROLE_PERMISSIONS.reports_access);
 
-  console.log(`Creando ${users.length} usuarios...\n`);
+  credentials.push({
+    username: userData.username,
+    password: password,
+    role: userData.role,
+  });
 
-  for (const userData of users) {
-    const password = generatePassword(10);
-    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const passwordHash = hashPassword(password);
-    const permissions = ROLE_PERMISSIONS[userData.role] || ROLE_PERMISSIONS.reports_access;
+  // Crear statement SQL con ON CONFLICT para evitar duplicados
+  const sql = `INSERT INTO users (id, username, password_hash, role, permissions, active, created_at, updated_at)
+VALUES (
+  '${userId}',
+  '${userData.username.replace(/'/g, "''")}',
+  '${passwordHash}',
+  '${userData.role}',
+  '${permissions.replace(/'/g, "''")}'::jsonb,
+  true,
+  NOW(),
+  NOW()
+)
+ON CONFLICT (username) 
+DO UPDATE SET
+  password_hash = EXCLUDED.password_hash,
+  role = EXCLUDED.role,
+  permissions = EXCLUDED.permissions,
+  active = EXCLUDED.active,
+  updated_at = NOW();`;
 
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .insert({
-          id: userId,
-          username: userData.username,
-          password_hash: passwordHash,
-          role: userData.role,
-          permissions: permissions,
-          active: true,
-        })
-        .select()
-        .single();
+  sqlStatements.push(sql);
+});
 
-      if (error) {
-        // Si el usuario ya existe, intentar actualizar
-        if (error.code === '23505') {
-          const { error: updateError } = await supabase
-            .from('users')
-            .update({
-              password_hash: passwordHash,
-              role: userData.role,
-              permissions: permissions,
-              active: true,
-            })
-            .eq('username', userData.username);
-
-          if (updateError) {
-            errors.push({ username: userData.username, error: updateError.message });
-            console.log(`❌ ${userData.username}: ${updateError.message}`);
-            continue;
-          } else {
-            console.log(`✓ ${userData.username} (actualizado)`);
-          }
-        } else {
-          errors.push({ username: userData.username, error: error.message });
-          console.log(`❌ ${userData.username}: ${error.message}`);
-          continue;
-        }
-      } else {
-        console.log(`✓ ${userData.username}`);
-      }
-
-      credentials.push({
-        username: userData.username,
-        password: password,
-        role: userData.role,
-      });
-    } catch (error) {
-      errors.push({ username: userData.username, error: error.message });
-      console.log(`❌ ${userData.username}: ${error.message}`);
-    }
-  }
-
-  console.log(`\n✅ Completado: ${credentials.length} de ${users.length} usuarios creados/actualizados`);
-
-  if (errors.length > 0) {
-    console.log(`\n⚠️  Errores: ${errors.length}`);
-    errors.forEach(err => {
-      console.log(`   - ${err.username}: ${err.error}`);
-    });
-  }
-
-  // Guardar credenciales en archivos
-  if (credentials.length > 0) {
-    const jsonPath = path.join(__dirname, '..', 'users-credentials.json');
-    const txtPath = path.join(__dirname, '..', 'users-credentials.txt');
-
-    // JSON
-    fs.writeFileSync(jsonPath, JSON.stringify(credentials, null, 2), 'utf8');
-    console.log(`\n📄 Credenciales guardadas en: ${jsonPath}`);
-
-    // TXT
-    const txtContent = credentials.map(c => 
-      `Gebruikersnaam: ${c.username}\nWachtwoord: ${c.password}\nRol: ${c.role}\n`
-    ).join('\n---\n\n');
-    fs.writeFileSync(txtPath, txtContent, 'utf8');
-    console.log(`📄 Credenciales guardadas en: ${txtPath}`);
-  }
+// Guardar SQL
+const sqlPath = path.join(__dirname, '..', 'supabase', 'create_users.sql');
+const sqlDir = path.dirname(sqlPath);
+if (!fs.existsSync(sqlDir)) {
+  fs.mkdirSync(sqlDir, { recursive: true });
 }
 
-createUsers().catch(console.error);
+const sqlContent = `-- Script SQL para crear todos los usuarios
+-- Ejecuta este script en Supabase SQL Editor
+
+${sqlStatements.join('\n\n')}
+`;
+
+fs.writeFileSync(sqlPath, sqlContent, 'utf8');
+console.log(`✅ SQL generado en: ${sqlPath}`);
+
+// Guardar credenciales JSON
+const jsonPath = path.join(__dirname, '..', 'users-credentials.json');
+fs.writeFileSync(jsonPath, JSON.stringify(credentials, null, 2), 'utf8');
+console.log(`✅ Credenciales JSON guardadas en: ${jsonPath}`);
+
+// Guardar credenciales TXT
+const txtPath = path.join(__dirname, '..', 'users-credentials.txt');
+const txtContent = credentials.map(c => 
+  `Gebruikersnaam: ${c.username}\nWachtwoord: ${c.password}\nRol: ${c.role}\n`
+).join('\n---\n\n');
+fs.writeFileSync(txtPath, txtContent, 'utf8');
+console.log(`✅ Credenciales TXT guardadas en: ${txtPath}`);
+
+console.log(`\n📊 Total: ${credentials.length} usuarios`);
+console.log('\n📝 Próximos pasos:');
+console.log('1. Ve a Supabase Dashboard > SQL Editor');
+console.log('2. Copia y pega el contenido de supabase/create_users.sql');
+console.log('3. Ejecuta el script');
+console.log('4. Las credenciales están guardadas en users-credentials.json y users-credentials.txt');
+
