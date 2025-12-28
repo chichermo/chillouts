@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Logo from './Logo';
+import InstallButton from './InstallButton';
 import { logout, getUsername, isAdmin, getCurrentUser, hasPermission } from '@/lib/auth';
 import type { UserPermissions } from '@/lib/users';
 
@@ -165,6 +166,9 @@ export default function Navigation() {
               );
             })}
             
+            {/* Install Button */}
+            <InstallButton />
+            
             {/* Logout Button */}
             <button
               onClick={handleLogout}
@@ -219,6 +223,11 @@ export default function Navigation() {
                 </Link>
               );
             })}
+            
+            {/* Install Button Mobile */}
+            <div className="mx-2 mb-2">
+              <InstallButton />
+            </div>
             
             {/* Logout Button Mobile */}
             <button
