@@ -67,6 +67,7 @@ export default function UsersPage() {
     setEditingUser({
       username: user.username,
       role: user.role,
+      permissions: { ...user.permissions },
       active: user.active,
       password: '',
     });
@@ -200,12 +201,12 @@ export default function UsersPage() {
                 <select
                   value={newUser.role}
                   onChange={(e) => setNewUser({ ...newUser, role: e.target.value as User['role'] })}
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 bg-[#2a2a3a] border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="reports_access">Rapporten</option>
-                  <option value="dagelijks_access">Dagelijks + Rapporten</option>
-                  <option value="full_access">Volledige Toegang</option>
-                  <option value="admin">Admin</option>
+                  <option value="reports_access" className="bg-[#2a2a3a] text-white">Rapporten</option>
+                  <option value="dagelijks_access" className="bg-[#2a2a3a] text-white">Dagelijks + Rapporten</option>
+                  <option value="full_access" className="bg-[#2a2a3a] text-white">Volledige Toegang</option>
+                  <option value="admin" className="bg-[#2a2a3a] text-white">Admin</option>
                 </select>
               </div>
             </div>
@@ -260,18 +261,69 @@ export default function UsersPage() {
                     </td>
                     <td className="px-4 py-3 text-white">
                       {editingId === user.id ? (
-                        <select
-                          value={editingUser.role || ''}
-                          onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as User['role'] })}
-                          className="w-full px-2 py-1 text-sm bg-white/10 border border-white/20 rounded text-white focus:outline-none"
-                        >
-                          <option value="reports_access">Rapporten</option>
-                          <option value="dagelijks_access">Dagelijks + Rapporten</option>
-                          <option value="full_access">Volledige Toegang</option>
-                          <option value="admin">Admin</option>
-                        </select>
+                        <div className="space-y-2 min-w-[280px]">
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries({
+                              dagelijks: 'Dagelijks',
+                              weekoverzicht: 'Weekoverzicht',
+                              statistieken: 'Statistieken',
+                              rapporten: 'Rapporten',
+                              students: 'Studenten',
+                              audit: 'Audit',
+                            }).map(([key, label]) => (
+                              <label key={key} className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={editingUser.permissions?.[key as keyof typeof editingUser.permissions] || false}
+                                  onChange={(e) => {
+                                    const currentPermissions = editingUser.permissions || { ...user.permissions };
+                                    setEditingUser({
+                                      ...editingUser,
+                                      permissions: {
+                                        ...currentPermissions,
+                                        [key]: e.target.checked,
+                                      },
+                                    });
+                                  }}
+                                  className="w-4 h-4 rounded border-white/30 bg-white/10 text-brand-green focus:ring-2 focus:ring-brand-green focus:ring-offset-0 cursor-pointer"
+                                />
+                                <span className="text-xs text-white/90">{label}</span>
+                              </label>
+                            ))}
+                          </div>
+                          <select
+                            value={editingUser.role || user.role}
+                            onChange={(e) => {
+                              const role = e.target.value as User['role'];
+                              const { ROLE_PERMISSIONS } = require('@/lib/users');
+                              setEditingUser({
+                                ...editingUser,
+                                role,
+                                permissions: ROLE_PERMISSIONS[role] || editingUser.permissions,
+                              });
+                            }}
+                            className="w-full px-2 py-1 text-sm bg-[#2a2a3a] border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-brand-green"
+                          >
+                            <option value="reports_access" className="bg-[#2a2a3a] text-white">Rapporten</option>
+                            <option value="dagelijks_access" className="bg-[#2a2a3a] text-white">Dagelijks + Rapporten</option>
+                            <option value="full_access" className="bg-[#2a2a3a] text-white">Volledige Toegang</option>
+                            <option value="admin" className="bg-[#2a2a3a] text-white">Admin</option>
+                          </select>
+                          <p className="text-xs text-white/60">Selecteer sjabloon of pas individueel aan</p>
+                        </div>
                       ) : (
-                        <span className="px-2 py-1 bg-white/20 rounded text-xs">{roleLabels[user.role]}</span>
+                        <div className="flex flex-col gap-1">
+                          <span className="px-2 py-1 bg-white/20 rounded text-xs">{roleLabels[user.role]}</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {Object.entries(user.permissions || {}).map(([key, value]) => 
+                              value && (
+                                <span key={key} className="px-1.5 py-0.5 bg-brand-green/20 text-brand-green text-[10px] rounded">
+                                  {key === 'dagelijks' ? 'Dag' : key === 'weekoverzicht' ? 'Week' : key === 'statistieken' ? 'Stat' : key === 'rapporten' ? 'Rap' : key === 'students' ? 'Stu' : 'Aud'}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -279,10 +331,10 @@ export default function UsersPage() {
                         <select
                           value={editingUser.active !== undefined ? editingUser.active.toString() : ''}
                           onChange={(e) => setEditingUser({ ...editingUser, active: e.target.value === 'true' })}
-                          className="px-2 py-1 text-sm bg-white/10 border border-white/20 rounded text-white focus:outline-none"
+                          className="px-2 py-1 text-sm bg-[#2a2a3a] border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-brand-green"
                         >
-                          <option value="true">Actief</option>
-                          <option value="false">Inactief</option>
+                          <option value="true" className="bg-[#2a2a3a] text-white">Actief</option>
+                          <option value="false" className="bg-[#2a2a3a] text-white">Inactief</option>
                         </select>
                       ) : (
                         <span className={`px-2 py-1 rounded text-xs font-medium ${

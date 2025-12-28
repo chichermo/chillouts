@@ -197,8 +197,14 @@ export async function updateUser(
     delete updateData.password;
   }
   
-  if (updates.role) {
+  // Solo actualizar permisos automáticamente si se cambia el rol Y no se están pasando permisos personalizados
+  if (updates.role && !updates.permissions) {
     updateData.permissions = ROLE_PERMISSIONS[updates.role] || ROLE_PERMISSIONS.reports_access;
+  }
+  
+  // Si se pasan permisos personalizados, usarlos (pueden sobrescribir los del rol)
+  if (updates.permissions) {
+    updateData.permissions = updates.permissions;
   }
 
   if (isSupabaseEnabled) {

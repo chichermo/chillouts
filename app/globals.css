@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos para select y option con tema oscuro */
+select {
+  background-color: #2a2a3a !important;
+  color: white !important;
+}
+
+select option {
+  background-color: #2a2a3a !important;
+  color: white !important;
+}
+
+/* Para navegadores que soportan ::-webkit-scrollbar en select */
+select::-webkit-scrollbar {
+  width: 8px;
+}
+
+select::-webkit-scrollbar-track {
+  background: #2a2a3a;
+}
+
+select::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 :root {
   /* Paleta de colores de la guía de estilo */
   --color-pink: #E897A3;
