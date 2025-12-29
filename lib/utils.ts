@@ -285,3 +285,29 @@ export function sortKlassen(klassen: string[]): string[] {
   return sorted;
 }
 
+// Funciones para manejar el orden personalizado de clases
+const KLASSEN_ORDER_KEY = 'chillapp_klassen_order';
+
+export function getCustomKlassenOrder(klassen: string[]): string[] {
+  if (typeof window === 'undefined') return sortKlassen(klassen);
+  
+  const stored = localStorage.getItem(KLASSEN_ORDER_KEY);
+  if (!stored) return sortKlassen(klassen);
+  
+  try {
+    const customOrder: string[] = JSON.parse(stored);
+    // Filtrar solo las clases que existen actualmente y mantener el orden personalizado
+    const ordered = customOrder.filter(k => klassen.includes(k));
+    // Agregar clases nuevas al final
+    const newKlassen = klassen.filter(k => !customOrder.includes(k));
+    return [...ordered, ...sortKlassen(newKlassen)];
+  } catch {
+    return sortKlassen(klassen);
+  }
+}
+
+export function saveCustomKlassenOrder(klassen: string[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(KLASSEN_ORDER_KEY, JSON.stringify(klassen));
+}
+

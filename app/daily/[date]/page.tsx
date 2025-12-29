@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
 import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
-import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen } from '@/lib/utils';
+import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen, getCustomKlassenOrder, saveCustomKlassenOrder } from '@/lib/utils';
 
 export default function DailyPage() {
   const params = useParams();
@@ -17,6 +17,8 @@ export default function DailyPage() {
   const [loading, setLoading] = useState(true);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [filterKlas, setFilterKlas] = useState<string>('');
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderedKlassen, setOrderedKlassen] = useState<string[]>([]);
 
   useEffect(() => {
     const loadDataAsync = async () => {
@@ -191,12 +193,43 @@ export default function DailyPage() {
   if (!record) return null;
 
   const totals = calculateTotals();
-  const klassen = sortKlassen([...new Set(students.map(s => s.klas))]);
+  const uniqueKlassen = [...new Set(students.map(s => s.klas))];
+  const klassen = getCustomKlassenOrder(uniqueKlassen);
+  
+  // Initialize ordered klassen for modal
+  useEffect(() => {
+    if (showOrderModal && orderedKlassen.length === 0) {
+      setOrderedKlassen([...klassen]);
+    }
+  }, [showOrderModal, klassen, orderedKlassen.length]);
   
   // Verdeel klassen in twee groepen om naast elkaar te tonen
   const midPoint = Math.ceil(klassen.length / 2);
   const leftKlassen = klassen.slice(0, midPoint);
   const rightKlassen = klassen.slice(midPoint);
+  
+  const handleMoveKlas = (index: number, direction: 'up' | 'down') => {
+    const newOrder = [...orderedKlassen];
+    if (direction === 'up' && index > 0) {
+      [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    } else if (direction === 'down' && index < newOrder.length - 1) {
+      [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    }
+    setOrderedKlassen(newOrder);
+  };
+  
+  const handleSaveOrder = () => {
+    saveCustomKlassenOrder(orderedKlassen);
+    setShowOrderModal(false);
+    // Force reload to apply new order
+    window.location.reload();
+  };
+  
+  const handleResetOrder = () => {
+    const defaultOrder = sortKlassen(uniqueKlassen);
+    setOrderedKlassen(defaultOrder);
+    saveCustomKlassenOrder(defaultOrder);
+  };
 
   const dateObj = new Date(dateStr);
   const displayDate = formatDateDisplay(dateObj);
@@ -251,20 +284,32 @@ export default function DailyPage() {
             </div>
           </div>
           
-          {/* Filter per klas */}
+          {/* Filter per klas y ordenar */}
           {klassen.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <label className="text-sm font-medium text-white/90 mr-3">Filter op klas:</label>
-              <select
-                value={filterKlas}
-                onChange={(e) => setFilterKlas(e.target.value)}
-                className="px-4 py-2 bg-white/10 border-2 border-white/20 rounded-lg text-white focus:border-white/50 focus:outline-none transition-colors"
+            <div className="mt-4 pt-4 border-t border-white/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-white/90">Filter op klas:</label>
+                <select
+                  value={filterKlas}
+                  onChange={(e) => setFilterKlas(e.target.value)}
+                  className="px-4 py-2 bg-white/10 border-2 border-white/20 rounded-lg text-white focus:border-white/50 focus:outline-none transition-colors"
+                >
+                  <option value="" className="bg-blue-900">Alle klassen</option>
+                  {klassen.map(klas => (
+                    <option key={klas} value={klas} className="bg-blue-900">{klas}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={() => setShowOrderModal(true)}
+                className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-2"
+                title="Ordenar klassen"
               >
-                <option value="" className="bg-blue-900">Alle klassen</option>
-                {klassen.map(klas => (
-                  <option key={klas} value={klas} className="bg-blue-900">{klas}</option>
-                ))}
-              </select>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Ordenar Klassen
+              </button>
             </div>
           )}
         </div>
@@ -615,6 +660,84 @@ export default function DailyPage() {
           </div>
         </div>
       </div>
+      
+      {/* Modal para ordenar klassen */}
+      {showOrderModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="glass-effect rounded-xl p-6 border border-white/20 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-white">Ordenar Klassen</h2>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <p className="text-white/70 text-sm mb-4">
+              Gebruik de pijltjes om de volgorde van klassen aan te passen. De volgorde wordt gebruikt in de dagelijkse weergave.
+            </p>
+            
+            <div className="space-y-2 mb-6">
+              {orderedKlassen.map((klas, index) => (
+                <div
+                  key={klas}
+                  className="flex items-center gap-2 p-3 bg-white/5 rounded-lg border border-white/10"
+                >
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => handleMoveKlas(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      title="Omhoog"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleMoveKlas(index, 'down')}
+                      disabled={index === orderedKlassen.length - 1}
+                      className="p-1 text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      title="Omlaag"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex-1 text-white font-medium">{klas}</div>
+                  <div className="text-white/50 text-sm">#{index + 1}</div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveOrder}
+                className="flex-1 px-4 py-2 bg-brand-green hover:bg-emerald-600 text-white rounded-lg font-semibold transition-colors"
+              >
+                Opslaan
+              </button>
+              <button
+                onClick={handleResetOrder}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg font-medium transition-colors"
+              >
+                Reset naar Standaard
+              </button>
+              <button
+                onClick={() => setShowOrderModal(false)}
+                className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg font-medium transition-colors"
+              >
+                Annuleren
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
