@@ -58,7 +58,7 @@ export default function ReportsPage() {
   const COLORS = {
     vr: '#3b82f6', // blue
     vl: '#10b981', // emerald
-    generic: '#6b7280', // gray
+    generic: '#fca5a5', // light red
     total: '#8b5cf6', // purple
   };
 
@@ -754,13 +754,13 @@ export default function ReportsPage() {
           <div className="glass-effect rounded-lg p-6 border border-white/20">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-medium text-white/85 uppercase">Chillouts</p>
-              <div className="w-10 h-10 rounded-lg bg-gray-500/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 rounded-lg bg-red-300/20 flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <p className="text-3xl font-black text-white/90">{stats.totalGeneric}</p>
+            <p className="text-3xl font-black text-red-200">{stats.totalGeneric}</p>
             <p className="text-xs text-white/60 mt-1">
               {stats.totalChillOuts > 0 ? Math.round((stats.totalGeneric / stats.totalChillOuts) * 100) : 0}%
             </p>
@@ -873,7 +873,7 @@ export default function ReportsPage() {
                       <td className="px-4 py-3 text-center text-white">{klas.total}</td>
                       <td className="px-4 py-3 text-center text-blue-200">{klas.vr}</td>
                       <td className="px-4 py-3 text-center text-emerald-200">{klas.vl}</td>
-                      <td className="px-4 py-3 text-center text-white/90">{klas.generic}</td>
+                      <td className="px-4 py-3 text-center text-red-200">{klas.generic}</td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-24 bg-white/10 rounded-full h-2 overflow-hidden">
@@ -919,7 +919,7 @@ export default function ReportsPage() {
                       <td className="px-4 py-2 text-center font-semibold text-white">{student.total}</td>
                       <td className="px-4 py-2 text-center text-blue-200 font-medium">{student.vr}</td>
                       <td className="px-4 py-2 text-center text-emerald-200 font-medium">{student.vl}</td>
-                      <td className="px-4 py-2 text-center text-white/90">{student.generic}</td>
+                      <td className="px-4 py-2 text-center text-red-200">{student.generic}</td>
                     </tr>
                   ))}
                 </tbody>
