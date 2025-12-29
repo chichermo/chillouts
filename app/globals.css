@@ -120,5 +120,14 @@ p, span, div, .text-body {
   .glow-orange {
     box-shadow: 0 0 20px rgba(255, 223, 185, 0.3);
   }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 

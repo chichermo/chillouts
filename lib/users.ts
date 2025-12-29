@@ -149,15 +149,24 @@ export async function createUser(
 // Obtener usuario por username
 export async function getUserByUsername(username: string): Promise<User | null> {
   if (isSupabaseEnabled) {
-    const { data, error } = await supabase!
-      .from('users')
-      .select('*')
-      .eq('username', username)
-      .eq('active', true)
-      .single();
+    try {
+      const { data, error } = await supabase!
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .eq('active', true)
+        .maybeSingle();
 
-    if (error || !data) return null;
-    return data;
+      if (error) {
+        console.error('Error fetching user:', error);
+        return null;
+      }
+      
+      return data || null;
+    } catch (err) {
+      console.error('Exception fetching user:', err);
+      return null;
+    }
   } else {
     // Fallback a localStorage
     if (typeof window === 'undefined') return null;

@@ -127,7 +127,7 @@ export default function Navigation() {
   return (
     <nav className="bg-[#2a2a3a] shadow-md border-b border-white/10 sticky top-0 z-50 backdrop-blur-lg bg-opacity-98">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-18">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center group flex-shrink-0">
             <div className="hidden sm:block">
@@ -139,16 +139,16 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-hide">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 relative group overflow-hidden ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 relative group overflow-hidden whitespace-nowrap ${
                     isActive
-                      ? 'bg-white/20 text-white shadow-lg scale-105'
+                      ? 'bg-white/20 text-white shadow-lg'
                       : 'text-white/70 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -158,7 +158,7 @@ export default function Navigation() {
                   <span className={`relative z-10 ${isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>
                     {link.icon}
                   </span>
-                  <span className="relative z-10 text-body">{link.label}</span>
+                  <span className="relative z-10">{link.label}</span>
                   {!isActive && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                   )}
@@ -167,35 +167,37 @@ export default function Navigation() {
             })}
             
             {/* Install Button */}
-            <InstallButton />
-            
-            {/* Profile Link */}
-            <Link
-              href="/profile"
-              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
-                pathname === '/profile'
-                  ? 'bg-white/20 text-white shadow-lg scale-105'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-              title="Mijn Profiel"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="hidden lg:inline">Profiel</span>
-            </Link>
-            
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 text-white/70 hover:text-white hover:bg-red-500/20 border border-red-500/30"
-              title="Uitloggen"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span className="hidden lg:inline">Uitloggen</span>
-            </button>
+            <div className="ml-auto flex items-center gap-1.5">
+              <InstallButton />
+              
+              {/* Profile Link */}
+              <Link
+                href="/profile"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                  pathname === '/profile'
+                    ? 'bg-white/20 text-white shadow-lg'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+                title="Mijn Profiel"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="hidden lg:inline">Profiel</span>
+              </Link>
+              
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 text-white/70 hover:text-white hover:bg-red-500/20 border border-red-500/30 whitespace-nowrap"
+                title="Uitloggen"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="hidden lg:inline">Uitloggen</span>
+              </button>
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -249,7 +251,7 @@ export default function Navigation() {
             <Link
               href="/profile"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 mx-2 mb-1 ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 mx-2 mb-1 ${
                 pathname === '/profile'
                   ? 'bg-white/20 text-white shadow-lg'
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
@@ -267,7 +269,7 @@ export default function Navigation() {
                 handleLogout();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 mx-2 mb-1 text-white/70 hover:bg-red-500/20 hover:text-white border border-red-500/30"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 mx-2 mb-1 text-white/70 hover:bg-red-500/20 hover:text-white border border-red-500/30"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

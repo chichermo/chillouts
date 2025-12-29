@@ -33,15 +33,41 @@ export default function ProfilePage() {
 
     const loadUser = async () => {
       try {
+        // Si es el usuario Admin hardcoded, usar directamente sus datos
+        if (currentUser.id === 'admin_temp' || currentUser.username === 'Admin') {
+          setUser(currentUser);
+          setEmail(currentUser.email || '');
+          setPhone(currentUser.phone || '');
+          setProfilePicture(currentUser.profile_picture || '');
+          setLoading(false);
+          return;
+        }
+
+        // Para otros usuarios, intentar cargar desde Supabase
         const fullUser = await getUserByUsername(currentUser.username);
         if (fullUser) {
           setUser(fullUser);
           setEmail(fullUser.email || '');
           setPhone(fullUser.phone || '');
           setProfilePicture(fullUser.profile_picture || '');
+        } else {
+          // Si no se encuentra el usuario completo, usar los datos del usuario actual
+          setUser(currentUser);
+          setEmail(currentUser.email || '');
+          setPhone(currentUser.phone || '');
+          setProfilePicture(currentUser.profile_picture || '');
         }
       } catch (err) {
-        setError('Fout bij het laden van profielgegevens');
+        console.error('Error loading user profile:', err);
+        // Si hay error, usar los datos del usuario actual como fallback
+        setUser(currentUser);
+        setEmail(currentUser.email || '');
+        setPhone(currentUser.phone || '');
+        setProfilePicture(currentUser.profile_picture || '');
+        // Solo mostrar error si no es el usuario Admin
+        if (currentUser.id !== 'admin_temp' && currentUser.username !== 'Admin') {
+          setError('Kon profielgegevens niet volledig laden, maar u kunt nog steeds bewerken');
+        }
       } finally {
         setLoading(false);
       }
@@ -78,6 +104,21 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     if (!user) return;
 
+    // Si es el usuario Admin hardcoded, guardar solo en localStorage
+    if (user.id === 'admin_temp' || user.username === 'Admin') {
+      const updatedUser = {
+        ...user,
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        profile_picture: profilePicture || undefined,
+      };
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      setSuccess('Profiel succesvol bijgewerkt');
+      setTimeout(() => setSuccess(''), 3000);
+      return;
+    }
+
     setError('');
     setSuccess('');
     setSaving(true);
@@ -89,9 +130,20 @@ export default function ProfilePage() {
         profile_picture: profilePicture || undefined,
       });
 
+      // Actualizar usuario en localStorage también
+      const updatedUser = {
+        ...user,
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        profile_picture: profilePicture || undefined,
+      };
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+
       setSuccess('Profiel succesvol bijgewerkt');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
+      console.error('Error updating profile:', err);
       setError('Fout bij het bijwerken van profiel');
     } finally {
       setSaving(false);
