@@ -789,7 +789,7 @@ export default function ReportsPage() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip contentStyle={{ backgroundColor: '#2a2a3a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
 import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
-import { formatDate, formatDateDisplay, calculateDailyTotals } from '@/lib/utils';
+import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen } from '@/lib/utils';
 
 export default function DailyPage() {
   const params = useParams();
@@ -191,7 +191,7 @@ export default function DailyPage() {
   if (!record) return null;
 
   const totals = calculateTotals();
-  const klassen = [...new Set(students.map(s => s.klas))].sort();
+  const klassen = sortKlassen([...new Set(students.map(s => s.klas))]);
   
   // Verdeel klassen in twee groepen om naast elkaar te tonen
   const midPoint = Math.ceil(klassen.length / 2);
