@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { login, isAuthenticated } from '@/lib/auth';
 import { AUTH_USERNAME, AUTH_PASSWORD } from '@/lib/auth';
@@ -116,6 +117,16 @@ export default function LoginPage() {
             >
               {isLoading ? 'Inloggen...' : 'Inloggen'}
             </button>
+
+            {/* Link para reset de contraseña */}
+            <div className="text-center mt-4">
+              <Link
+                href="/reset-password"
+                className="text-sm text-white/70 hover:text-white transition-colors underline"
+              >
+                Wachtwoord vergeten?
+              </Link>
+            </div>
           </form>
         </div>
 

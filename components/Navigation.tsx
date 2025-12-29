@@ -169,6 +169,22 @@ export default function Navigation() {
             {/* Install Button */}
             <InstallButton />
             
+            {/* Profile Link */}
+            <Link
+              href="/profile"
+              className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                pathname === '/profile'
+                  ? 'bg-white/20 text-white shadow-lg scale-105'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+              title="Mijn Profiel"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="hidden lg:inline">Profiel</span>
+            </Link>
+            
             {/* Logout Button */}
             <button
               onClick={handleLogout}
@@ -228,6 +244,22 @@ export default function Navigation() {
             <div className="mx-2 mb-2">
               <InstallButton />
             </div>
+            
+            {/* Profile Link Mobile */}
+            <Link
+              href="/profile"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 mx-2 mb-1 ${
+                pathname === '/profile'
+                  ? 'bg-white/20 text-white shadow-lg'
+                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>Profiel</span>
+            </Link>
             
             {/* Logout Button Mobile */}
             <button

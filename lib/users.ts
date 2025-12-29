@@ -17,6 +17,11 @@ export interface User {
   updated_at?: string;
   last_login?: string;
   active: boolean;
+  profile_picture?: string;
+  email?: string;
+  phone?: string;
+  reset_token?: string;
+  reset_token_expires?: string;
 }
 
 export interface UserPermissions {
@@ -272,6 +277,97 @@ export async function authenticateUser(username: string, password: string): Prom
   }
 
   return user;
+}
+
+// Generar token de reset de contraseña
+export async function generateResetToken(username: string): Promise<string | null> {
+  const user = await getUserByUsername(username);
+  if (!user) return null;
+
+  // Generar token aleatorio
+  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const expires = new Date();
+  expires.setHours(expires.getHours() + 1); // Token válido por 1 hora
+
+  const updateData = {
+    reset_token: token,
+    reset_token_expires: expires.toISOString(),
+  };
+
+  if (isSupabaseEnabled) {
+    const { error } = await supabase!
+      .from('users')
+      .update(updateData)
+      .eq('id', user.id);
+
+    if (error) return null;
+  } else {
+    if (typeof window === 'undefined') return null;
+    
+    const STORAGE_KEY = 'chillapp_users';
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const users: User[] = stored ? JSON.parse(stored) : [];
+    
+    const index = users.findIndex(u => u.id === user.id);
+    if (index !== -1) {
+      users[index] = { ...users[index], ...updateData };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    }
+  }
+
+  return token;
+}
+
+// Resetear contraseña con token
+export async function resetPasswordWithToken(token: string, newPassword: string): Promise<boolean> {
+  if (isSupabaseEnabled) {
+    const { data: users, error: findError } = await supabase!
+      .from('users')
+      .select('*')
+      .eq('reset_token', token)
+      .gt('reset_token_expires', new Date().toISOString());
+
+    if (findError || !users || users.length === 0) return false;
+
+    const user = users[0];
+    const passwordHash = await hashPassword(newPassword);
+
+    const { error: updateError } = await supabase!
+      .from('users')
+      .update({
+        password_hash: passwordHash,
+        reset_token: null,
+        reset_token_expires: null,
+      })
+      .eq('id', user.id);
+
+    return !updateError;
+  } else {
+    if (typeof window === 'undefined') return false;
+    
+    const STORAGE_KEY = 'chillapp_users';
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const users: User[] = stored ? JSON.parse(stored) : [];
+    
+    const user = users.find(u => u.reset_token === token && u.reset_token_expires && new Date(u.reset_token_expires) > new Date());
+    if (!user) return false;
+
+    const passwordHash = await hashPassword(newPassword);
+    const index = users.findIndex(u => u.id === user.id);
+    
+    if (index !== -1) {
+      users[index] = {
+        ...users[index],
+        password_hash: passwordHash,
+        reset_token: undefined,
+        reset_token_expires: undefined,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+      return true;
+    }
+    
+    return false;
+  }
 }
 
 // Verificar permisos

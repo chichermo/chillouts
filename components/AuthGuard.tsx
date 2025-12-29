@@ -22,8 +22,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // No proteger la ruta de login o create-users
-    if (pathname === '/login' || pathname === '/create-users') {
+    // No proteger la ruta de login, create-users o reset-password
+    if (pathname === '/login' || pathname === '/create-users' || pathname === '/reset-password') {
       setIsChecking(false);
       return;
     }
@@ -56,7 +56,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [router, pathname]);
 
   // Mostrar nada mientras se verifica (o un loader si prefieres)
-  if (isChecking && pathname !== '/login' && pathname !== '/create-users') {
+  if (isChecking && pathname !== '/login' && pathname !== '/create-users' && pathname !== '/reset-password') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#2a2a3a]">
         <div className="text-white">Laden...</div>
