@@ -21,6 +21,7 @@ export default function MigratePage() {
     if (!migrating && !completed) {
       handleMigrate();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleMigrate = async () => {

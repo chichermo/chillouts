@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
@@ -183,6 +183,17 @@ export default function DailyPage() {
     return { totals, vr, vl };
   };
 
+  // Calculate klassen with useMemo to ensure stable reference
+  const uniqueKlassen = useMemo(() => [...new Set(students.map(s => s.klas))], [students]);
+  const klassen = useMemo(() => getCustomKlassenOrder(uniqueKlassen), [uniqueKlassen]);
+  
+  // Initialize ordered klassen for modal
+  useEffect(() => {
+    if (showOrderModal && orderedKlassen.length === 0 && klassen.length > 0) {
+      setOrderedKlassen([...klassen]);
+    }
+  }, [showOrderModal, orderedKlassen.length, klassen]);
+
   if (loading) {
     return <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
       <Navigation />
@@ -193,15 +204,6 @@ export default function DailyPage() {
   if (!record) return null;
 
   const totals = calculateTotals();
-  const uniqueKlassen = [...new Set(students.map(s => s.klas))];
-  const klassen = getCustomKlassenOrder(uniqueKlassen);
-  
-  // Initialize ordered klassen for modal
-  useEffect(() => {
-    if (showOrderModal && orderedKlassen.length === 0) {
-      setOrderedKlassen([...klassen]);
-    }
-  }, [showOrderModal, klassen, orderedKlassen.length]);
   
   // Verdeel klassen in twee groepen om naast elkaar te tonen
   const midPoint = Math.ceil(klassen.length / 2);
@@ -301,7 +303,10 @@ export default function DailyPage() {
                 </select>
               </div>
               <button
-                onClick={() => setShowOrderModal(true)}
+                onClick={() => {
+                  setOrderedKlassen([...klassen]);
+                  setShowOrderModal(true);
+                }}
                 className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-2"
                 title="Ordenar klassen"
               >
