@@ -189,7 +189,7 @@ export default function StatsPage() {
               </div>
             </div>
           </div>
-          <div className="glass-effect rounded-lg shadow-md p-4 border-t-3 border-blue-400/50">
+          <div className="glass-effect rounded-lg shadow-md p-4 border-t-3" style={{ borderTopColor: `${COLORS.vr}80` }}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-white/85">Totaal VR</p>
@@ -198,14 +198,14 @@ export default function StatsPage() {
                   {stats.totalChillOuts > 0 ? Math.round((stats.totalVR / stats.totalChillOuts) * 100) : 0}%
                 </p>
               </div>
-              <div className="bg-brand-blue/20 rounded-full p-2">
+              <div className="rounded-full p-2" style={{ backgroundColor: `${COLORS.vr}33` }}>
                 <svg className="w-6 h-6 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
             </div>
           </div>
-          <div className="glass-effect rounded-lg shadow-md p-4 border-t-3 border-emerald-400/50">
+          <div className="glass-effect rounded-lg shadow-md p-4 border-t-3" style={{ borderTopColor: `${COLORS.vl}80` }}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-white/85">Totaal VL</p>
@@ -214,7 +214,7 @@ export default function StatsPage() {
                   {stats.totalChillOuts > 0 ? Math.round((stats.totalVL / stats.totalChillOuts) * 100) : 0}%
                 </p>
               </div>
-              <div className="bg-brand-green/20 rounded-full p-2">
+              <div className="rounded-full p-2" style={{ backgroundColor: `${COLORS.vl}33` }}>
                 <svg className="w-6 h-6 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
@@ -240,13 +240,13 @@ export default function StatsPage() {
                     <div className="w-full bg-white/20 rounded-full h-6 overflow-hidden">
                       <div className="flex h-full">
                         <div
-                          className="bg-brand-blue transition-all duration-500"
-                          style={{ width: `${(hourData.vr / maxHourTotal) * 100}%` }}
+                          className="transition-all duration-500"
+                          style={{ width: `${(hourData.vr / maxHourTotal) * 100}%`, backgroundColor: COLORS.vr }}
                           title={`VR: ${hourData.vr}`}
                         />
                         <div
-                          className="bg-brand-green transition-all duration-500"
-                          style={{ width: `${(hourData.vl / maxHourTotal) * 100}%` }}
+                          className="transition-all duration-500"
+                          style={{ width: `${(hourData.vl / maxHourTotal) * 100}%`, backgroundColor: COLORS.vl }}
                           title={`VL: ${hourData.vl}`}
                         />
                       </div>
@@ -277,13 +277,13 @@ export default function StatsPage() {
                     <div className="w-full bg-white/20 rounded-full h-6 overflow-hidden">
                       <div className="flex h-full">
                         <div
-                          className="bg-brand-blue transition-all duration-500"
-                          style={{ width: `${(klasData.vr / maxKlasTotal) * 100}%` }}
+                          className="transition-all duration-500"
+                          style={{ width: `${(klasData.vr / maxKlasTotal) * 100}%`, backgroundColor: COLORS.vr }}
                           title={`VR: ${klasData.vr}`}
                         />
                         <div
-                          className="bg-brand-green transition-all duration-500"
-                          style={{ width: `${(klasData.vl / maxKlasTotal) * 100}%` }}
+                          className="transition-all duration-500"
+                          style={{ width: `${(klasData.vl / maxKlasTotal) * 100}%`, backgroundColor: COLORS.vl }}
                           title={`VL: ${klasData.vl}`}
                         />
                       </div>
