@@ -82,14 +82,14 @@ export default function PWARegister() {
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 bg-blue-600 text-white p-4 rounded-lg shadow-lg border-2 border-blue-400">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
-              <p className="font-semibold mb-1">Nueva versión disponible</p>
-              <p className="text-sm text-blue-100">Haz clic para actualizar la aplicación</p>
+              <p className="font-semibold mb-1">Nieuwe versie beschikbaar</p>
+              <p className="text-sm text-blue-100">Klik om de app bij te werken</p>
             </div>
             <button
               onClick={handleUpdate}
               className="px-4 py-2 bg-white text-blue-600 rounded-md font-semibold hover:bg-blue-50 whitespace-nowrap"
             >
-              Actualizar
+              Bijwerken
             </button>
           </div>
         </div>

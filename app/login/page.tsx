@@ -102,7 +102,7 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Mensaje de error */}
+            {/* Foutmelding */}
             {error && (
               <div className="p-3 rounded-xl bg-brand-pink/20 border border-brand-pink/30 text-white text-sm text-center">
                 {error}

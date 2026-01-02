@@ -82,7 +82,7 @@ export default function MigratePage() {
                   successCount++;
                   setProgress(prev => ({ ...prev, students: successCount }));
                 } else {
-                  errors.push(`Error con ${student.name}: ya existe o error desconocido`);
+                  errors.push(`Fout met ${student.name}: bestaat al of onbekende fout`);
                 }
               }
             } else {
@@ -106,11 +106,11 @@ export default function MigratePage() {
                 setProgress(prev => ({ ...prev, students: successCount }));
               } else {
                 const errorText = await postResponse.text();
-                errors.push(`Error con ${student.name}: ${errorText.substring(0, 50)}`);
+                errors.push(`Fout met ${student.name}: ${errorText.substring(0, 50)}`);
               }
             }
           } catch (error: any) {
-            errors.push(`Error con ${student.name}: ${error.message}`);
+            errors.push(`Fout met ${student.name}: ${error.message}`);
           }
         }
 
@@ -167,11 +167,11 @@ export default function MigratePage() {
                 setProgress(prev => ({ ...prev, records: successCount }));
               } else {
                 const errorText = await postResponse.text();
-                errors.push(`Error con registro ${record.date}: ${errorText.substring(0, 50)}`);
+                errors.push(`Fout met record ${record.date}: ${errorText.substring(0, 50)}`);
               }
             }
           } catch (error: any) {
-            errors.push(`Error con registro ${record.date}: ${error.message}`);
+            errors.push(`Fout met record ${record.date}: ${error.message}`);
           }
         }
 
@@ -183,7 +183,7 @@ export default function MigratePage() {
       setCompleted(true);
 
     } catch (error: any) {
-      setStatus(`❌ Error: ${error.message}`);
+      setStatus(`❌ Fout: ${error.message}`);
       setMigrating(false);
     }
   };
@@ -242,7 +242,7 @@ export default function MigratePage() {
                   href="/"
                   className="mt-4 inline-block px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
                 >
-                  Volver al inicio
+                  Terug naar start
                 </a>
               </div>
             )}
@@ -252,7 +252,7 @@ export default function MigratePage() {
                 onClick={handleMigrate}
                 className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors"
               >
-                Iniciar Migración
+                Migratie starten
               </button>
             )}
           </div>

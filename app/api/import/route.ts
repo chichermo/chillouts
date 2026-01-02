@@ -12,12 +12,12 @@ export async function GET() {
     return NextResponse.json({ 
       success: true, 
       data,
-      message: 'Datos cargados correctamente'
+      message: 'Gegevens succesvol geladen'
     });
   } catch (error) {
     return NextResponse.json({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Error desconocido'
+      error: error instanceof Error ? error.message : 'Onbekende fout'
     }, { status: 500 });
   }
 }

@@ -230,7 +230,7 @@ export default function WeeklyPage() {
                 );
               })}
               
-              {/* Fila de totales generales */}
+              {/* Rij van algemene totalen */}
               <tr className="bg-brand-orange-500/20 font-bold">
                 <td className="border border-white/20 px-2 py-2 text-white">TOTAAL</td>
                 {weekDays.map(day => {

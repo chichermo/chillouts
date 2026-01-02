@@ -38,7 +38,7 @@ export default function UsersPage() {
       const allUsers = await getAllUsers();
       setUsers(allUsers);
     } catch (error: any) {
-      setError(`Error cargando usuarios: ${error.message}`);
+      setError(`Fout bij laden gebruikers: ${error.message}`);
     } finally {
       setLoading(false);
     }

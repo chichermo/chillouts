@@ -286,7 +286,7 @@ export default function DailyPage() {
             </div>
           </div>
           
-          {/* Filter per klas y ordenar */}
+          {/* Filter op klas en sorteren */}
           {klassen.length > 0 && (
             <div className="mt-4 pt-4 border-t border-white/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
@@ -308,12 +308,12 @@ export default function DailyPage() {
                   setShowOrderModal(true);
                 }}
                 className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-white text-sm font-medium transition-colors flex items-center gap-2"
-                title="Ordenar klassen"
+                title="Sorteren klassen"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                Ordenar Klassen
+                Sorteren Klassen
               </button>
             </div>
           )}
@@ -364,7 +364,7 @@ export default function DailyPage() {
 
         {/* Registratie per klas - Twee kolommen */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Columna izquierda */}
+          {/* Linker kolom */}
           <div>
             {filteredKlassen.slice(0, Math.ceil(filteredKlassen.length / 2)).map(klas => {
               const klasStudents = students.filter(s => s.klas === klas);
@@ -514,7 +514,7 @@ export default function DailyPage() {
             })}
           </div>
 
-          {/* Columna derecha */}
+          {/* Rechter kolom */}
           <div>
             {filteredKlassen.slice(Math.ceil(filteredKlassen.length / 2)).map(klas => {
               const klasStudents = students.filter(s => s.klas === klas);
@@ -666,12 +666,12 @@ export default function DailyPage() {
         </div>
       </div>
       
-      {/* Modal para ordenar klassen */}
+      {/* Modal om klassen te sorteren */}
       {showOrderModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="glass-effect rounded-xl p-6 border border-white/20 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-white">Ordenar Klassen</h2>
+              <h2 className="text-2xl font-bold text-white">Sorteren Klassen</h2>
               <button
                 onClick={() => setShowOrderModal(false)}
                 className="text-white/70 hover:text-white transition-colors"
