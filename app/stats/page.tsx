@@ -11,10 +11,11 @@ export default function StatsPage() {
     totalChillOuts: 0,
     totalVR: 0,
     totalVL: 0,
-    byHour: {} as { [hour: number]: { total: number; vr: number; vl: number } },
-    byKlas: {} as { [klas: string]: { total: number; vr: number; vl: number } },
-    byStudent: {} as { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number } },
-    recentDays: [] as { date: string; total: number; vr: number; vl: number }[],
+    totalGeneric: 0,
+    byHour: {} as { [hour: number]: { total: number; vr: number; vl: number; generic: number } },
+    byKlas: {} as { [klas: string]: { total: number; vr: number; vl: number; generic: number } },
+    byStudent: {} as { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number; generic: number } },
+    recentDays: [] as { date: string; total: number; vr: number; vl: number; generic: number }[],
   });
   const [mounted, setMounted] = useState(false);
 
@@ -34,20 +35,21 @@ export default function StatsPage() {
     let totalChillOuts = 0;
     let totalVR = 0;
     let totalVL = 0;
-    const byHour: { [hour: number]: { total: number; vr: number; vl: number } } = {};
-    const byKlas: { [klas: string]: { total: number; vr: number; vl: number } } = {};
-    const byStudent: { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number } } = {};
-    const recentDays: { date: string; total: number; vr: number; vl: number }[] = [];
+    let totalGeneric = 0;
+    const byHour: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } = {};
+    const byKlas: { [klas: string]: { total: number; vr: number; vl: number; generic: number } } = {};
+    const byStudent: { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number; generic: number } } = {};
+    const recentDays: { date: string; total: number; vr: number; vl: number; generic: number }[] = [];
 
     // Inicializar horas
     for (let hour = 1; hour <= 7; hour++) {
-      byHour[hour] = { total: 0, vr: 0, vl: 0 };
+      byHour[hour] = { total: 0, vr: 0, vl: 0, generic: 0 };
     }
 
     // Inicializar clases y estudiantes
     data.students.forEach(student => {
       if (!byKlas[student.klas]) {
-        byKlas[student.klas] = { total: 0, vr: 0, vl: 0 };
+        byKlas[student.klas] = { total: 0, vr: 0, vl: 0, generic: 0 };
       }
       if (student.status === 'Actief') {
         byStudent[student.id] = {
@@ -56,6 +58,7 @@ export default function StatsPage() {
           total: 0,
           vr: 0,
           vl: 0,
+          generic: 0,
         };
       }
     });
@@ -80,9 +83,14 @@ export default function StatsPage() {
 
       // Por hora
       for (let hour = 1; hour <= 7; hour++) {
-        byHour[hour].total += totals.totals[hour] || 0;
-        byHour[hour].vr += totals.vr[hour] || 0;
-        byHour[hour].vl += totals.vl[hour] || 0;
+        const hourTotal = totals.totals[hour] || 0;
+        const hourVR = totals.vr[hour] || 0;
+        const hourVL = totals.vl[hour] || 0;
+        const hourGeneric = hourTotal - hourVR - hourVL;
+        byHour[hour].total += hourTotal;
+        byHour[hour].vr += hourVR;
+        byHour[hour].vl += hourVL;
+        byHour[hour].generic += hourGeneric;
       }
 
       // Por clase y por estudiante
@@ -99,6 +107,8 @@ export default function StatsPage() {
                     byKlas[student.klas].vr += 1;
                   } else if (entry.type === 'VL') {
                     byKlas[student.klas].vl += 1;
+                  } else {
+                    byKlas[student.klas].generic += 1;
                   }
                   
                   // Contar en estudiante
@@ -108,9 +118,10 @@ export default function StatsPage() {
                       byStudent[student.id].vr += 1;
                     } else if (entry.type === 'VL') {
                       byStudent[student.id].vl += 1;
+                    } else {
+                      byStudent[student.id].generic += 1;
                     }
                   }
-                  // Los chill-outs genéricos (type === null) se cuentan en total pero no en VR/VL
                 }
               });
             }
@@ -118,16 +129,21 @@ export default function StatsPage() {
         }
       });
 
+      // Totales generales del día
+      const dayTotal = Object.values(totals.totals).reduce((a, b) => a + b, 0);
+      const dayVR = Object.values(totals.vr).reduce((a, b) => a + b, 0);
+      const dayVL = Object.values(totals.vl).reduce((a, b) => a + b, 0);
+      const dayGeneric = dayTotal - dayVR - dayVL;
+      totalGeneric += dayGeneric;
+
       // Días recientes
       if (sortedDates.includes(date)) {
-        const dayTotal = Object.values(totals.totals).reduce((a, b) => a + b, 0);
-        const dayVR = Object.values(totals.vr).reduce((a, b) => a + b, 0);
-        const dayVL = Object.values(totals.vl).reduce((a, b) => a + b, 0);
         recentDays.push({
           date,
           total: dayTotal,
           vr: dayVR,
           vl: dayVL,
+          generic: dayGeneric,
         });
       }
     });
@@ -136,6 +152,7 @@ export default function StatsPage() {
         totalChillOuts,
         totalVR,
         totalVL,
+        totalGeneric,
         byHour,
         byKlas,
         byStudent,
@@ -229,7 +246,7 @@ export default function StatsPage() {
             <h2 className="text-lg font-bold mb-3 text-white">Chill-outs per Lesuur</h2>
             <div className="space-y-4">
               {[1, 2, 3, 4, 5, 6, 7].map(hour => {
-                const hourData = stats.byHour[hour] || { total: 0, vr: 0, vl: 0 };
+                const hourData = stats.byHour[hour] || { total: 0, vr: 0, vl: 0, generic: 0 };
                 const percentage = maxHourTotal > 0 ? (hourData.total / maxHourTotal) * 100 : 0;
                 return (
                   <div key={hour}>
@@ -249,11 +266,17 @@ export default function StatsPage() {
                           style={{ width: `${(hourData.vl / maxHourTotal) * 100}%`, backgroundColor: COLORS.vl }}
                           title={`VL: ${hourData.vl}`}
                         />
+                        <div
+                          className="transition-all duration-500"
+                          style={{ width: `${(hourData.generic / maxHourTotal) * 100}%`, backgroundColor: COLORS.generic }}
+                          title={`Chillouts: ${hourData.generic}`}
+                        />
                       </div>
                     </div>
                     <div className="flex gap-4 mt-1 text-xs">
                       <span className="text-blue-200">VR: {hourData.vr}</span>
                       <span className="text-emerald-200">VL: {hourData.vl}</span>
+                      <span style={{ color: COLORS.generic }}>Chillouts: {hourData.generic}</span>
                     </div>
                   </div>
                 );
@@ -286,11 +309,17 @@ export default function StatsPage() {
                           style={{ width: `${(klasData.vl / maxKlasTotal) * 100}%`, backgroundColor: COLORS.vl }}
                           title={`VL: ${klasData.vl}`}
                         />
+                        <div
+                          className="transition-all duration-500"
+                          style={{ width: `${(klasData.generic / maxKlasTotal) * 100}%`, backgroundColor: COLORS.generic }}
+                          title={`Chillouts: ${klasData.generic}`}
+                        />
                       </div>
                     </div>
                     <div className="flex gap-4 mt-1 text-xs">
                       <span className="text-blue-200">VR: {klasData.vr}</span>
                       <span className="text-emerald-200">VL: {klasData.vl}</span>
+                      <span style={{ color: COLORS.generic }}>Chillouts: {klasData.generic}</span>
                     </div>
                   </div>
                 );
@@ -313,6 +342,7 @@ export default function StatsPage() {
                   <div className="flex justify-center gap-2 mt-2 text-xs">
                     <span className="text-blue-200">VR: {day.vr}</span>
                     <span className="text-emerald-200">VL: {day.vl}</span>
+                    <span style={{ color: COLORS.generic }}>Chillouts: {day.generic || 0}</span>
                   </div>
                 </div>
               ))}
@@ -348,7 +378,7 @@ export default function StatsPage() {
                     })
                     .map(studentId => {
                       const student = stats.byStudent[studentId];
-                      const genericCount = student.total - student.vr - student.vl;
+                      const genericCount = student.generic || (student.total - student.vr - student.vl);
                       return (
                         <tr key={studentId} className="border-b border-white/10 hover:bg-white/10 transition-colors">
                           <td className="px-3 py-2 font-medium text-white">{student.name}</td>
@@ -358,7 +388,7 @@ export default function StatsPage() {
                           <td className="px-3 py-2 text-center font-semibold text-white">{student.total}</td>
                           <td className="px-3 py-2 text-center text-blue-200 font-medium">{student.vr}</td>
                           <td className="px-3 py-2 text-center text-emerald-200 font-medium">{student.vl}</td>
-                          <td className="px-3 py-2 text-center text-red-200 font-medium">{genericCount}</td>
+                          <td className="px-3 py-2 text-center font-medium" style={{ color: COLORS.generic }}>{genericCount}</td>
                         </tr>
                       );
                     })}
