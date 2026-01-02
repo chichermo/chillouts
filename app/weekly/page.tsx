@@ -217,10 +217,10 @@ export default function WeeklyPage() {
                     <td className="border border-white/20 px-2 py-2 text-center font-semibold bg-white/10 text-white">
                       {totals.total}
                     </td>
-                    <td className="border border-white/20 px-2 py-2 text-center bg-blue-500/20 text-white">
+                    <td className="border border-white/20 px-2 py-2 text-center bg-blue-500/20 text-blue-200 font-semibold">
                       {totals.vr}
                     </td>
-                    <td className="border border-white/20 px-2 py-2 text-center bg-emerald-500/20 text-white">
+                    <td className="border border-white/20 px-2 py-2 text-center bg-emerald-500/20 text-emerald-200 font-semibold">
                       {totals.vl}
                     </td>
                     <td className="border border-white/20 px-2 py-2 text-center text-white">
@@ -245,8 +245,8 @@ export default function WeeklyPage() {
                   );
                 })}
                 <td className="border border-white/20 px-2 py-2 text-center text-white">{weekTotal.total}</td>
-                <td className="border border-white/20 px-2 py-2 text-center text-white">{weekTotal.vr}</td>
-                <td className="border border-white/20 px-2 py-2 text-center text-white">{weekTotal.vl}</td>
+                <td className="border border-white/20 px-2 py-2 text-center text-blue-200 font-semibold">{weekTotal.vr}</td>
+                <td className="border border-white/20 px-2 py-2 text-center text-emerald-200 font-semibold">{weekTotal.vl}</td>
                 <td className="border border-white/20 px-2 py-2 text-center text-white">
                   {(weekTotal.total / 5).toFixed(1)}
                 </td>
@@ -328,10 +328,10 @@ export default function WeeklyPage() {
                         <td className="border border-white/20 px-2 py-2 text-center font-semibold bg-white/10 text-white">
                           {weekTotal}
                         </td>
-                        <td className="border border-white/20 px-2 py-2 text-center bg-blue-500/20 text-white">
+                        <td className="border border-white/20 px-2 py-2 text-center bg-blue-500/20 text-blue-200 font-semibold">
                           {weekVR}
                         </td>
-                        <td className="border border-white/20 px-2 py-2 text-center bg-emerald-500/20 text-white">
+                        <td className="border border-white/20 px-2 py-2 text-center bg-emerald-500/20 text-emerald-200 font-semibold">
                           {weekVL}
                         </td>
                         <td className="border border-white/20 px-2 py-2 text-center text-white">

@@ -18,6 +18,13 @@ export default function StatsPage() {
   });
   const [mounted, setMounted] = useState(false);
 
+  // Colores consistentes con Rapporten
+  const COLORS = {
+    vr: '#3b82f6', // blue
+    vl: '#10b981', // emerald
+    generic: '#fca5a5', // light red
+  };
+
   useEffect(() => {
     setMounted(true);
     const loadDataAsync = async () => {
@@ -244,9 +251,9 @@ export default function StatsPage() {
                         />
                       </div>
                     </div>
-                    <div className="flex gap-4 mt-1 text-xs text-white/90">
-                      <span>VR: {hourData.vr}</span>
-                      <span>VL: {hourData.vl}</span>
+                    <div className="flex gap-4 mt-1 text-xs">
+                      <span className="text-blue-200">VR: {hourData.vr}</span>
+                      <span className="text-emerald-200">VL: {hourData.vl}</span>
                     </div>
                   </div>
                 );
@@ -281,9 +288,9 @@ export default function StatsPage() {
                         />
                       </div>
                     </div>
-                    <div className="flex gap-4 mt-1 text-xs text-white/90">
-                      <span>VR: {klasData.vr}</span>
-                      <span>VL: {klasData.vl}</span>
+                    <div className="flex gap-4 mt-1 text-xs">
+                      <span className="text-blue-200">VR: {klasData.vr}</span>
+                      <span className="text-emerald-200">VL: {klasData.vl}</span>
                     </div>
                   </div>
                 );
@@ -351,7 +358,7 @@ export default function StatsPage() {
                           <td className="px-3 py-2 text-center font-semibold text-white">{student.total}</td>
                           <td className="px-3 py-2 text-center text-blue-200 font-medium">{student.vr}</td>
                           <td className="px-3 py-2 text-center text-emerald-200 font-medium">{student.vl}</td>
-                          <td className="px-3 py-2 text-center text-white/90">{genericCount}</td>
+                          <td className="px-3 py-2 text-center text-red-200 font-medium">{genericCount}</td>
                         </tr>
                       );
                     })}
