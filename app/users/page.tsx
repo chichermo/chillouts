@@ -75,7 +75,13 @@ export default function UsersPage() {
 
   const handleUpdate = async (userId: string) => {
     try {
-      await updateUser(userId, editingUser);
+      // Crear objeto de actualización sin password vacío
+      const updateData: any = { ...editingUser };
+      // Solo incluir password si tiene un valor real
+      if (!updateData.password || updateData.password.trim() === '') {
+        delete updateData.password;
+      }
+      await updateUser(userId, updateData);
       setSuccess('Gebruiker succesvol bijgewerkt.');
       setEditingId(null);
       setEditingUser({});

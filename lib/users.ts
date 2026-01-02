@@ -204,11 +204,20 @@ export async function updateUser(
   userId: string,
   updates: Partial<Omit<User, 'id' | 'password_hash'>> & { password?: string }
 ): Promise<void> {
-  const updateData: any = { ...updates };
+  // Crear objeto de actualización sin incluir password directamente
+  const updateData: any = {};
   
-  if (updates.password) {
+  // Solo incluir campos que existen en la tabla users
+  if (updates.username !== undefined) updateData.username = updates.username;
+  if (updates.role !== undefined) updateData.role = updates.role;
+  if (updates.active !== undefined) updateData.active = updates.active;
+  if (updates.email !== undefined) updateData.email = updates.email;
+  if (updates.phone !== undefined) updateData.phone = updates.phone;
+  if (updates.profile_picture !== undefined) updateData.profile_picture = updates.profile_picture;
+  
+  // Manejar password: convertir a password_hash si se proporciona
+  if (updates.password && updates.password.trim() !== '') {
     updateData.password_hash = await hashPassword(updates.password);
-    delete updateData.password;
   }
   
   // Solo actualizar permisos automáticamente si se cambia el rol Y no se están pasando permisos personalizados
