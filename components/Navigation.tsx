@@ -125,11 +125,11 @@ export default function Navigation() {
   const navLinks = getNavLinks();
 
   return (
-    <nav className="bg-[#2a2a3a] shadow-md border-b border-white/10 sticky top-0 z-50 backdrop-blur-lg bg-opacity-98">
+    <nav className="bg-[#1a1a2e] border-b-2 border-white/20 sticky top-0 z-50 shadow-lg">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center group flex-shrink-0">
+          <Link href="/" className="flex items-center flex-shrink-0 py-3">
             <div className="hidden sm:block">
               <Logo variant="compact" />
             </div>
@@ -139,44 +139,38 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-hide">
+          <div className="hidden md:flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide ml-6">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 relative group overflow-hidden whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap border ${
                     isActive
-                      ? 'bg-white/20 text-white shadow-lg'
-                      : 'text-white/70 hover:text-white hover:bg-white/10'
+                      ? 'bg-blue-600 text-white border-blue-500 shadow-md'
+                      : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
                   }`}
                 >
-                  {isActive && (
-                    <div className="absolute inset-0 bg-white/10"></div>
-                  )}
-                  <span className={`relative z-10 ${isActive ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>
+                  <span className={`${isActive ? 'text-white' : 'text-white/70'}`}>
                     {link.icon}
                   </span>
-                  <span className="relative z-10">{link.label}</span>
-                  {!isActive && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
-                  )}
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
             
-            {/* Install Button */}
-            <div className="ml-auto flex items-center gap-1.5">
+            {/* Separator */}
+            <div className="ml-auto flex items-center gap-2 pl-4 border-l border-white/20">
               <InstallButton />
               
               {/* Profile Link */}
               <Link
                 href="/profile"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap border ${
                   pathname === '/profile'
-                    ? 'bg-white/20 text-white shadow-lg'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-md'
+                    : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
                 }`}
                 title="Mijn Profiel"
               >
@@ -189,7 +183,7 @@ export default function Navigation() {
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all duration-300 text-white/70 hover:text-white hover:bg-red-500/20 border border-red-500/30 whitespace-nowrap"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium whitespace-nowrap border border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100 hover:border-red-500/60"
                 title="Uitloggen"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,7 +197,7 @@ export default function Navigation() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2.5 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-all duration-200"
+            className="md:hidden p-3 rounded-md text-white/80 hover:bg-white/10 hover:text-white border border-white/10"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -220,7 +214,7 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/10 py-3 bg-[#2a2a3a]/98 backdrop-blur-lg">
+          <div className="md:hidden border-t-2 border-white/20 py-4 bg-[#1a1a2e]">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
               return (
@@ -228,22 +222,25 @@ export default function Navigation() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 mx-2 mb-1 ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-md font-medium mx-2 mb-2 border ${
                     isActive
-                      ? 'bg-white/20 text-white shadow-lg'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      ? 'bg-blue-600 text-white border-blue-500 shadow-md'
+                      : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   <span className={`${isActive ? 'text-white' : 'text-white/70'}`}>
                     {link.icon}
                   </span>
-                  <span className="text-body">{link.label}</span>
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
             
+            {/* Separator Mobile */}
+            <div className="border-t-2 border-white/20 my-3 mx-2"></div>
+            
             {/* Install Button Mobile */}
-            <div className="mx-2 mb-2">
+            <div className="mx-2 mb-3">
               <InstallButton />
             </div>
             
@@ -251,10 +248,10 @@ export default function Navigation() {
             <Link
               href="/profile"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 mx-2 mb-1 ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-md font-medium mx-2 mb-2 border ${
                 pathname === '/profile'
-                  ? 'bg-white/20 text-white shadow-lg'
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-md'
+                  : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +266,7 @@ export default function Navigation() {
                 handleLogout();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 mx-2 mb-1 text-white/70 hover:bg-red-500/20 hover:text-white border border-red-500/30"
+              className="flex items-center gap-3 px-4 py-3 rounded-md font-medium mx-2 mb-2 border border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100 hover:border-red-500/60"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
