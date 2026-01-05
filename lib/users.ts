@@ -392,6 +392,8 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
 export function hasPermission(user: User | null, permission: keyof UserPermissions): boolean {
   if (!user || !user.active) return false;
   if (user.role === 'admin') return true;
+  // Verificar que permissions exista y que el permiso específico sea true
+  if (!user.permissions) return false;
   return user.permissions[permission] === true;
 }
 

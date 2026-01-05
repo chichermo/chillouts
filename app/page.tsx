@@ -6,6 +6,8 @@ import Navigation from '@/components/Navigation';
 import Logo from '@/components/Logo';
 import { loadData } from '@/lib/storage';
 import { formatDate, getDayName } from '@/lib/utils';
+import { getCurrentUser, hasPermission } from '@/lib/auth';
+import type { UserPermissions } from '@/lib/users';
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -13,6 +15,7 @@ export default function Home() {
   const [activeStudents, setActiveStudents] = useState(0);
   const [totalDays, setTotalDays] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
 
   const [totalChillOuts, setTotalChillOuts] = useState(0);
   const [todayChillOuts, setTodayChillOuts] = useState(0);
@@ -23,6 +26,7 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     setCurrentDate(new Date());
+    setUser(getCurrentUser());
     
     // Cargar datos solo en el cliente
     const loadDataAsync = async () => {
@@ -169,10 +173,12 @@ export default function Home() {
         {/* Navigation Cards - Diseño único con glassmorphism */}
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link
-              href="/students"
-              className="group relative overflow-hidden"
-            >
+            {/* Beheer Studenten - Solo si tiene permiso students */}
+            {user && hasPermission(user, 'students') && (
+              <Link
+                href="/students"
+                className="group relative overflow-hidden"
+              >
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
               <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
                 <div className="flex items-start justify-between mb-6">
@@ -195,11 +201,14 @@ export default function Home() {
                 </p>
               </div>
             </Link>
+            )}
 
-            <Link
-              href={`/daily/${todayStr}`}
-              className="group relative overflow-hidden"
-            >
+            {/* Vandaag - Solo si tiene permiso dagelijks */}
+            {user && hasPermission(user, 'dagelijks') && (
+              <Link
+                href={`/daily/${todayStr}`}
+                className="group relative overflow-hidden"
+              >
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
               <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
                 <div className="flex items-start justify-between mb-6">
@@ -222,11 +231,14 @@ export default function Home() {
                 </p>
               </div>
             </Link>
+            )}
 
-            <Link
-              href="/daily"
-              className="group relative overflow-hidden"
-            >
+            {/* Dagelijks Overzicht - Solo si tiene permiso dagelijks */}
+            {user && hasPermission(user, 'dagelijks') && (
+              <Link
+                href="/daily"
+                className="group relative overflow-hidden"
+              >
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
               <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
                 <div className="flex items-start justify-between mb-6">
@@ -249,11 +261,14 @@ export default function Home() {
                 </p>
               </div>
             </Link>
+            )}
 
-            <Link
-              href="/weekly"
-              className="group relative overflow-hidden"
-            >
+            {/* Weekoverzicht - Solo si tiene permiso weekoverzicht */}
+            {user && hasPermission(user, 'weekoverzicht') && (
+              <Link
+                href="/weekly"
+                className="group relative overflow-hidden"
+              >
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
               <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
                 <div className="flex items-start justify-between mb-6">
@@ -276,11 +291,14 @@ export default function Home() {
                 </p>
               </div>
             </Link>
+            )}
 
-            <Link
-              href="/stats"
-              className="group relative overflow-hidden lg:col-span-2"
-            >
+            {/* Statistieken - Solo si tiene permiso statistieken */}
+            {user && hasPermission(user, 'statistieken') && (
+              <Link
+                href="/stats"
+                className="group relative overflow-hidden lg:col-span-2"
+              >
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/15 to-white/20 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
               <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
                 <div className="flex items-start justify-between mb-6">
@@ -303,6 +321,37 @@ export default function Home() {
                 </p>
               </div>
             </Link>
+            )}
+
+            {/* Rapporten - Solo si tiene permiso rapporten */}
+            {user && hasPermission(user, 'rapporten') && (
+              <Link
+                href="/import"
+                className="group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
+                <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                      <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-black text-white mb-3 group-hover:text-white/90 transition-colors">
+                    Rapporten
+                  </h2>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    Bekijk gedetailleerde rapporten en analyses van alle chill-outs.
+                  </p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>

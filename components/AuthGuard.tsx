@@ -35,19 +35,30 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     // Verificar permisos para rutas específicas
-    const requiredPermission = ROUTE_PERMISSIONS[pathname || ''];
-    if (requiredPermission) {
-      const user = getCurrentUser();
-      if (!user || !hasPermission(user, requiredPermission)) {
-        // Si es la página de usuarios, verificar que sea admin
-        if (pathname === '/users' && user?.role !== 'admin') {
-          router.push('/');
-          return;
-        }
-        // Para otras rutas, verificar permiso
-        if (pathname !== '/users' && !hasPermission(user, requiredPermission)) {
-          router.push('/');
-          return;
+    const user = getCurrentUser();
+    
+    // Verificar rutas dinámicas primero
+    if (pathname?.startsWith('/daily/')) {
+      // Ruta dinámica /daily/[date] requiere permiso dagelijks
+      if (!user || !hasPermission(user, 'dagelijks')) {
+        router.push('/');
+        return;
+      }
+    } else {
+      // Verificar rutas estáticas
+      const requiredPermission = ROUTE_PERMISSIONS[pathname || ''];
+      if (requiredPermission) {
+        if (!user || !hasPermission(user, requiredPermission)) {
+          // Si es la página de usuarios, verificar que sea admin
+          if (pathname === '/users' && user?.role !== 'admin') {
+            router.push('/');
+            return;
+          }
+          // Para otras rutas, verificar permiso
+          if (pathname !== '/users' && !hasPermission(user, requiredPermission)) {
+            router.push('/');
+            return;
+          }
         }
       }
     }
