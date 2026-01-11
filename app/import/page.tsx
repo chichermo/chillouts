@@ -333,8 +333,15 @@ export default function ReportsPage() {
     const header = getReportHeader();
     
     // Blad 1: Algemeen Overzicht
+    let reportTitle = 'Rapport Chill-outs';
+    if (appliedFilters.student) {
+      const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+      reportTitle = `Rapport Chill-outs - ${studentName}`;
+    } else if (appliedFilters.klas) {
+      reportTitle = `Rapport Chill-outs - ${appliedFilters.klas}`;
+    }
     const summaryData = [
-      ['Rapport Chill-outs'],
+      [reportTitle],
       [''],
       ['Rapport Details'],
       ['Datum gegenereerd:', header.date],
@@ -381,7 +388,35 @@ export default function ReportsPage() {
     const daySheet = XLSX.utils.aoa_to_sheet(dayData);
     XLSX.utils.book_append_sheet(workbook, daySheet, 'Per Dag');
 
-    const filename = `Chill-outs_Rapport_${new Date().toISOString().split('T')[0]}.xlsx`;
+    // Blad 4: Per Lesuur per Dag (nuevo gráfico combinado)
+    if (stats.byDayAndHour && stats.byDayAndHour.length > 0) {
+      const dayAndHourData = [
+        ['Datum', 'Lesuur 1', 'Lesuur 2', 'Lesuur 3', 'Lesuur 4', 'Lesuur 5', 'Lesuur 6', 'Lesuur 7'],
+        ...stats.byDayAndHour.map(d => [
+          d.date,
+          d['1'] || 0,
+          d['2'] || 0,
+          d['3'] || 0,
+          d['4'] || 0,
+          d['5'] || 0,
+          d['6'] || 0,
+          d['7'] || 0,
+        ]),
+      ];
+      const dayAndHourSheet = XLSX.utils.aoa_to_sheet(dayAndHourData);
+      XLSX.utils.book_append_sheet(workbook, dayAndHourSheet, 'Lesuur per Dag');
+    }
+
+    // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
+    let filenameSuffix = '';
+    if (appliedFilters.student) {
+      const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+      filenameSuffix = `_${studentName.replace(/\s+/g, '_')}`;
+    } else if (appliedFilters.klas) {
+      filenameSuffix = `_${appliedFilters.klas.replace(/\s+/g, '_')}`;
+    }
+
+    const filename = `Chill-outs_Rapport${filenameSuffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(workbook, filename);
   };
 
@@ -394,9 +429,16 @@ export default function ReportsPage() {
       let yPos = 20;
       const header = getReportHeader();
 
-      // Titel
+      // Titel - incluir información de filtros si están aplicados
       doc.setFontSize(20);
-      doc.text('Rapport Chill-outs', pageWidth / 2, yPos, { align: 'center' });
+      let reportTitle = 'Rapport Chill-outs';
+      if (appliedFilters.student) {
+        const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+        reportTitle = `Rapport Chill-outs - ${studentName}`;
+      } else if (appliedFilters.klas) {
+        reportTitle = `Rapport Chill-outs - ${appliedFilters.klas}`;
+      }
+      doc.text(reportTitle, pageWidth / 2, yPos, { align: 'center' });
       yPos += 10;
 
       // Rapport details
@@ -512,7 +554,7 @@ export default function ReportsPage() {
       // Tabel per Student (als er ruimte is)
       if (stats.byStudent.length > 0 && yPos < 250) {
         doc.setFontSize(14);
-        doc.text('Top Studenten', 14, yPos);
+        doc.text(appliedFilters.student ? 'Statistieken per Student' : 'Top Studenten', 14, yPos);
         yPos += 10;
         
         const studentHeaders = ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Chillouts'];
@@ -528,10 +570,86 @@ export default function ReportsPage() {
             s.generic.toString(),
           ]);
         
-        drawTable(yPos, studentHeaders, studentRows);
+        yPos = drawTable(yPos, studentHeaders, studentRows) + 10;
       }
 
-      doc.save(`Chill-outs_Rapport_${new Date().toISOString().split('T')[0]}.pdf`);
+      // Tabel per Lesuur per Dag (nuevo gráfico combinado)
+      if (stats.byDayAndHour && stats.byDayAndHour.length > 0 && yPos < 250) {
+        doc.setFontSize(14);
+        doc.text('Chill-outs per Lesuur per Dag', 14, yPos);
+        yPos += 10;
+        
+        const dayAndHourHeaders = ['Datum', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
+        const dayAndHourRows = stats.byDayAndHour.map(d => [
+          d.date.length > 12 ? d.date.substring(0, 12) + '...' : d.date,
+          (d['1'] || 0).toString(),
+          (d['2'] || 0).toString(),
+          (d['3'] || 0).toString(),
+          (d['4'] || 0).toString(),
+          (d['5'] || 0).toString(),
+          (d['6'] || 0).toString(),
+          (d['7'] || 0).toString(),
+        ]);
+        
+        // Ajustar anchos de columna para esta tabla
+        const originalDrawTable = drawTable;
+        const drawDayAndHourTable = (startY: number, headers: string[], rows: string[][]) => {
+          const colWidths = [30, 15, 15, 15, 15, 15, 15, 15];
+          const rowHeight = 8;
+          let currentY = startY;
+          
+          // Header tekenen
+          doc.setFillColor(59, 130, 246);
+          doc.rect(14, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(9);
+          let xPos = 14;
+          headers.forEach((header, i) => {
+            doc.text(header, xPos + 2, currentY + 5);
+            xPos += colWidths[i];
+          });
+          
+          currentY += rowHeight;
+          doc.setTextColor(0, 0, 0);
+          
+          // Rijen tekenen
+          rows.forEach((row, rowIndex) => {
+            if (currentY > 280) {
+              doc.addPage();
+              currentY = 20;
+            }
+            
+            // Achtergrondkleur afwisselen
+            if (rowIndex % 2 === 0) {
+              doc.setFillColor(245, 245, 245);
+              doc.rect(14, currentY, colWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+            }
+            
+            xPos = 14;
+            row.forEach((cell, i) => {
+              doc.text(cell, xPos + 2, currentY + 5);
+              xPos += colWidths[i];
+            });
+            
+            currentY += rowHeight;
+          });
+          
+          return currentY;
+        };
+        
+        yPos = drawDayAndHourTable(yPos, dayAndHourHeaders, dayAndHourRows) + 10;
+      }
+
+      // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
+      let filenameSuffix = '';
+      if (appliedFilters.student) {
+        const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+        filenameSuffix = `_${studentName.replace(/\s+/g, '_')}`;
+      } else if (appliedFilters.klas) {
+        filenameSuffix = `_${appliedFilters.klas.replace(/\s+/g, '_')}`;
+      }
+
+      doc.save(`Chill-outs_Rapport${filenameSuffix}_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('Fout bij exporteren PDF:', error);
       // Fallback: eenvoudige PDF zonder tabellen
@@ -920,10 +1038,10 @@ export default function ReportsPage() {
             <div className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
                 {appliedFilters.student 
-                  ? `Chill-outs per Lesuur over Time - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
+                  ? `Chill-outs per Lesuur per Dag - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
                   : appliedFilters.klas
-                  ? `Chill-outs per Lesuur over Time - ${appliedFilters.klas}`
-                  : 'Chill-outs per Lesuur over Time'}
+                  ? `Chill-outs per Lesuur per Dag - ${appliedFilters.klas}`
+                  : 'Chill-outs per Lesuur per Dag'}
               </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={stats.byDayAndHour}>
