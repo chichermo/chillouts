@@ -32,6 +32,7 @@ export default function ReportsPage() {
     byKlas: [] as { klas: string; total: number; vr: number; vl: number; generic: number; percentage: number }[],
     byStudent: [] as { name: string; klas: string; total: number; vr: number; vl: number; generic: number }[],
     byDay: [] as { date: string; total: number; vr: number; vl: number; generic: number }[],
+    byDayAndHour: [] as { date: string; hour: number; total: number; vr: number; vl: number; generic: number }[],
     weeklyTrend: [] as { week: string; total: number; vr: number; vl: number }[],
   });
   const [mounted, setMounted] = useState(false);
@@ -123,6 +124,7 @@ export default function ReportsPage() {
     const byKlasData: { [klas: string]: { total: number; vr: number; vl: number; generic: number } } = {};
     const byStudentData: { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number; generic: number; byHour?: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } } } = {};
     const byDayData: { [date: string]: { total: number; vr: number; vl: number; generic: number } } = {};
+    const byDayAndHourData: { [date: string]: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } } = {};
 
     // Initialiseer lesuren
     for (let hour = 1; hour <= 7; hour++) {
@@ -170,6 +172,14 @@ export default function ReportsPage() {
       let dayVL = 0;
       let dayGeneric = 0;
 
+      // Inicializar estructura por día y hora
+      if (!byDayAndHourData[date]) {
+        byDayAndHourData[date] = {};
+        for (let hour = 1; hour <= 7; hour++) {
+          byDayAndHourData[date][hour] = { total: 0, vr: 0, vl: 0, generic: 0 };
+        }
+      }
+
       // Calcular totales SOLO para los estudiantes filtrados
       // Per klas en per student (solo procesar horas según filtro)
       studentsToProcess.forEach((student: any) => {
@@ -185,6 +195,9 @@ export default function ReportsPage() {
                 byStudentData[student.id].total += 1;
                 byKlasData[student.klas].total += 1;
                 
+                // Actualizar totales por día y hora
+                byDayAndHourData[date][hour].total += 1;
+                
                 // Actualizar totales del día
                 dayTotal += 1;
                 
@@ -192,16 +205,19 @@ export default function ReportsPage() {
                   byHourData[hour].vr += 1;
                   byStudentData[student.id].vr += 1;
                   byKlasData[student.klas].vr += 1;
+                  byDayAndHourData[date][hour].vr += 1;
                   dayVR += 1;
                 } else if (entry.type === 'VL') {
                   byHourData[hour].vl += 1;
                   byStudentData[student.id].vl += 1;
                   byKlasData[student.klas].vl += 1;
+                  byDayAndHourData[date][hour].vl += 1;
                   dayVL += 1;
                 } else {
                   byHourData[hour].generic += 1;
                   byStudentData[student.id].generic += 1;
                   byKlasData[student.klas].generic += 1;
+                  byDayAndHourData[date][hour].generic += 1;
                   dayGeneric += 1;
                 }
               }
@@ -252,6 +268,37 @@ export default function ReportsPage() {
         ...byDayData[date],
       }));
 
+    // Crear array combinado de día y hora para el nuevo gráfico
+    const byDayAndHourArray: { date: string; hour: number; total: number; vr: number; vl: number; generic: number }[] = [];
+    Object.keys(byDayAndHourData)
+      .sort()
+      .forEach(date => {
+        const formattedDate = formatDateDisplay(new Date(date));
+        for (let hour = 1; hour <= 7; hour++) {
+          const hourData = byDayAndHourData[date][hour];
+          if (hourData && hourData.total > 0) {
+            byDayAndHourArray.push({
+              date: formattedDate,
+              hour,
+              ...hourData,
+            });
+          }
+        }
+      });
+
+    // Preparar datos para gráfico de líneas múltiples (una línea por hora)
+    // Crear un objeto con todas las fechas únicas
+    const allDates = Object.keys(byDayAndHourData).sort();
+    const dayAndHourLineData = allDates.map(date => {
+      const formattedDate = formatDateDisplay(new Date(date));
+      const dataPoint: any = { date: formattedDate };
+      // Agregar cada hora como propiedad
+      for (let hour = 1; hour <= 7; hour++) {
+        dataPoint[hour.toString()] = byDayAndHourData[date][hour]?.total || 0;
+      }
+      return dataPoint;
+    });
+
     setStats({
       totalChillOuts,
       totalVR,
@@ -261,6 +308,7 @@ export default function ReportsPage() {
       byKlas: byKlasArray,
       byStudent: byStudentArray,
       byDay: byDayArray,
+      byDayAndHour: dayAndHourLineData,
       weeklyTrend: [],
     });
   };
@@ -862,6 +910,35 @@ export default function ReportsPage() {
                   <Line type="monotone" dataKey="total" stroke={COLORS.total} strokeWidth={2} name="Totaal" />
                   <Line type="monotone" dataKey="vr" stroke={COLORS.vr} strokeWidth={2} name="VR" />
                   <Line type="monotone" dataKey="vl" stroke={COLORS.vl} strokeWidth={2} name="VL" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Nuevo gráfico: Chill-outs per Lesuur over Time */}
+          {stats.byDayAndHour && stats.byDayAndHour.length > 0 && (
+            <div className="glass-effect rounded-lg p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-4 text-white">
+                {appliedFilters.student 
+                  ? `Chill-outs per Lesuur over Time - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
+                  : appliedFilters.klas
+                  ? `Chill-outs per Lesuur over Time - ${appliedFilters.klas}`
+                  : 'Chill-outs per Lesuur over Time'}
+              </h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={stats.byDayAndHour}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="date" stroke="rgba(255,255,255,0.7)" angle={-45} textAnchor="end" height={80} />
+                  <YAxis stroke="rgba(255,255,255,0.7)" />
+                  <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="1" stroke="#3b82f6" strokeWidth={2} name="Lesuur 1" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="2" stroke="#10b981" strokeWidth={2} name="Lesuur 2" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="3" stroke="#f59e0b" strokeWidth={2} name="Lesuur 3" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="4" stroke="#ef4444" strokeWidth={2} name="Lesuur 4" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="5" stroke="#8b5cf6" strokeWidth={2} name="Lesuur 5" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="6" stroke="#ec4899" strokeWidth={2} name="Lesuur 6" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="7" stroke="#06b6d4" strokeWidth={2} name="Lesuur 7" dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
