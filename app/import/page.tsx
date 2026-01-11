@@ -32,7 +32,7 @@ export default function ReportsPage() {
     byKlas: [] as { klas: string; total: number; vr: number; vl: number; generic: number; percentage: number }[],
     byStudent: [] as { name: string; klas: string; total: number; vr: number; vl: number; generic: number }[],
     byDay: [] as { date: string; total: number; vr: number; vl: number; generic: number }[],
-    byDayAndHour: [] as { date: string; hour: number; total: number; vr: number; vl: number; generic: number }[],
+    byDayAndHour: [] as { date: string; [key: string]: string | number }[],
     weeklyTrend: [] as { week: string; total: number; vr: number; vl: number }[],
   });
   const [mounted, setMounted] = useState(false);
@@ -394,13 +394,13 @@ export default function ReportsPage() {
         ['Datum', 'Lesuur 1', 'Lesuur 2', 'Lesuur 3', 'Lesuur 4', 'Lesuur 5', 'Lesuur 6', 'Lesuur 7'],
         ...stats.byDayAndHour.map(d => [
           d.date,
-          d['1'] || 0,
-          d['2'] || 0,
-          d['3'] || 0,
-          d['4'] || 0,
-          d['5'] || 0,
-          d['6'] || 0,
-          d['7'] || 0,
+          (d as any)['1'] || 0,
+          (d as any)['2'] || 0,
+          (d as any)['3'] || 0,
+          (d as any)['4'] || 0,
+          (d as any)['5'] || 0,
+          (d as any)['6'] || 0,
+          (d as any)['7'] || 0,
         ]),
       ];
       const dayAndHourSheet = XLSX.utils.aoa_to_sheet(dayAndHourData);
@@ -582,13 +582,13 @@ export default function ReportsPage() {
         const dayAndHourHeaders = ['Datum', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'];
         const dayAndHourRows = stats.byDayAndHour.map(d => [
           d.date.length > 12 ? d.date.substring(0, 12) + '...' : d.date,
-          (d['1'] || 0).toString(),
-          (d['2'] || 0).toString(),
-          (d['3'] || 0).toString(),
-          (d['4'] || 0).toString(),
-          (d['5'] || 0).toString(),
-          (d['6'] || 0).toString(),
-          (d['7'] || 0).toString(),
+          ((d as any)['1'] || 0).toString(),
+          ((d as any)['2'] || 0).toString(),
+          ((d as any)['3'] || 0).toString(),
+          ((d as any)['4'] || 0).toString(),
+          ((d as any)['5'] || 0).toString(),
+          ((d as any)['6'] || 0).toString(),
+          ((d as any)['7'] || 0).toString(),
         ]);
         
         // Ajustar anchos de columna para esta tabla
