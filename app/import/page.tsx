@@ -161,7 +161,6 @@ export default function ReportsPage() {
       if (currentFilters.dateTo && date > currentFilters.dateTo) return;
 
       const record = data.dailyRecords[date];
-      const totals = calculateDailyTotals(record, studentsToProcess);
       
       // Si hay filtro de hora, solo procesar esa hora
       const hoursToProcess = filterHour ? [filterHour] : [1, 2, 3, 4, 5, 6, 7];
@@ -171,24 +170,7 @@ export default function ReportsPage() {
       let dayVL = 0;
       let dayGeneric = 0;
 
-      // Per lesuur (solo procesar horas según filtro)
-      hoursToProcess.forEach(hour => {
-        const hourTotal = totals.totals[hour] || 0;
-        const hourVR = totals.vr[hour] || 0;
-        const hourVL = totals.vl[hour] || 0;
-        const hourGeneric = hourTotal - hourVR - hourVL;
-        
-        byHourData[hour].total += hourTotal;
-        byHourData[hour].vr += hourVR;
-        byHourData[hour].vl += hourVL;
-        byHourData[hour].generic += hourGeneric;
-        
-        dayTotal += hourTotal;
-        dayVR += hourVR;
-        dayVL += hourVL;
-        dayGeneric += hourGeneric;
-      });
-
+      // Calcular totales SOLO para los estudiantes filtrados
       // Per klas en per student (solo procesar horas según filtro)
       studentsToProcess.forEach((student: any) => {
         const studentEntries = record.entries[student.id] || {};
@@ -198,18 +180,29 @@ export default function ReportsPage() {
             const entriesArray = Array.isArray(entries) ? entries : [];
             entriesArray.forEach((entry: any) => {
               if (entry) {
-                byKlasData[student.klas].total += 1;
+                // Actualizar totales por hora
+                byHourData[hour].total += 1;
                 byStudentData[student.id].total += 1;
+                byKlasData[student.klas].total += 1;
+                
+                // Actualizar totales del día
+                dayTotal += 1;
                 
                 if (entry.type === 'VR') {
-                  byKlasData[student.klas].vr += 1;
+                  byHourData[hour].vr += 1;
                   byStudentData[student.id].vr += 1;
+                  byKlasData[student.klas].vr += 1;
+                  dayVR += 1;
                 } else if (entry.type === 'VL') {
-                  byKlasData[student.klas].vl += 1;
+                  byHourData[hour].vl += 1;
                   byStudentData[student.id].vl += 1;
+                  byKlasData[student.klas].vl += 1;
+                  dayVL += 1;
                 } else {
-                  byKlasData[student.klas].generic += 1;
+                  byHourData[hour].generic += 1;
                   byStudentData[student.id].generic += 1;
+                  byKlasData[student.klas].generic += 1;
+                  dayGeneric += 1;
                 }
               }
             });
