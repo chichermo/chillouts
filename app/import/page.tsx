@@ -226,17 +226,24 @@ export default function ReportsPage() {
     });
 
     // Converteer naar arrays voor grafieken
-    const byHourArray = Object.keys(byHourData).map(hour => ({
-      hour: parseInt(hour),
-      ...byHourData[parseInt(hour)],
-    }));
+    // Si hay filtro de hora específico, solo mostrar esa hora
+    const byHourArray = Object.keys(byHourData)
+      .map(hour => ({
+        hour: parseInt(hour),
+        ...byHourData[parseInt(hour)],
+      }))
+      .filter(h => filterHour === null || h.hour === filterHour)
+      .sort((a, b) => a.hour - b.hour);
 
     const totalForPercentage = totalChillOuts || 1;
-    const byKlasArray = Object.keys(byKlasData).map(klas => ({
-      klas,
-      ...byKlasData[klas],
-      percentage: Math.round((byKlasData[klas].total / totalForPercentage) * 100),
-    })).sort((a, b) => b.total - a.total);
+    const byKlasArray = Object.keys(byKlasData)
+      .map(klas => ({
+        klas,
+        ...byKlasData[klas],
+        percentage: Math.round((byKlasData[klas].total / totalForPercentage) * 100),
+      }))
+      .filter(k => k.total > 0) // Solo mostrar clases con datos
+      .sort((a, b) => b.total - a.total);
 
     const byStudentArray = Object.values(byStudentData)
       .filter(s => s.total > 0)
@@ -772,7 +779,13 @@ export default function ReportsPage() {
           {/* Distributie grafiek */}
           {pieData.length > 0 && (
             <div className="glass-effect rounded-lg p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4 text-white">Distributie Chill-outs</h2>
+              <h2 className="text-xl font-bold mb-4 text-white">
+                {appliedFilters.student 
+                  ? `Distributie Chill-outs - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
+                  : appliedFilters.klas
+                  ? `Distributie Chill-outs - ${appliedFilters.klas}`
+                  : 'Distributie Chill-outs'}
+              </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -796,44 +809,56 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* Grafiek per lesuur */}
-          <div className="glass-effect rounded-lg p-6 border border-white/20">
-            <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Lesuur</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.byHour}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis dataKey="hour" stroke="rgba(255,255,255,0.7)" />
-                <YAxis stroke="rgba(255,255,255,0.7)" />
-                <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
-                <Legend />
-                <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
-                <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
-                <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {/* Grafiek per lesuur - Solo mostrar si hay datos */}
+          {stats.byHour.length > 0 && (
+            <div className="glass-effect rounded-lg p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-4 text-white">
+                {appliedFilters.hour ? `Chill-outs voor Lesuur ${appliedFilters.hour}` : 'Chill-outs per Lesuur'}
+              </h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.byHour}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="hour" stroke="rgba(255,255,255,0.7)" />
+                  <YAxis stroke="rgba(255,255,255,0.7)" />
+                  <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
+                  <Legend />
+                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
+                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
+                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
-          {/* Grafiek per klas */}
-          <div className="glass-effect rounded-lg p-6 border border-white/20">
-            <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.byKlas.slice(0, 10)} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                <XAxis type="number" stroke="rgba(255,255,255,0.7)" />
-                <YAxis dataKey="klas" type="category" stroke="rgba(255,255,255,0.7)" width={100} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
-                <Legend />
-                <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
-                <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
-                <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {/* Grafiek per klas - Solo mostrar si no hay filtro de estudiante específico */}
+          {!appliedFilters.student && stats.byKlas.length > 0 && (
+            <div className="glass-effect rounded-lg p-6 border border-white/20">
+              <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.byKlas.slice(0, 10)} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis type="number" stroke="rgba(255,255,255,0.7)" />
+                  <YAxis dataKey="klas" type="category" stroke="rgba(255,255,255,0.7)" width={100} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
+                  <Legend />
+                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
+                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
+                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
 
           {/* Dagelijkse trend grafiek */}
           {stats.byDay.length > 0 && (
             <div className="glass-effect rounded-lg p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4 text-white">Tendens</h2>
+              <h2 className="text-xl font-bold mb-4 text-white">
+                {appliedFilters.student 
+                  ? `Tendens - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
+                  : appliedFilters.klas
+                  ? `Tendens - ${appliedFilters.klas}`
+                  : 'Tendens'}
+              </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={stats.byDay}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -850,8 +875,8 @@ export default function ReportsPage() {
           )}
         </div>
 
-        {/* Gedetailleerde tabel per klas */}
-        {stats.byKlas.length > 0 && (
+        {/* Gedetailleerde tabel per klas - Solo mostrar si no hay filtro de estudiante específico */}
+        {!appliedFilters.student && stats.byKlas.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20 mb-8">
             <h2 className="text-xl font-bold mb-4 text-white">Statistieken per Klas</h2>
             <div className="overflow-x-auto">
@@ -896,7 +921,13 @@ export default function ReportsPage() {
         {/* Tabel per student */}
         {stats.byStudent.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20">
-            <h2 className="text-xl font-bold mb-4 text-white">Statistieken per Student</h2>
+            <h2 className="text-xl font-bold mb-4 text-white">
+              {appliedFilters.student 
+                ? `Statistieken - ${stats.byStudent[0]?.name || 'Student'}`
+                : appliedFilters.klas
+                ? `Statistieken per Student - ${appliedFilters.klas}`
+                : 'Statistieken per Student'}
+            </h2>
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-blue-900/50 backdrop-blur">
