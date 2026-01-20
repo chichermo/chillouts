@@ -45,17 +45,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
     } else {
-      // Verificar rutas estáticas
-      const requiredPermission = ROUTE_PERMISSIONS[pathname || ''];
-      if (requiredPermission) {
-        if (!user || !hasPermission(user, requiredPermission)) {
-          // Si es la página de usuarios, verificar que sea admin
-          if (pathname === '/users' && user?.role !== 'admin') {
-            router.push('/');
-            return;
-          }
-          // Para otras rutas, verificar permiso
-          if (pathname !== '/users' && !hasPermission(user, requiredPermission)) {
+      // Verificar rutas que requieren ser admin
+      if (pathname === '/users' || pathname === '/nablijven') {
+        if (!user || user.role !== 'admin') {
+          router.push('/');
+          return;
+        }
+      } else {
+        // Verificar rutas estáticas con permisos
+        const requiredPermission = ROUTE_PERMISSIONS[pathname || ''];
+        if (requiredPermission) {
+          if (!user || !hasPermission(user, requiredPermission)) {
             router.push('/');
             return;
           }

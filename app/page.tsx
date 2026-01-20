@@ -6,7 +6,7 @@ import Navigation from '@/components/Navigation';
 import Logo from '@/components/Logo';
 import { loadData } from '@/lib/storage';
 import { formatDate, getDayName } from '@/lib/utils';
-import { getCurrentUser, hasPermission } from '@/lib/auth';
+import { getCurrentUser, hasPermission, isAdmin } from '@/lib/auth';
 import type { UserPermissions } from '@/lib/users';
 
 export default function Home() {
@@ -353,8 +353,8 @@ export default function Home() {
               </Link>
             )}
 
-            {/* Nablijven - Accesible para todos los usuarios autenticados */}
-            {user && (
+            {/* Nablijven - Solo para admins */}
+            {user && isAdmin() && (
               <Link
                 href="/nablijven"
                 className="group relative overflow-hidden"
