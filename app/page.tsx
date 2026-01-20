@@ -352,6 +352,36 @@ export default function Home() {
                 </div>
               </Link>
             )}
+
+            {/* Nablijven - Accesible para todos los usuarios autenticados */}
+            {user && (
+              <Link
+                href="/nablijven"
+                className="group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
+                <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                      <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-black text-white mb-3 group-hover:text-white/90 transition-colors">
+                    Nablijven
+                  </h2>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    Beheer van nablijven (16:00 - 16:50)
+                  </p>
+                </div>
+              </Link>
+            )}
           </div>
         </div>
       </div>
