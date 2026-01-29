@@ -257,6 +257,8 @@ export default function ReportsPage() {
     const byStudentArray = Object.values(byStudentData)
       .filter(s => s.total > 0)
       .sort((a, b) => {
+        // Hoog naar laag (high to low) op totaal
+        if (b.total !== a.total) return b.total - a.total;
         if (a.klas !== b.klas) return a.klas.localeCompare(b.klas);
         return a.name.localeCompare(b.name);
       });
