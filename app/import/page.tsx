@@ -413,8 +413,9 @@ export default function ReportsPage() {
 
   const captureVisibleCharts = async (): Promise<CapturedChart[]> => {
     if (typeof window === 'undefined') return [];
-    const html2canvasModule = await import('html2canvas');
-    const html2canvas = (html2canvasModule as any).default || (html2canvasModule as any);
+    const importDynamic = new Function('m', 'return import(m)') as (m: string) => Promise<any>;
+    const html2canvasModule = await importDynamic('html2canvas');
+    const html2canvas = html2canvasModule.default || html2canvasModule;
     const chartTargets = [
       { id: 'chart-distributie', title: 'Distributie Chill-outs' },
       { id: 'chart-lesuur', title: 'Chill-outs per Lesuur' },
