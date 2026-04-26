@@ -413,8 +413,8 @@ export default function ReportsPage() {
 
   const captureVisibleCharts = async (): Promise<CapturedChart[]> => {
     if (typeof window === 'undefined') return [];
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const html2canvas = require('html2canvas');
+    const html2canvasModule = await import('html2canvas');
+    const html2canvas = (html2canvasModule as any).default || (html2canvasModule as any);
     const chartTargets = [
       { id: 'chart-distributie', title: 'Distributie Chill-outs' },
       { id: 'chart-lesuur', title: 'Chill-outs per Lesuur' },
