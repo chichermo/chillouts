@@ -7,6 +7,9 @@ import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
 import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
 import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen, getCustomKlassenOrder, saveCustomKlassenOrder } from '@/lib/utils';
+import { loadTimetables, getTeacherForSlot, getSchoolYear } from '@/lib/timetables';
+import type { Timetable } from '@/types';
+import { isAdmin } from '@/lib/auth';
 
 export default function DailyPage() {
   const params = useParams();
@@ -19,6 +22,7 @@ export default function DailyPage() {
   const [filterKlas, setFilterKlas] = useState<string>('');
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderedKlassen, setOrderedKlassen] = useState<string[]>([]);
+  const [timetableMap, setTimetableMap] = useState<Record<string, Timetable>>({});
 
   useEffect(() => {
     const loadDataAsync = async () => {
@@ -44,6 +48,18 @@ export default function DailyPage() {
     };
     loadDataAsync();
   }, [dateStr]);
+
+  // Laad roosters voor docentweergave
+  useEffect(() => {
+    if (!dateStr || !record) return;
+    const dateObj = new Date(dateStr);
+    const year = getSchoolYear(dateObj);
+    loadTimetables(year).then((timetables) => {
+      const map: Record<string, Timetable> = {};
+      timetables.forEach((t) => { map[t.klas] = t; });
+      setTimetableMap(map);
+    });
+  }, [dateStr, record]);
 
   // Migreer oude records naar nieuw formaat
   function migrateRecord(oldRecord: DailyRecord): DailyRecord {
@@ -78,7 +94,7 @@ export default function DailyPage() {
   }
 
   const handleCheckboxChange = (studentId: string, hour: number, type: ChillOutType, targetCount: number, checked: boolean) => {
-    if (!record) return;
+    if (!record || isReadOnlyPast) return;
 
     const updatedRecord = { ...record };
     if (!updatedRecord.entries[studentId]) {
@@ -235,6 +251,9 @@ export default function DailyPage() {
 
   const dateObj = new Date(dateStr);
   const displayDate = formatDateDisplay(dateObj);
+  const todayLocal = new Date().toLocaleDateString('sv-SE');
+  const isPastDate = dateStr < todayLocal;
+  const isReadOnlyPast = isPastDate && !isAdmin();
 
   // Datumnavigatie
   const navigateDate = (days: number) => {
@@ -285,6 +304,12 @@ export default function DailyPage() {
               </Link>
             </div>
           </div>
+
+          {isReadOnlyPast && (
+            <div className="mt-4 rounded-lg border border-amber-300/40 bg-amber-400/15 px-4 py-3 text-amber-100 text-sm">
+              Deze datum is alleen-lezen voor niet-admin gebruikers. Alleen admins kunnen vorige dagen bewerken.
+            </div>
+          )}
           
           {/* Filter op klas en sorteren */}
           {klassen.length > 0 && (
@@ -377,10 +402,24 @@ export default function DailyPage() {
                     <table className="w-full border-collapse text-xs">
                       <thead>
                         <tr className="bg-white/10">
-                          <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam?</th>
-                          {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                            <th key={hour} className="border border-white/20 px-1 py-1 text-center font-semibold text-xs text-white">{hour}</th>
-                          ))}
+                          <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam</th>
+                          {[1, 2, 3, 4, 5, 6, 7].map(hour => {
+                            const teacher = getTeacherForSlot(
+                              timetableMap[klas]?.slots || {},
+                              new Date(dateStr),
+                              hour
+                            );
+                            return (
+                              <th key={hour} className="border border-white/20 px-1 py-1 text-center font-semibold text-xs text-white">
+                                <div>{hour}</div>
+                                {teacher && (
+                                  <div className="text-[9px] font-normal text-white/70 truncate max-w-[60px] mx-auto" title={teacher}>
+                                    {teacher}
+                                  </div>
+                                )}
+                              </th>
+                            );
+                          })}
                         </tr>
                       </thead>
                       <tbody>
@@ -424,7 +463,7 @@ export default function DailyPage() {
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={(e) => handleCheckboxChange(student.id, hour, 'VR', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={!canCheck && !isChecked}
+                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
                                                 className="w-3 h-3 text-blue-600 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                               />
                                             </label>
@@ -451,7 +490,7 @@ export default function DailyPage() {
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={(e) => handleCheckboxChange(student.id, hour, 'VL', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={!canCheck && !isChecked}
+                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
                                                 className="w-3 h-3 text-green-600 border border-gray-400 rounded focus:ring-1 focus:ring-green-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                               />
                                             </label>
@@ -479,7 +518,7 @@ export default function DailyPage() {
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={(e) => handleCheckboxChange(student.id, hour, null, e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={!canCheck && !isChecked}
+                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
                                                 className="w-3 h-3 text-gray-600 border border-gray-400 rounded focus:ring-1 focus:ring-gray-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                               />
                                             </label>
@@ -527,10 +566,24 @@ export default function DailyPage() {
                     <table className="w-full border-collapse text-xs">
                       <thead>
                         <tr className="bg-white/10">
-                          <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam?</th>
-                          {[1, 2, 3, 4, 5, 6, 7].map(hour => (
-                            <th key={hour} className="border border-white/20 px-1 py-1 text-center font-semibold text-xs text-white">{hour}</th>
-                          ))}
+                          <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam</th>
+                          {[1, 2, 3, 4, 5, 6, 7].map(hour => {
+                            const teacher = getTeacherForSlot(
+                              timetableMap[klas]?.slots || {},
+                              new Date(dateStr),
+                              hour
+                            );
+                            return (
+                              <th key={hour} className="border border-white/20 px-1 py-1 text-center font-semibold text-xs text-white">
+                                <div>{hour}</div>
+                                {teacher && (
+                                  <div className="text-[9px] font-normal text-white/70 truncate max-w-[60px] mx-auto" title={teacher}>
+                                    {teacher}
+                                  </div>
+                                )}
+                              </th>
+                            );
+                          })}
                         </tr>
                       </thead>
                       <tbody>
@@ -574,7 +627,7 @@ export default function DailyPage() {
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={(e) => handleCheckboxChange(student.id, hour, 'VR', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={!canCheck && !isChecked}
+                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
                                                 className="w-3 h-3 text-blue-600 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                               />
                                             </label>
@@ -601,7 +654,7 @@ export default function DailyPage() {
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={(e) => handleCheckboxChange(student.id, hour, 'VL', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={!canCheck && !isChecked}
+                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
                                                 className="w-3 h-3 text-green-600 border border-gray-400 rounded focus:ring-1 focus:ring-green-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                               />
                                             </label>
@@ -629,7 +682,7 @@ export default function DailyPage() {
                                                 type="checkbox"
                                                 checked={isChecked}
                                                 onChange={(e) => handleCheckboxChange(student.id, hour, null, e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={!canCheck && !isChecked}
+                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
                                                 className="w-3 h-3 text-gray-600 border border-gray-400 rounded focus:ring-1 focus:ring-gray-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                               />
                                             </label>
