@@ -56,6 +56,46 @@ const loadTimetables = async (year: string): Promise<Timetable[]> => {
   }
 };
 
+const waitForNextFrame = async () =>
+  new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+const svgToPngDataUrl = async (svgElement: SVGElement, background = '#1a1a2e'): Promise<string | null> => {
+  try {
+    const cloned = svgElement.cloneNode(true) as SVGElement;
+    cloned.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    cloned.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+    const width =
+      parseInt(svgElement.getAttribute('width') || '', 10) ||
+      Math.max(800, svgElement.clientWidth || 0);
+    const height =
+      parseInt(svgElement.getAttribute('height') || '', 10) ||
+      Math.max(300, svgElement.clientHeight || 0);
+
+    const serialized = new XMLSerializer().serializeToString(cloned);
+    const svgBase64 = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(serialized)))}`;
+
+    const img = new Image();
+    img.src = svgBase64;
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Kon SVG niet laden voor export'));
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width * 2;
+    canvas.height = height * 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/png');
+  } catch {
+    return null;
+  }
+};
+
 export default function ReportsPage() {
   const [stats, setStats] = useState({
     totalChillOuts: 0,
@@ -413,7 +453,19 @@ export default function ReportsPage() {
 
   const captureVisibleCharts = async (): Promise<CapturedChart[]> => {
     if (typeof window === 'undefined') return [];
-    const { default: html2canvas } = await import('html2canvas');
+    // Wacht op render/animatie van Recharts
+    await waitForNextFrame();
+    await waitForNextFrame();
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    let html2canvas: any = null;
+    try {
+      const mod = await import('html2canvas');
+      html2canvas = mod.default;
+    } catch {
+      // fallback blijft SVG-capture
+    }
+
     const chartTargets = [
       { id: 'chart-distributie', title: 'Distributie Chill-outs' },
       { id: 'chart-lesuur', title: 'Chill-outs per Lesuur' },
@@ -426,15 +478,29 @@ export default function ReportsPage() {
     for (const target of chartTargets) {
       const element = document.getElementById(target.id);
       if (!element) continue;
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        backgroundColor: '#1a1a2e',
-        useCORS: true,
-      });
+
+      // Eerst betrouwbare SVG capture (Recharts rendert als SVG)
+      const svg = element.querySelector('svg.recharts-surface') || element.querySelector('svg');
+      let dataUrl: string | null = null;
+      if (svg) {
+        dataUrl = await svgToPngDataUrl(svg as SVGElement);
+      }
+
+      // Fallback naar html2canvas indien nodig
+      if (!dataUrl && html2canvas) {
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          backgroundColor: '#1a1a2e',
+          useCORS: true,
+        });
+        dataUrl = canvas.toDataURL('image/png');
+      }
+
+      if (!dataUrl) continue;
       results.push({
         id: target.id,
         title: target.title,
-        dataUrl: canvas.toDataURL('image/png'),
+        dataUrl,
       });
     }
     return results;
