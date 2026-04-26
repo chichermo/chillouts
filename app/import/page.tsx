@@ -937,6 +937,10 @@ export default function ReportsPage() {
   ].filter(item => item.value > 0);
 
   const hasActiveFilters = appliedFilters.klas || appliedFilters.student || appliedFilters.dateFrom || appliedFilters.dateTo || appliedFilters.hour;
+  const klasChartData = stats.byKlas;
+  const maxKlasLabelLength = klasChartData.reduce((max, item) => Math.max(max, item.klas.length), 0);
+  const klasYAxisWidth = Math.min(240, Math.max(120, maxKlasLabelLength * 9));
+  const klasChartHeight = Math.max(320, klasChartData.length * 54);
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -1206,11 +1210,17 @@ export default function ReportsPage() {
           {!appliedFilters.student && stats.byKlas.length > 0 && (
             <div id="chart-klas" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.byKlas.slice(0, 10)} layout="vertical">
+              <ResponsiveContainer width="100%" height={klasChartHeight}>
+                <BarChart data={klasChartData} layout="vertical" margin={{ left: 10, right: 20, top: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis type="number" stroke="rgba(255,255,255,0.7)" />
-                  <YAxis dataKey="klas" type="category" stroke="rgba(255,255,255,0.7)" width={100} />
+                  <YAxis
+                    dataKey="klas"
+                    type="category"
+                    stroke="rgba(255,255,255,0.7)"
+                    width={klasYAxisWidth}
+                    interval={0}
+                  />
                   <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
                   <Legend />
                   <Bar dataKey="vr" fill={COLORS.vr} name="VR" isAnimationActive={!isExportingCharts} />
