@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { loadData } from '@/lib/storage';
 import { calculateDailyTotals, formatDateDisplay, getDayName } from '@/lib/utils';
+import { loadTimetables, getTeacherForSlot, getSchoolYear } from '@/lib/timetables';
+import type { Timetable } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 
 // Importeer jspdf-autotable om jsPDF uit te breiden
@@ -22,6 +23,12 @@ interface FilterState {
   hour: string; // Filtro de hora (1-7 o vacío para todas)
 }
 
+interface CapturedChart {
+  id: string;
+  title: string;
+  dataUrl: string;
+}
+
 export default function ReportsPage() {
   const [stats, setStats] = useState({
     totalChillOuts: 0,
@@ -34,6 +41,7 @@ export default function ReportsPage() {
     byDay: [] as { date: string; total: number; vr: number; vl: number; generic: number }[],
     byDayAndHour: [] as { date: string; [key: string]: string | number }[],
     weeklyTrend: [] as { week: string; total: number; vr: number; vl: number }[],
+    byTeacher: [] as { teacher: string; total: number; vr: number; vl: number; generic: number }[],
   });
   const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
@@ -55,6 +63,7 @@ export default function ReportsPage() {
   const [allStudents, setAllStudents] = useState<{ id: string; name: string; klas: string }[]>([]);
   const [allKlassen, setAllKlassen] = useState<string[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<{ id: string; name: string; klas: string }[]>([]);
+  const [timetableMapByYear, setTimetableMapByYear] = useState<Record<string, Record<string, Timetable>>>({});
 
   const COLORS = {
     vr: '#3b82f6', // blue
@@ -90,7 +99,25 @@ export default function ReportsPage() {
     if (mounted) {
       const loadDataAsync = async () => {
         const data = await loadData();
-        calculateStats(data, appliedFilters);
+        // Bepaal jaren voor roosters (uit datumfilter of huidige jaar)
+        const from = appliedFilters.dateFrom || '2020-01-01';
+        const to = appliedFilters.dateTo || '2030-12-31';
+        const years = new Set<string>();
+        const d = new Date(from);
+        const end = new Date(to);
+        while (d <= end) {
+          years.add(getSchoolYear(d));
+          d.setMonth(d.getMonth() + 1);
+        }
+        if (years.size === 0) years.add(getSchoolYear(new Date()));
+        const mapByYear: Record<string, Record<string, Timetable>> = {};
+        for (const year of years) {
+          const timetables = await loadTimetables(year);
+          mapByYear[year] = {};
+          timetables.forEach((t) => { mapByYear[year][t.klas] = t; });
+        }
+        setTimetableMapByYear(mapByYear);
+        calculateStats(data, appliedFilters, mapByYear);
       };
       loadDataAsync();
     }
@@ -113,7 +140,11 @@ export default function ReportsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.klas, allStudents]);
 
-  const calculateStats = (data: any, currentFilters: FilterState) => {
+  const calculateStats = (
+    data: any,
+    currentFilters: FilterState,
+    timetableMapByYear?: Record<string, Record<string, Timetable>>
+  ) => {
     // Bereken volledige statistieken met filters
     let totalChillOuts = 0;
     let totalVR = 0;
@@ -125,6 +156,7 @@ export default function ReportsPage() {
     const byStudentData: { [studentId: string]: { name: string; klas: string; total: number; vr: number; vl: number; generic: number; byHour?: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } } } = {};
     const byDayData: { [date: string]: { total: number; vr: number; vl: number; generic: number } } = {};
     const byDayAndHourData: { [date: string]: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } } = {};
+    const byTeacherData: { [teacher: string]: { total: number; vr: number; vl: number; generic: number } } = {};
 
     // Initialiseer lesuren
     for (let hour = 1; hour <= 7; hour++) {
@@ -201,6 +233,24 @@ export default function ReportsPage() {
                 // Actualizar totales del día
                 dayTotal += 1;
                 
+                const addToTeacher = () => {
+                  if (!timetableMapByYear) return;
+                  const year = getSchoolYear(new Date(date));
+                  const timetable = timetableMapByYear[year]?.[student.klas];
+                  const teacher = timetable
+                    ? getTeacherForSlot(timetable.slots, new Date(date), hour)
+                    : '';
+                  const teacherKey = teacher || '(Onbekend)';
+                  if (!byTeacherData[teacherKey]) {
+                    byTeacherData[teacherKey] = { total: 0, vr: 0, vl: 0, generic: 0 };
+                  }
+                  byTeacherData[teacherKey].total += 1;
+                  if (entry.type === 'VR') byTeacherData[teacherKey].vr += 1;
+                  else if (entry.type === 'VL') byTeacherData[teacherKey].vl += 1;
+                  else byTeacherData[teacherKey].generic += 1;
+                };
+                addToTeacher();
+
                 if (entry.type === 'VR') {
                   byHourData[hour].vr += 1;
                   byStudentData[student.id].vr += 1;
@@ -289,17 +339,20 @@ export default function ReportsPage() {
       });
 
     // Preparar datos para gráfico de líneas múltiples (una línea por hora)
-    // Crear un objeto con todas las fechas únicas
     const allDates = Object.keys(byDayAndHourData).sort();
     const dayAndHourLineData = allDates.map(date => {
       const formattedDate = formatDateDisplay(new Date(date));
       const dataPoint: any = { date: formattedDate };
-      // Agregar cada hora como propiedad
       for (let hour = 1; hour <= 7; hour++) {
         dataPoint[hour.toString()] = byDayAndHourData[date][hour]?.total || 0;
       }
       return dataPoint;
     });
+
+    const byTeacherArray = Object.keys(byTeacherData)
+      .map((teacher) => ({ teacher, ...byTeacherData[teacher] }))
+      .filter((t) => t.total > 0)
+      .sort((a, b) => b.total - a.total);
 
     setStats({
       totalChillOuts,
@@ -312,6 +365,7 @@ export default function ReportsPage() {
       byDay: byDayArray,
       byDayAndHour: dayAndHourLineData,
       weeklyTrend: [],
+      byTeacher: byTeacherArray,
     });
   };
 
@@ -330,8 +384,40 @@ export default function ReportsPage() {
     };
   };
 
-  const exportToExcel = () => {
-    const workbook = XLSX.utils.book_new();
+  const captureVisibleCharts = async (): Promise<CapturedChart[]> => {
+    if (typeof window === 'undefined') return [];
+    const { default: html2canvas } = await import('html2canvas');
+    const chartTargets = [
+      { id: 'chart-distributie', title: 'Distributie Chill-outs' },
+      { id: 'chart-lesuur', title: 'Chill-outs per Lesuur' },
+      { id: 'chart-klas', title: 'Chill-outs per Klas' },
+      { id: 'chart-tendens', title: 'Tendens' },
+      { id: 'chart-lesuur-dag', title: 'Chill-outs per Lesuur per Dag' },
+    ];
+
+    const results: CapturedChart[] = [];
+    for (const target of chartTargets) {
+      const element = document.getElementById(target.id);
+      if (!element) continue;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#1a1a2e',
+        useCORS: true,
+      });
+      results.push({
+        id: target.id,
+        title: target.title,
+        dataUrl: canvas.toDataURL('image/png'),
+      });
+    }
+    return results;
+  };
+
+  const exportToExcel = async () => {
+    const ExcelJS = await import('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Chill-out App';
+    workbook.created = new Date();
     const header = getReportHeader();
     
     // Blad 1: Algemeen Overzicht
@@ -370,25 +456,34 @@ export default function ReportsPage() {
       ['Per Klas'],
       ['Klas', 'Totaal', 'VR', 'VL', 'Chillouts', 'Percentage'],
       ...stats.byKlas.map(k => [k.klas, k.total, k.vr, k.vl, k.generic, `${k.percentage}%`]),
+      ...(stats.byTeacher.length > 0 ? [
+        [''],
+        ['Per Docent'],
+        ['Docent', 'Totaal', 'VR', 'VL', 'Chillouts'],
+        ...stats.byTeacher.map(t => [t.teacher, t.total, t.vr, t.vl, t.generic]),
+      ] : []),
     ];
-    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Overzicht');
+    const summarySheet = workbook.addWorksheet('Overzicht');
+    summaryData.forEach((row) => summarySheet.addRow(row as (string | number)[]));
+    summarySheet.columns = [{ width: 35 }, { width: 25 }, { width: 18 }, { width: 18 }, { width: 18 }, { width: 18 }];
 
     // Blad 2: Per Student
     const studentData = [
       ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Chillouts'],
       ...stats.byStudent.map(s => [s.name, s.klas, s.total, s.vr, s.vl, s.generic]),
     ];
-    const studentSheet = XLSX.utils.aoa_to_sheet(studentData);
-    XLSX.utils.book_append_sheet(workbook, studentSheet, 'Per Student');
+    const studentSheet = workbook.addWorksheet('Per Student');
+    studentData.forEach((row) => studentSheet.addRow(row as (string | number)[]));
+    studentSheet.columns = [{ width: 30 }, { width: 20 }, { width: 12 }, { width: 10 }, { width: 10 }, { width: 14 }];
 
     // Blad 3: Per Dag
     const dayData = [
       ['Datum', 'Totaal', 'VR', 'VL', 'Chillouts'],
       ...stats.byDay.map(d => [d.date, d.total, d.vr, d.vl, d.generic]),
     ];
-    const daySheet = XLSX.utils.aoa_to_sheet(dayData);
-    XLSX.utils.book_append_sheet(workbook, daySheet, 'Per Dag');
+    const daySheet = workbook.addWorksheet('Per Dag');
+    dayData.forEach((row) => daySheet.addRow(row as (string | number)[]));
+    daySheet.columns = [{ width: 20 }, { width: 12 }, { width: 10 }, { width: 10 }, { width: 14 }];
 
     // Blad 4: Per Lesuur per Dag (nuevo gráfico combinado)
     if (stats.byDayAndHour && stats.byDayAndHour.length > 0) {
@@ -405,8 +500,37 @@ export default function ReportsPage() {
           (d as any)['7'] || 0,
         ]),
       ];
-      const dayAndHourSheet = XLSX.utils.aoa_to_sheet(dayAndHourData);
-      XLSX.utils.book_append_sheet(workbook, dayAndHourSheet, 'Lesuur per Dag');
+      const dayAndHourSheet = workbook.addWorksheet('Lesuur per Dag');
+      dayAndHourData.forEach((row) => dayAndHourSheet.addRow(row as (string | number)[]));
+      dayAndHourSheet.columns = [
+        { width: 20 }, { width: 12 }, { width: 12 }, { width: 12 }, { width: 12 },
+        { width: 12 }, { width: 12 }, { width: 12 },
+      ];
+    }
+
+    // Blad 5: Gráficos capturados
+    const capturedCharts = await captureVisibleCharts();
+    if (capturedCharts.length > 0) {
+      const chartsSheet = workbook.addWorksheet('Grafieken');
+      chartsSheet.getCell('A1').value = 'Grafieken rapport';
+      chartsSheet.getCell('A1').font = { bold: true, size: 14 };
+      let currentRow = 3;
+
+      for (const chart of capturedCharts) {
+        chartsSheet.getCell(`A${currentRow}`).value = chart.title;
+        chartsSheet.getCell(`A${currentRow}`).font = { bold: true, size: 12 };
+        currentRow += 1;
+
+        const imageId = workbook.addImage({
+          base64: chart.dataUrl,
+          extension: 'png',
+        });
+        chartsSheet.addImage(imageId, {
+          tl: { col: 0, row: currentRow - 1 },
+          ext: { width: 900, height: 320 },
+        });
+        currentRow += 18;
+      }
     }
 
     // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
@@ -419,7 +543,16 @@ export default function ReportsPage() {
     }
 
     const filename = `Chill-outs_Rapport${filenameSuffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(workbook, filename);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const exportToPDF = async () => {
@@ -553,6 +686,24 @@ export default function ReportsPage() {
         yPos = drawTable(yPos, klasHeaders, klasRows) + 10;
       }
 
+      // Tabel per Docent
+      if (stats.byTeacher.length > 0 && yPos < 250) {
+        doc.setFontSize(14);
+        doc.text('Per Docent', 14, yPos);
+        yPos += 10;
+
+        const teacherHeaders = ['Docent', 'Totaal', 'VR', 'VL', 'Chillouts'];
+        const teacherRows = stats.byTeacher.map(t => [
+          t.teacher.length > 20 ? t.teacher.substring(0, 20) + '...' : t.teacher,
+          t.total.toString(),
+          t.vr.toString(),
+          t.vl.toString(),
+          t.generic.toString(),
+        ]);
+
+        yPos = drawTable(yPos, teacherHeaders, teacherRows) + 10;
+      }
+
       // Tabel per Student (als er ruimte is)
       if (stats.byStudent.length > 0 && yPos < 250) {
         doc.setFontSize(14);
@@ -640,6 +791,19 @@ export default function ReportsPage() {
         };
         
         yPos = drawDayAndHourTable(yPos, dayAndHourHeaders, dayAndHourRows) + 10;
+      }
+
+      // Agregar gráficos capturados en páginas adicionales
+      const capturedCharts = await captureVisibleCharts();
+      for (const chart of capturedCharts) {
+        doc.addPage();
+        doc.setFontSize(14);
+        doc.text(chart.title, 14, 15);
+        const pageW = doc.internal.pageSize.getWidth();
+        const margin = 14;
+        const imgW = pageW - margin * 2;
+        const imgH = 140;
+        doc.addImage(chart.dataUrl, 'PNG', margin, 22, imgW, imgH);
       }
 
       // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
@@ -939,7 +1103,7 @@ export default function ReportsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Distributie grafiek */}
           {pieData.length > 0 && (
-            <div className="glass-effect rounded-lg p-6 border border-white/20">
+            <div id="chart-distributie" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
                 {appliedFilters.student 
                   ? `Distributie Chill-outs - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
@@ -972,7 +1136,7 @@ export default function ReportsPage() {
 
           {/* Grafiek per lesuur - Solo mostrar si hay datos */}
           {stats.byHour.length > 0 && (
-            <div className="glass-effect rounded-lg p-6 border border-white/20">
+            <div id="chart-lesuur" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
                 {appliedFilters.hour ? `Chill-outs voor Lesuur ${appliedFilters.hour}` : 'Chill-outs per Lesuur'}
               </h2>
@@ -993,7 +1157,7 @@ export default function ReportsPage() {
 
           {/* Grafiek per klas - Solo mostrar si no hay filtro de estudiante específico */}
           {!appliedFilters.student && stats.byKlas.length > 0 && (
-            <div className="glass-effect rounded-lg p-6 border border-white/20">
+            <div id="chart-klas" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={stats.byKlas.slice(0, 10)} layout="vertical">
@@ -1012,7 +1176,7 @@ export default function ReportsPage() {
 
           {/* Dagelijkse trend grafiek */}
           {stats.byDay.length > 0 && (
-            <div className="glass-effect rounded-lg p-6 border border-white/20">
+            <div id="chart-tendens" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
                 {appliedFilters.student 
                   ? `Tendens - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
@@ -1037,7 +1201,7 @@ export default function ReportsPage() {
 
           {/* Nuevo gráfico: Chill-outs per Lesuur over Time */}
           {stats.byDayAndHour && stats.byDayAndHour.length > 0 && (
-            <div className="glass-effect rounded-lg p-6 border border-white/20">
+            <div id="chart-lesuur-dag" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
                 {appliedFilters.student 
                   ? `Chill-outs per Lesuur per Dag - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
@@ -1100,6 +1264,40 @@ export default function ReportsPage() {
                           <span className="text-white font-semibold">{klas.percentage}%</span>
                         </div>
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Chill-outs per Docent - toont bij welke docenten problemen voorkomen */}
+        {stats.byTeacher.length > 0 && (
+          <div className="glass-effect rounded-lg p-6 border border-white/20 mb-8">
+            <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Docent</h2>
+            <p className="text-white/70 text-sm mb-4">
+              Gekoppeld via roosters. Configureer roosters in het menu Roosters om docenten te koppelen.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/20 bg-white/10">
+                    <th className="px-4 py-3 text-left font-semibold text-white">Docent</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">Chillouts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.byTeacher.map((t) => (
+                    <tr key={t.teacher} className="border-b border-white/10 hover:bg-white/10 transition-colors">
+                      <td className="px-4 py-3 font-medium text-white">{t.teacher}</td>
+                      <td className="px-4 py-3 text-center text-white">{t.total}</td>
+                      <td className="px-4 py-3 text-center text-blue-200">{t.vr}</td>
+                      <td className="px-4 py-3 text-center text-emerald-200">{t.vl}</td>
+                      <td className="px-4 py-3 text-center text-red-200">{t.generic}</td>
                     </tr>
                   ))}
                 </tbody>
