@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { loadData } from '@/lib/storage';
 import { calculateDailyTotals, formatDateDisplay, getDayName } from '@/lib/utils';
-import { loadTimetables, getTeacherForSlot, getSchoolYear } from '@/lib/timetables';
-import type { Timetable } from '@/types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import jsPDF from 'jspdf';
 
@@ -28,6 +26,35 @@ interface CapturedChart {
   title: string;
   dataUrl: string;
 }
+
+type Timetable = {
+  klas: string;
+  slots: Record<string, string>;
+};
+
+const getSchoolYear = (date: Date): string => {
+  const y = date.getFullYear();
+  return date.getMonth() >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+};
+
+const getTeacherForSlot = (slots: Record<string, string>, date: Date, hour: number): string => {
+  const day = date.getDay(); // 0=Sun, 1=Mon, ... 5=Fri
+  if (day === 0 || day > 5) return '';
+  const dayIndex = day - 1; // Mon=0 ... Fri=4
+  return slots[`${dayIndex}_${hour}`] || '';
+};
+
+const loadTimetables = async (year: string): Promise<Timetable[]> => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`chillapp_timetables_${year}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
 
 export default function ReportsPage() {
   const [stats, setStats] = useState({
@@ -386,7 +413,8 @@ export default function ReportsPage() {
 
   const captureVisibleCharts = async (): Promise<CapturedChart[]> => {
     if (typeof window === 'undefined') return [];
-    const { default: html2canvas } = await import('html2canvas');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const html2canvas = require('html2canvas');
     const chartTargets = [
       { id: 'chart-distributie', title: 'Distributie Chill-outs' },
       { id: 'chart-lesuur', title: 'Chill-outs per Lesuur' },
