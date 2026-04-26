@@ -59,44 +59,8 @@ const loadTimetables = async (year: string): Promise<Timetable[]> => {
 const waitForNextFrame = async () =>
   new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
-const svgToPngDataUrl = async (svgElement: SVGElement, background = '#1a1a2e'): Promise<string | null> => {
-  try {
-    const cloned = svgElement.cloneNode(true) as SVGElement;
-    cloned.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    cloned.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-
-    const width =
-      parseInt(svgElement.getAttribute('width') || '', 10) ||
-      Math.max(800, svgElement.clientWidth || 0);
-    const height =
-      parseInt(svgElement.getAttribute('height') || '', 10) ||
-      Math.max(300, svgElement.clientHeight || 0);
-
-    const serialized = new XMLSerializer().serializeToString(cloned);
-    const svgBase64 = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(serialized)))}`;
-
-    const img = new Image();
-    img.src = svgBase64;
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(new Error('Kon SVG niet laden voor export'));
-    });
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width * 2;
-    canvas.height = height * 2;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/png');
-  } catch {
-    return null;
-  }
-};
-
 export default function ReportsPage() {
+  const [isExportingCharts, setIsExportingCharts] = useState(false);
   const [stats, setStats] = useState({
     totalChillOuts: 0,
     totalVR: 0,
@@ -453,57 +417,46 @@ export default function ReportsPage() {
 
   const captureVisibleCharts = async (): Promise<CapturedChart[]> => {
     if (typeof window === 'undefined') return [];
+    setIsExportingCharts(true);
     // Wacht op render/animatie van Recharts
     await waitForNextFrame();
     await waitForNextFrame();
-    await new Promise((resolve) => setTimeout(resolve, 120));
+    await new Promise((resolve) => setTimeout(resolve, 250));
 
-    let html2canvas: any = null;
     try {
       const mod = await import('html2canvas');
-      html2canvas = mod.default;
-    } catch {
-      // fallback blijft SVG-capture
-    }
+      const html2canvas = mod.default;
 
-    const chartTargets = [
-      { id: 'chart-distributie', title: 'Distributie Chill-outs' },
-      { id: 'chart-lesuur', title: 'Chill-outs per Lesuur' },
-      { id: 'chart-klas', title: 'Chill-outs per Klas' },
-      { id: 'chart-tendens', title: 'Tendens' },
-      { id: 'chart-lesuur-dag', title: 'Chill-outs per Lesuur per Dag' },
-    ];
+      const chartTargets = [
+        { id: 'chart-distributie', title: 'Distributie Chill-outs' },
+        { id: 'chart-lesuur', title: 'Chill-outs per Lesuur' },
+        { id: 'chart-klas', title: 'Chill-outs per Klas' },
+        { id: 'chart-tendens', title: 'Tendens' },
+        { id: 'chart-lesuur-dag', title: 'Chill-outs per Lesuur per Dag' },
+      ];
 
-    const results: CapturedChart[] = [];
-    for (const target of chartTargets) {
-      const element = document.getElementById(target.id);
-      if (!element) continue;
-
-      // Eerst betrouwbare SVG capture (Recharts rendert als SVG)
-      const svg = element.querySelector('svg.recharts-surface') || element.querySelector('svg');
-      let dataUrl: string | null = null;
-      if (svg) {
-        dataUrl = await svgToPngDataUrl(svg as SVGElement);
-      }
-
-      // Fallback naar html2canvas indien nodig
-      if (!dataUrl && html2canvas) {
-        const canvas = await html2canvas(element, {
+      const results: CapturedChart[] = [];
+      for (const target of chartTargets) {
+        const card = document.getElementById(target.id);
+        if (!card) continue;
+        const chartNode = (card.querySelector('.recharts-wrapper') as HTMLElement | null) || card;
+        const canvas = await html2canvas(chartNode, {
           scale: 2,
           backgroundColor: '#1a1a2e',
           useCORS: true,
+          logging: false,
         });
-        dataUrl = canvas.toDataURL('image/png');
-      }
 
-      if (!dataUrl) continue;
-      results.push({
-        id: target.id,
-        title: target.title,
-        dataUrl,
-      });
+        results.push({
+          id: target.id,
+          title: target.title,
+          dataUrl: canvas.toDataURL('image/png'),
+        });
+      }
+      return results;
+    } finally {
+      setIsExportingCharts(false);
     }
-    return results;
   };
 
   const exportToExcel = async () => {
@@ -1210,6 +1163,7 @@ export default function ReportsPage() {
                     data={pieData}
                     cx="50%"
                     cy="50%"
+                    isAnimationActive={!isExportingCharts}
                     labelLine={false}
                     label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(1)}%`}
                     outerRadius={100}
@@ -1240,9 +1194,9 @@ export default function ReportsPage() {
                   <YAxis stroke="rgba(255,255,255,0.7)" />
                   <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
                   <Legend />
-                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
-                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
-                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" />
+                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" isAnimationActive={!isExportingCharts} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1259,9 +1213,9 @@ export default function ReportsPage() {
                   <YAxis dataKey="klas" type="category" stroke="rgba(255,255,255,0.7)" width={100} />
                   <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
                   <Legend />
-                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" />
-                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" />
-                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" />
+                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" isAnimationActive={!isExportingCharts} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1284,9 +1238,9 @@ export default function ReportsPage() {
                   <YAxis stroke="rgba(255,255,255,0.7)" />
                   <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
                   <Legend />
-                  <Line type="monotone" dataKey="total" stroke={COLORS.total} strokeWidth={2} name="Totaal" />
-                  <Line type="monotone" dataKey="vr" stroke={COLORS.vr} strokeWidth={2} name="VR" />
-                  <Line type="monotone" dataKey="vl" stroke={COLORS.vl} strokeWidth={2} name="VL" />
+                  <Line type="monotone" dataKey="total" stroke={COLORS.total} strokeWidth={2} name="Totaal" isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="vr" stroke={COLORS.vr} strokeWidth={2} name="VR" isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="vl" stroke={COLORS.vl} strokeWidth={2} name="VL" isAnimationActive={!isExportingCharts} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -1309,13 +1263,13 @@ export default function ReportsPage() {
                   <YAxis stroke="rgba(255,255,255,0.7)" />
                   <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
                   <Legend />
-                  <Line type="monotone" dataKey="1" stroke="#3b82f6" strokeWidth={2} name="Lesuur 1" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="2" stroke="#10b981" strokeWidth={2} name="Lesuur 2" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="3" stroke="#f59e0b" strokeWidth={2} name="Lesuur 3" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="4" stroke="#ef4444" strokeWidth={2} name="Lesuur 4" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="5" stroke="#8b5cf6" strokeWidth={2} name="Lesuur 5" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="6" stroke="#ec4899" strokeWidth={2} name="Lesuur 6" dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="7" stroke="#06b6d4" strokeWidth={2} name="Lesuur 7" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="1" stroke="#3b82f6" strokeWidth={2} name="Lesuur 1" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="2" stroke="#10b981" strokeWidth={2} name="Lesuur 2" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="3" stroke="#f59e0b" strokeWidth={2} name="Lesuur 3" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="4" stroke="#ef4444" strokeWidth={2} name="Lesuur 4" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="5" stroke="#8b5cf6" strokeWidth={2} name="Lesuur 5" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="6" stroke="#ec4899" strokeWidth={2} name="Lesuur 6" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
+                  <Line type="monotone" dataKey="7" stroke="#06b6d4" strokeWidth={2} name="Lesuur 7" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
