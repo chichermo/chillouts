@@ -7,9 +7,36 @@ import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
 import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
 import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen, getCustomKlassenOrder, saveCustomKlassenOrder } from '@/lib/utils';
-import { loadTimetables, getTeacherForSlot, getSchoolYear } from '@/lib/timetables';
-import type { Timetable } from '@/types';
 import { isAdmin } from '@/lib/auth';
+
+type Timetable = {
+  klas: string;
+  slots: Record<string, string>;
+};
+
+const getSchoolYear = (date: Date): string => {
+  const y = date.getFullYear();
+  return date.getMonth() >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+};
+
+const getTeacherForSlot = (slots: Record<string, string>, date: Date, hour: number): string => {
+  const day = date.getDay(); // 0=Sun, 1=Mon, ... 5=Fri
+  if (day === 0 || day > 5) return '';
+  const dayIndex = day - 1; // Mon=0 ... Fri=4
+  return slots[`${dayIndex}_${hour}`] || '';
+};
+
+const loadTimetables = async (year: string): Promise<Timetable[]> => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(`chillapp_timetables_${year}`);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
 
 export default function DailyPage() {
   const params = useParams();
