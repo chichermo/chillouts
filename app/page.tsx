@@ -172,22 +172,22 @@ export default function Home() {
         
         {/* Navigation Cards - Diseño único con glassmorphism */}
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7">
             {/* Beheer Studenten - Solo si tiene permiso students */}
             {user && hasPermission(user, 'students') && (
               <Link
                 href="/students"
                 className="group relative overflow-hidden"
               >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
-              <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+              <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
-                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                     <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
@@ -209,21 +209,21 @@ export default function Home() {
                 href={`/daily/${todayStr}`}
                 className="group relative overflow-hidden"
               >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
-              <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+              <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                     <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </div>
-                <h2 className="text-2xl font-black text-white mb-3 group-hover:text-white/80-100 transition-colors">
+                <h2 className="text-2xl font-black tracking-tight text-white mb-3 group-hover:text-white/90 transition-colors">
                   Vandaag ({dayName})
                 </h2>
                 <p className="text-white/90 text-sm leading-relaxed">
@@ -239,15 +239,15 @@ export default function Home() {
                 href="/daily"
                 className="group relative overflow-hidden"
               >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
-              <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+              <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                     <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
@@ -269,15 +269,15 @@ export default function Home() {
                 href="/weekly"
                 className="group relative overflow-hidden"
               >
-              <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
-              <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+              <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                     <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
@@ -300,14 +300,14 @@ export default function Home() {
                 className="group relative overflow-hidden lg:col-span-2"
               >
               <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/15 to-white/20 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
-              <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+              <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
                 <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                     <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                     </svg>
@@ -329,15 +329,15 @@ export default function Home() {
                 href="/import"
                 className="group relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
-                <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+                <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
                   <div className="flex items-start justify-between mb-6">
-                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
                       <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                       <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                       </svg>
@@ -353,21 +353,51 @@ export default function Home() {
               </Link>
             )}
 
+            {/* Roosters - Solo para admins */}
+            {user && isAdmin() && (
+              <Link
+                href="/timetables"
+                className="group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+                <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                      <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-black text-white mb-3 group-hover:text-white/90 transition-colors">
+                    Roosters
+                  </h2>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    Koppel docenten aan klassen per dag en lesuur
+                  </p>
+                </div>
+              </Link>
+            )}
+
             {/* Nablijven - Solo para admins */}
             {user && isAdmin() && (
               <Link
                 href="/nablijven"
                 className="group relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-white/10 rounded-3xl blur-2xl group-hover:blur-3xl transition-all"></div>
-                <div className="relative glass-effect rounded-3xl p-8 border border-white/20 hover:border-white/30 transition-all hover:scale-[1.02] h-full">
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+                <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
                   <div className="flex items-start justify-between mb-6">
-                    <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shadow-xl shadow-white/20 group-hover:scale-110 transition-transform">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
                       <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                       <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                       </svg>

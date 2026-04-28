@@ -122,6 +122,16 @@ export default function Navigation() {
           </svg>
         )
       });
+      allLinks.push({
+        href: '/timetables',
+        label: 'Roosters',
+        permission: null,
+        icon: (
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        )
+      });
     }
 
     // Filtrar links según permisos del usuario
@@ -135,9 +145,9 @@ export default function Navigation() {
   const navLinks = getNavLinks();
 
   return (
-    <nav className="bg-[#1a1a2e] border-b-2 border-white/20 sticky top-0 z-50 shadow-lg">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#141427]/90 backdrop-blur-xl shadow-[0_6px_24px_rgba(0,0,0,0.35)]">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo */}
           <Link href="/" className="flex items-center flex-shrink-0 py-2">
             <div className="hidden sm:block">
@@ -149,20 +159,20 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-hide ml-4">
+          <div className="hidden md:flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide ml-3">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap border ${
+                  className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border transition-all duration-200 ${
                     isActive
-                      ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                      : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border-blue-400/80 shadow-[0_6px_18px_rgba(59,130,246,0.45)]'
+                      : 'bg-white/[0.04] text-white/80 border-white/10 hover:bg-white/[0.09] hover:text-white hover:border-white/25'
                   }`}
                 >
-                  <span className={`${isActive ? 'text-white' : 'text-white/70'}`}>
+                  <span className={`${isActive ? 'text-white' : 'text-white/65 group-hover:text-white/90'}`}>
                     {link.icon}
                   </span>
                   <span>{link.label}</span>
@@ -171,16 +181,16 @@ export default function Navigation() {
             })}
             
             {/* Separator */}
-            <div className="ml-auto flex items-center gap-1.5 pl-3 border-l border-white/20">
+            <div className="ml-auto flex items-center gap-2 pl-3 border-l border-white/15">
               <InstallButton />
               
               {/* Profile Link */}
               <Link
                 href="/profile"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap border ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border transition-all duration-200 ${
                   pathname === '/profile'
-                    ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                    : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/20'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border-blue-400/80 shadow-[0_6px_18px_rgba(59,130,246,0.45)]'
+                    : 'bg-white/[0.04] text-white/80 border-white/10 hover:bg-white/[0.09] hover:text-white hover:border-white/25'
                 }`}
                 title="Mijn Profiel"
               >
@@ -193,7 +203,7 @@ export default function Navigation() {
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium whitespace-nowrap border border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100 hover:border-red-500/60"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap border border-red-400/40 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100 hover:border-red-400/65 transition-all duration-200"
                 title="Uitloggen"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +217,7 @@ export default function Navigation() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-3 rounded-md text-white/80 hover:bg-white/10 hover:text-white border border-white/10"
+            className="md:hidden p-3 rounded-xl text-white/80 hover:bg-white/10 hover:text-white border border-white/15 transition-colors"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -224,7 +234,7 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t-2 border-white/20 py-4 bg-[#1a1a2e]">
+          <div className="md:hidden border-t border-white/10 py-4 bg-[#141427]/95 backdrop-blur-xl">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
               return (
@@ -232,10 +242,10 @@ export default function Navigation() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-md font-medium mx-2 mb-2 border ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold mx-2 mb-2 border transition-all ${
                     isActive
-                      ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                      : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border-blue-400/80 shadow-[0_6px_18px_rgba(59,130,246,0.45)]'
+                      : 'bg-white/[0.04] text-white/80 border-white/10 hover:bg-white/[0.09] hover:text-white'
                   }`}
                 >
                   <span className={`${isActive ? 'text-white' : 'text-white/70'}`}>
@@ -247,7 +257,7 @@ export default function Navigation() {
             })}
             
             {/* Separator Mobile */}
-            <div className="border-t-2 border-white/20 my-3 mx-2"></div>
+            <div className="border-t border-white/10 my-3 mx-2"></div>
             
             {/* Install Button Mobile */}
             <div className="mx-2 mb-3">
@@ -258,10 +268,10 @@ export default function Navigation() {
             <Link
               href="/profile"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-md font-medium mx-2 mb-2 border ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold mx-2 mb-2 border transition-all ${
                 pathname === '/profile'
-                  ? 'bg-blue-600 text-white border-blue-500 shadow-md'
-                  : 'bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white'
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border-blue-400/80 shadow-[0_6px_18px_rgba(59,130,246,0.45)]'
+                  : 'bg-white/[0.04] text-white/80 border-white/10 hover:bg-white/[0.09] hover:text-white'
               }`}
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,7 +286,7 @@ export default function Navigation() {
                 handleLogout();
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center gap-3 px-4 py-3 rounded-md font-medium mx-2 mb-2 border border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100 hover:border-red-500/60"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold mx-2 mb-2 border border-red-400/40 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-red-100 hover:border-red-400/65 transition-all"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
