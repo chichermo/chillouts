@@ -19,6 +19,7 @@ interface FilterState {
   dateTo: string;
   generatedBy: string;
   hour: string; // Filtro de hora (1-7 o vacío para todas)
+  weekday: string; // Filtro por dag: Ma, Di, Wo, Do, Vr...
 }
 
 interface CapturedChart {
@@ -82,6 +83,7 @@ export default function ReportsPage() {
     dateTo: '',
     generatedBy: '',
     hour: '',
+    weekday: '',
   });
   const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     klas: '',
@@ -90,6 +92,7 @@ export default function ReportsPage() {
     dateTo: '',
     generatedBy: '',
     hour: '',
+    weekday: '',
   });
   const [allStudents, setAllStudents] = useState<{ id: string; name: string; klas: string }[]>([]);
   const [allKlassen, setAllKlassen] = useState<string[]>([]);
@@ -224,6 +227,10 @@ export default function ReportsPage() {
       // Filter op datum
       if (currentFilters.dateFrom && date < currentFilters.dateFrom) return;
       if (currentFilters.dateTo && date > currentFilters.dateTo) return;
+      if (currentFilters.weekday) {
+        const dayName = getDayName(new Date(date));
+        if (dayName !== currentFilters.weekday) return;
+      }
 
       const record = data.dailyRecords[date];
       
@@ -486,6 +493,7 @@ export default function ReportsPage() {
       ['Klas filter:', appliedFilters.klas || 'Alle klassen'],
       ['Student filter:', appliedFilters.student ? filteredStudents.find(s => s.id === appliedFilters.student)?.name || '' : 'Alle studenten'],
       ['Lesuur filter:', appliedFilters.hour ? `Lesuur ${appliedFilters.hour}` : 'Alle lesuren'],
+      ['Dag filter:', appliedFilters.weekday || 'Alle dagen'],
       ['Van datum:', appliedFilters.dateFrom || 'Geen'],
       ['Tot datum:', appliedFilters.dateTo || 'Geen'],
       [''],
@@ -641,6 +649,10 @@ export default function ReportsPage() {
       if (appliedFilters.student) {
         const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
         doc.text(`Student: ${studentName}`, 14, yPos);
+        yPos += 6;
+      }
+      if (appliedFilters.weekday) {
+        doc.text(`Dag: ${appliedFilters.weekday}`, 14, yPos);
         yPos += 6;
       }
       if (appliedFilters.hour) {
@@ -914,6 +926,7 @@ export default function ReportsPage() {
       dateTo: '',
       generatedBy: '',
       hour: '',
+      weekday: '',
     };
     setFilters(emptyFilters);
     setAppliedFilters(emptyFilters);
@@ -936,7 +949,7 @@ export default function ReportsPage() {
     { name: 'Chillouts', value: stats.totalGeneric, color: COLORS.generic },
   ].filter(item => item.value > 0);
 
-  const hasActiveFilters = appliedFilters.klas || appliedFilters.student || appliedFilters.dateFrom || appliedFilters.dateTo || appliedFilters.hour;
+  const hasActiveFilters = appliedFilters.klas || appliedFilters.student || appliedFilters.dateFrom || appliedFilters.dateTo || appliedFilters.hour || appliedFilters.weekday;
   const klasChartData = stats.byKlas;
   const maxKlasLabelLength = klasChartData.reduce((max, item) => Math.max(max, item.klas.length), 0);
   const klasYAxisWidth = Math.min(240, Math.max(120, maxKlasLabelLength * 9));
@@ -1035,6 +1048,23 @@ export default function ReportsPage() {
                 {[1, 2, 3, 4, 5, 6, 7].map(hour => (
                   <option key={hour} value={hour.toString()} className="bg-blue-900">Lesuur {hour}</option>
                 ))}
+              </select>
+            </div>
+
+            {/* Dag filter */}
+            <div>
+              <label className="block text-sm font-medium text-white/90 mb-2">Dag</label>
+              <select
+                value={filters.weekday}
+                onChange={(e) => setFilters(prev => ({ ...prev, weekday: e.target.value }))}
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Alle dagen</option>
+                <option value="Ma" className="bg-blue-900">Maandag</option>
+                <option value="Di" className="bg-blue-900">Dinsdag</option>
+                <option value="Wo" className="bg-blue-900">Woensdag</option>
+                <option value="Do" className="bg-blue-900">Donderdag</option>
+                <option value="Vr" className="bg-blue-900">Vrijdag</option>
               </select>
             </div>
 
