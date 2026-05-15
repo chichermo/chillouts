@@ -42,8 +42,8 @@ export default function ChilloutStackedBarChart({
   const isVertical = layout === 'vertical';
 
   return (
-    <div role="img" aria-label={ariaLabel} style={{ width: '100%', height, minHeight: height, minWidth: 0 }}>
-      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+    <div role="img" aria-label={ariaLabel} style={{ width: '100%', minWidth: 0 }}>
+      <ResponsiveContainer width="100%" height={height} minWidth={0}>
         <BarChart
           data={data}
           layout={isVertical ? undefined : 'vertical'}

@@ -6,6 +6,23 @@ const HOURS = [1, 2, 3, 4, 5, 6, 7];
 
 export { DAY_NAMES, HOURS };
 
+/** Na eerste 404 geen Supabase-calls meer voor timetables deze sessie */
+let timetablesSupabaseAvailable: boolean | null = null;
+
+function isMissingTableError(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  const code = error.code || '';
+  const msg = (error.message || '').toLowerCase();
+  return (
+    code === 'PGRST205' ||
+    code === 'PGRST116' ||
+    code === '42P01' ||
+    msg.includes('does not exist') ||
+    msg.includes('relation') ||
+    msg.includes('404')
+  );
+}
+
 /** Bepaal schooljaar voor een datum (bv. sept 2025 = 2025-2026) */
 export function getSchoolYear(date: Date): string {
   const y = date.getFullYear();
@@ -57,10 +74,17 @@ export function getSchoolYearsFromDates(
   dateTo?: string
 ): string[] {
   const years = new Set<string>();
+  const currentYear = new Date().getFullYear();
   for (const date of recordDates) {
     if (dateFrom && date < dateFrom) continue;
     if (dateTo && date > dateTo) continue;
-    years.add(getSchoolYear(new Date(`${date}T12:00:00`)));
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+    const parsed = new Date(`${date}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) continue;
+    const schoolYear = getSchoolYear(parsed);
+    const startYear = parseInt(schoolYear.split('-')[0], 10);
+    if (startYear < 2018 || startYear > currentYear + 1) continue;
+    years.add(schoolYear);
   }
   if (years.size === 0) {
     years.add(getSchoolYear(new Date()));
@@ -70,6 +94,10 @@ export function getSchoolYearsFromDates(
 
 /** Laad alle roosters voor een jaar */
 export async function loadTimetables(year: string): Promise<Timetable[]> {
+  if (timetablesSupabaseAvailable === false) {
+    return loadTimetablesFromLocalStorage(year);
+  }
+
   if (isSupabaseEnabled && supabase) {
     const { data, error } = await supabase
       .from('timetables')
@@ -78,17 +106,20 @@ export async function loadTimetables(year: string): Promise<Timetable[]> {
       .order('klas', { ascending: true });
 
     if (!error) {
+      timetablesSupabaseAvailable = true;
       return (data || []).map((row: any) => ({
-      id: row.id,
-      year: row.year,
-      klas: row.klas,
-      slots: row.slots || {},
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    }));
+        id: row.id,
+        year: row.year,
+        klas: row.klas,
+        slots: row.slots || {},
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
     }
 
-    // Tabel ontbreekt of andere fout → localStorage (geen lege array die data verbergt)
+    if (isMissingTableError(error)) {
+      timetablesSupabaseAvailable = false;
+    }
     return loadTimetablesFromLocalStorage(year);
   }
 

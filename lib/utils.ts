@@ -12,6 +12,44 @@ export function getDayName(date: Date): string {
   return days[date.getDay()];
 }
 
+/** Parseert record-datum (verwacht YYYY-MM-DD) zonder timezone-shift */
+export function parseRecordDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const d = new Date(`${dateStr}T12:00:00`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(dateStr);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** Ondersteunt array-formaat én oud Supabase-formaat { count, type } */
+export function forEachChillOutAtHour(
+  slot: unknown,
+  onEntry: (type: ChillOutType | null) => void
+): void {
+  if (!slot) return;
+  if (Array.isArray(slot)) {
+    slot.forEach((entry) => {
+      if (entry) onEntry(entry.type ?? null);
+    });
+    return;
+  }
+  if (typeof slot === 'object' && slot !== null && 'count' in slot) {
+    const old = slot as { count: number; type: ChillOutType | null };
+    const n = Math.min(3, Math.max(0, Number(old.count) || 0));
+    for (let i = 0; i < n; i++) onEntry(old.type ?? null);
+  }
+}
+
+export function getHourSlot(
+  studentEntries: Record<string | number, unknown> | undefined,
+  hour: number
+): unknown {
+  if (!studentEntries) return undefined;
+  return studentEntries[hour] ?? studentEntries[String(hour)];
+}
+
 export function formatDateDisplay(date: Date | string): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const day = String(dateObj.getDate()).padStart(2, '0');

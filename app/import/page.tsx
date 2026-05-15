@@ -1,9 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navigation from '@/components/Navigation';
 import { loadData } from '@/lib/storage';
-import { calculateDailyTotals, formatDateDisplay, getDayName } from '@/lib/utils';
+import {
+  calculateDailyTotals,
+  formatDateDisplay,
+  forEachChillOutAtHour,
+  getDayName,
+  getHourSlot,
+  parseRecordDate,
+} from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import jsPDF from 'jspdf';
 import LesuurPerDagBarChart from '@/components/charts/LesuurPerDagBarChart';
@@ -75,6 +82,7 @@ export default function ReportsPage() {
   const [allKlassen, setAllKlassen] = useState<string[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<{ id: string; name: string; klas: string }[]>([]);
   const [timetableMapByYear, setTimetableMapByYear] = useState<Record<string, Record<string, Timetable>>>({});
+  const loadGenRef = useRef(0);
 
   const COLORS = {
     vr: '#3b82f6', // blue
@@ -90,11 +98,11 @@ export default function ReportsPage() {
   useEffect(() => {
     if (!mounted) return;
 
-    let cancelled = false;
+    const gen = ++loadGenRef.current;
 
     const loadDataAsync = async () => {
       const data = await loadData();
-      if (cancelled) return;
+      if (gen !== loadGenRef.current) return;
 
       const klassen = [...new Set(data.students.map((s) => s.klas))].sort();
       const students = data.students
@@ -105,6 +113,9 @@ export default function ReportsPage() {
       setAllStudents(students);
       setFilteredStudents(students);
 
+      // Toon chill-out statistieken meteen (zonder te wachten op roosters)
+      calculateStats(data, appliedFilters, {});
+
       const years = getSchoolYearsFromDates(
         Object.keys(data.dailyRecords),
         appliedFilters.dateFrom || undefined,
@@ -112,25 +123,22 @@ export default function ReportsPage() {
       );
 
       const mapByYear: Record<string, Record<string, Timetable>> = {};
-      for (const year of years) {
-        const timetables = await loadTimetables(year);
-        if (cancelled) return;
-        mapByYear[year] = {};
-        timetables.forEach((t) => {
-          mapByYear[year][t.klas] = t;
-        });
-      }
+      await Promise.all(
+        years.map(async (year) => {
+          const timetables = await loadTimetables(year);
+          mapByYear[year] = {};
+          timetables.forEach((t) => {
+            mapByYear[year][t.klas] = t;
+          });
+        })
+      );
 
-      if (cancelled) return;
+      if (gen !== loadGenRef.current) return;
       setTimetableMapByYear(mapByYear);
       calculateStats(data, appliedFilters, mapByYear);
     };
 
     loadDataAsync();
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters, mounted]);
 
@@ -204,8 +212,8 @@ export default function ReportsPage() {
       if (currentFilters.dateFrom && date < currentFilters.dateFrom) return;
       if (currentFilters.dateTo && date > currentFilters.dateTo) return;
       if (currentFilters.weekday) {
-        const dayName = getDayName(new Date(date));
-        if (dayName !== currentFilters.weekday) return;
+        const recordDate = parseRecordDate(date);
+        if (!recordDate || getDayName(recordDate) !== currentFilters.weekday) return;
       }
 
       const record = data.dailyRecords[date];
@@ -230,63 +238,54 @@ export default function ReportsPage() {
       // Per klas en per student (solo procesar horas según filtro)
       studentsToProcess.forEach((student: any) => {
         const studentEntries = record.entries[student.id] || {};
-        hoursToProcess.forEach(hour => {
-          const entries = studentEntries[hour];
-          if (entries) {
-            const entriesArray = Array.isArray(entries) ? entries : [];
-            entriesArray.forEach((entry: any) => {
-              if (entry) {
-                // Actualizar totales por hora
-                byHourData[hour].total += 1;
-                byStudentData[student.id].total += 1;
-                byKlasData[student.klas].total += 1;
-                
-                // Actualizar totales por día y hora
-                byDayAndHourData[date][hour].total += 1;
-                
-                // Actualizar totales del día
-                dayTotal += 1;
-                
-                const addToTeacher = () => {
-                  if (!timetableMapByYear) return;
-                  const year = getSchoolYear(new Date(date));
-                  const timetable = timetableMapByYear[year]?.[student.klas];
-                  const teacher = timetable
-                    ? getTeacherForSlot(timetable.slots, new Date(date), hour)
-                    : '';
-                  const teacherKey = teacher || '(Onbekend)';
-                  if (!byTeacherData[teacherKey]) {
-                    byTeacherData[teacherKey] = { total: 0, vr: 0, vl: 0, generic: 0 };
-                  }
-                  byTeacherData[teacherKey].total += 1;
-                  if (entry.type === 'VR') byTeacherData[teacherKey].vr += 1;
-                  else if (entry.type === 'VL') byTeacherData[teacherKey].vl += 1;
-                  else byTeacherData[teacherKey].generic += 1;
-                };
-                addToTeacher();
+        hoursToProcess.forEach((hour) => {
+          const slot = getHourSlot(studentEntries, hour);
+          forEachChillOutAtHour(slot, (type) => {
+            byHourData[hour].total += 1;
+            byStudentData[student.id].total += 1;
+            byKlasData[student.klas].total += 1;
+            byDayAndHourData[date][hour].total += 1;
+            dayTotal += 1;
 
-                if (entry.type === 'VR') {
-                  byHourData[hour].vr += 1;
-                  byStudentData[student.id].vr += 1;
-                  byKlasData[student.klas].vr += 1;
-                  byDayAndHourData[date][hour].vr += 1;
-                  dayVR += 1;
-                } else if (entry.type === 'VL') {
-                  byHourData[hour].vl += 1;
-                  byStudentData[student.id].vl += 1;
-                  byKlasData[student.klas].vl += 1;
-                  byDayAndHourData[date][hour].vl += 1;
-                  dayVL += 1;
-                } else {
-                  byHourData[hour].generic += 1;
-                  byStudentData[student.id].generic += 1;
-                  byKlasData[student.klas].generic += 1;
-                  byDayAndHourData[date][hour].generic += 1;
-                  dayGeneric += 1;
+            if (timetableMapByYear) {
+              const recordDate = parseRecordDate(date);
+              if (recordDate) {
+                const year = getSchoolYear(recordDate);
+                const timetable = timetableMapByYear[year]?.[student.klas];
+                const teacher = timetable
+                  ? getTeacherForSlot(timetable.slots, recordDate, hour)
+                  : '';
+                const teacherKey = teacher || '(Onbekend)';
+                if (!byTeacherData[teacherKey]) {
+                  byTeacherData[teacherKey] = { total: 0, vr: 0, vl: 0, generic: 0 };
                 }
+                byTeacherData[teacherKey].total += 1;
+                if (type === 'VR') byTeacherData[teacherKey].vr += 1;
+                else if (type === 'VL') byTeacherData[teacherKey].vl += 1;
+                else byTeacherData[teacherKey].generic += 1;
               }
-            });
-          }
+            }
+
+            if (type === 'VR') {
+              byHourData[hour].vr += 1;
+              byStudentData[student.id].vr += 1;
+              byKlasData[student.klas].vr += 1;
+              byDayAndHourData[date][hour].vr += 1;
+              dayVR += 1;
+            } else if (type === 'VL') {
+              byHourData[hour].vl += 1;
+              byStudentData[student.id].vl += 1;
+              byKlasData[student.klas].vl += 1;
+              byDayAndHourData[date][hour].vl += 1;
+              dayVL += 1;
+            } else {
+              byHourData[hour].generic += 1;
+              byStudentData[student.id].generic += 1;
+              byKlasData[student.klas].generic += 1;
+              byDayAndHourData[date][hour].generic += 1;
+              dayGeneric += 1;
+            }
+          });
         });
       });
 
@@ -329,10 +328,13 @@ export default function ReportsPage() {
 
     const byDayArray = Object.keys(byDayData)
       .sort()
-      .map(date => ({
-        date: formatDateDisplay(new Date(date)),
-        ...byDayData[date],
-      }));
+      .map((date) => {
+        const parsed = parseRecordDate(date);
+        return {
+          date: parsed ? formatDateDisplay(parsed) : date,
+          ...byDayData[date],
+        };
+      });
 
     // Crear array combinado de día y hora para el nuevo gráfico
     const byDayAndHourArray: { date: string; hour: number; total: number; vr: number; vl: number; generic: number }[] = [];
@@ -354,14 +356,22 @@ export default function ReportsPage() {
 
     // Preparar datos para gráfico de líneas múltiples (una línea por hora)
     const allDates = Object.keys(byDayAndHourData).sort();
-    const dayAndHourLineData = allDates.map(date => {
-      const formattedDate = formatDateDisplay(new Date(date));
-      const dataPoint: any = { date: formattedDate };
-      for (let hour = 1; hour <= 7; hour++) {
-        dataPoint[hour.toString()] = byDayAndHourData[date][hour]?.total || 0;
-      }
-      return dataPoint;
-    });
+    const dayAndHourLineData = allDates
+      .map((date) => {
+        const parsed = parseRecordDate(date);
+        const formattedDate = parsed ? formatDateDisplay(parsed) : date;
+        const dataPoint: { date: string; [key: string]: string | number } = { date: formattedDate };
+        for (let hour = 1; hour <= 7; hour++) {
+          dataPoint[String(hour)] = byDayAndHourData[date][hour]?.total || 0;
+        }
+        return dataPoint;
+      })
+      .filter((row) => {
+        for (let hour = 1; hour <= 7; hour++) {
+          if (Number(row[String(hour)]) > 0) return true;
+        }
+        return false;
+      });
 
     const byTeacherArray = Object.keys(byTeacherData)
       .map((teacher) => ({ teacher, ...byTeacherData[teacher] }))

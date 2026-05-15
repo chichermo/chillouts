@@ -129,22 +129,19 @@ export default function LesuurPerDagBarChart({
     </BarChart>
   );
 
-  const inner =
-    compact || !manyDates ? (
-      <div style={{ width: '100%', height: chartHeight, minHeight: chartHeight, minWidth: 0 }}>
-        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-          {chart}
-        </ResponsiveContainer>
-      </div>
-    ) : (
-      <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
-        <div style={{ minWidth: scrollMinWidth, height: chartHeight, minHeight: chartHeight }}>
-          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-            {chart}
-          </ResponsiveContainer>
-        </div>
-      </div>
-    );
+  const chartWidth = compact || !manyDates ? '100%' : scrollMinWidth;
+
+  const inner = (
+    <div
+      className={manyDates && !compact ? 'w-full overflow-x-auto pb-1 scrollbar-hide' : undefined}
+      style={{ width: '100%', minWidth: 0 }}
+    >
+      <ResponsiveContainer width={chartWidth} height={chartHeight} minWidth={0}>
+        {chart}
+      </ResponsiveContainer>
+    </div>
+  );
+
 
   return (
     <div role="img" aria-label={ariaLabel}>
