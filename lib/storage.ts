@@ -1,5 +1,4 @@
-// Re-exportar funciones de storage-db.ts para mantener compatibilidad
-// Esto permite usar Supabase en producción y localStorage en desarrollo
+// Re-exportar funciones de storage-db.ts (alleen Supabase)
 export {
   loadData,
   saveData,

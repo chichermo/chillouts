@@ -3,54 +3,19 @@ import type { Timetable, TimetableSlots } from '@/types';
 
 const DAY_NAMES = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
 const HOURS = [1, 2, 3, 4, 5, 6, 7];
-const UNAVAILABLE_KEY = 'chillapp_timetables_no_supabase';
-const AVAILABLE_KEY = 'chillapp_timetables_supabase_ok';
 
 export { DAY_NAMES, HOURS };
 
-let timetablesSupabaseAvailable: boolean | null = null;
+const TIMETABLES_SETUP_HINT =
+  'Voer supabase/timetables_schema.sql uit in de Supabase SQL Editor.';
 
-function readBrowserFlag(key: string): boolean {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(key) === '1' || sessionStorage.getItem(key) === '1';
-}
-
-function readCachedUnavailable(): boolean {
-  if (timetablesSupabaseAvailable === false) return true;
-  if (readBrowserFlag(UNAVAILABLE_KEY)) {
-    timetablesSupabaseAvailable = false;
-    return true;
+function requireSupabase() {
+  if (!isSupabaseEnabled || !supabase) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel.'
+    );
   }
-  return false;
-}
-
-function markTimetablesUnavailable(): void {
-  timetablesSupabaseAvailable = false;
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(UNAVAILABLE_KEY, '1');
-    localStorage.removeItem(AVAILABLE_KEY);
-    sessionStorage.setItem(UNAVAILABLE_KEY, '1');
-  }
-}
-
-function markTimetablesAvailable(): void {
-  timetablesSupabaseAvailable = true;
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(AVAILABLE_KEY, '1');
-    localStorage.removeItem(UNAVAILABLE_KEY);
-    sessionStorage.removeItem(UNAVAILABLE_KEY);
-  }
-}
-
-/**
- * Supabase roosters alleen als expliciet ingeschakeld (geen automatische probe → geen 404).
- * Zet NEXT_PUBLIC_TIMETABLES_SUPABASE=true in Vercel nadat supabase/timetables_schema.sql is uitgevoerd.
- */
-function shouldUseSupabaseForTimetables(): boolean {
-  if (!isSupabaseEnabled || !supabase) return false;
-  if (readCachedUnavailable()) return false;
-  if (readBrowserFlag(AVAILABLE_KEY)) return true;
-  return process.env.NEXT_PUBLIC_TIMETABLES_SUPABASE === 'true';
+  return supabase;
 }
 
 function isMissingTableError(error: {
@@ -74,32 +39,54 @@ function isMissingTableError(error: {
     msg.includes('does not exist') ||
     msg.includes('not found') ||
     msg.includes('relation') ||
-    details.includes('does not exist') ||
-    msg.includes('404')
+    details.includes('does not exist')
   );
+}
+
+function wrapTimetablesError(error: unknown): Error {
+  if (error && typeof error === 'object' && isMissingTableError(error as { code?: string })) {
+    return new Error(`Tabel "timetables" ontbreekt in Supabase. ${TIMETABLES_SETUP_HINT}`);
+  }
+  if (error instanceof Error) return error;
+  return new Error('Fout bij laden van roosters uit Supabase.');
+}
+
+function mapRow(row: {
+  id: string;
+  year: string;
+  klas: string;
+  slots?: TimetableSlots;
+  created_at?: string;
+  updated_at?: string;
+}): Timetable {
+  return {
+    id: row.id,
+    year: row.year,
+    klas: row.klas,
+    slots: row.slots || {},
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
 }
 
 /** Bepaal schooljaar voor een datum (bv. sept 2025 = 2025-2026) */
 export function getSchoolYear(date: Date): string {
   const y = date.getFullYear();
-  const m = date.getMonth(); // 0-11
+  const m = date.getMonth();
   if (m >= 8) return `${y}-${y + 1}`;
   return `${y - 1}-${y}`;
 }
 
-/** Maak slot key: dayIndex (0=Ma) + hour (1-7) */
 export function slotKey(dayIndex: number, hour: number): string {
   return `${dayIndex}_${hour}`;
 }
 
-/** Geef dayIndex (0-4) voor een datum: Ma=0, Di=1, Wo=2, Do=3, Vr=4 */
 export function getDayIndex(date: Date): number {
-  const d = date.getDay(); // 0=Zo, 1=Ma, ..., 5=Vr
-  if (d === 0) return -1; // Zondag
-  return d - 1; // Ma=0, Di=1, ...
+  const d = date.getDay();
+  if (d === 0) return -1;
+  return d - 1;
 }
 
-/** Haal docent op voor klas, dag en lesuur */
 export function getTeacherForSlot(
   slots: TimetableSlots,
   date: Date,
@@ -107,43 +94,9 @@ export function getTeacherForSlot(
 ): string {
   const dayIndex = getDayIndex(date);
   if (dayIndex < 0) return '';
-  const key = slotKey(dayIndex, hour);
-  return slots[key] || '';
+  return slots[slotKey(dayIndex, hour)] || '';
 }
 
-function loadTimetablesFromLocalStorage(year: string): Timetable[] {
-  if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem(`chillapp_timetables_${year}`);
-  if (!stored) return [];
-  try {
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function mapTimetableRows(
-  data: {
-    id: string;
-    year: string;
-    klas: string;
-    slots?: TimetableSlots;
-    created_at?: string;
-    updated_at?: string;
-  }[]
-): Timetable[] {
-  return data.map((row) => ({
-    id: row.id,
-    year: row.year,
-    klas: row.klas,
-    slots: row.slots || {},
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  }));
-}
-
-/** Schooljaren die in de daily records voorkomen (optioneel binnen datumfilter) */
 export function getSchoolYearsFromDates(
   recordDates: string[],
   dateFrom?: string,
@@ -168,30 +121,23 @@ export function getSchoolYearsFromDates(
   return Array.from(years).sort();
 }
 
-/** Laad alle roosters voor een jaar */
+/** Laad alle roosters voor een jaar (alleen Supabase) */
 export async function loadTimetables(year: string): Promise<Timetable[]> {
-  if (!shouldUseSupabaseForTimetables() || !supabase) {
-    return loadTimetablesFromLocalStorage(year);
-  }
+  const client = requireSupabase();
+  try {
+    const { data, error } = await client
+      .from('timetables')
+      .select('*')
+      .eq('year', year)
+      .order('klas', { ascending: true });
 
-  const { data, error } = await supabase
-    .from('timetables')
-    .select('*')
-    .eq('year', year)
-    .order('klas', { ascending: true });
-
-  if (!error) {
-    markTimetablesAvailable();
-    return mapTimetableRows(data || []);
+    if (error) throw error;
+    return (data || []).map(mapRow);
+  } catch (e) {
+    throw wrapTimetablesError(e);
   }
-
-  if (isMissingTableError(error)) {
-    markTimetablesUnavailable();
-  }
-  return loadTimetablesFromLocalStorage(year);
 }
 
-/** Laad één rooster voor klas en jaar */
 export async function loadTimetable(
   year: string,
   klas: string
@@ -200,78 +146,54 @@ export async function loadTimetable(
   return all.find((t) => t.klas === klas) || null;
 }
 
-/** Genereer id voor rooster */
 export function timetableId(year: string, klas: string): string {
   return `timetable_${year}_${klas.replace(/\s+/g, '_')}`;
 }
 
-/** Sla rooster op */
+/** Sla rooster op in Supabase */
 export async function saveTimetable(timetable: Timetable): Promise<void> {
+  const client = requireSupabase();
   const id = timetable.id || timetableId(timetable.year, timetable.klas);
-  const toSave = { ...timetable, id };
-
-  if (shouldUseSupabaseForTimetables() && supabase) {
-    const { error } = await supabase.from('timetables').upsert(
+  try {
+    const { error } = await client.from('timetables').upsert(
       {
         id,
-        year: toSave.year,
-        klas: toSave.klas,
-        slots: toSave.slots,
+        year: timetable.year,
+        klas: timetable.klas,
+        slots: timetable.slots,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'year,klas' }
     );
-    if (!error) {
-      markTimetablesAvailable();
-      return;
-    }
-    if (isMissingTableError(error)) markTimetablesUnavailable();
+    if (error) throw error;
+  } catch (e) {
+    throw wrapTimetablesError(e);
   }
-
-  if (typeof window === 'undefined') return;
-  const all = loadTimetablesFromLocalStorage(timetable.year);
-  const idx = all.findIndex((t) => t.id === id || t.klas === timetable.klas);
-  if (idx >= 0) all[idx] = toSave;
-  else all.push(toSave);
-  localStorage.setItem(`chillapp_timetables_${timetable.year}`, JSON.stringify(all));
 }
 
-/** Verwijder rooster */
-export async function deleteTimetable(id: string, year: string): Promise<void> {
-  if (shouldUseSupabaseForTimetables() && supabase) {
-    const { error } = await supabase.from('timetables').delete().eq('id', id);
-    if (!error) return;
-    if (isMissingTableError(error)) markTimetablesUnavailable();
+export async function deleteTimetable(id: string): Promise<void> {
+  const client = requireSupabase();
+  try {
+    const { error } = await client.from('timetables').delete().eq('id', id);
+    if (error) throw error;
+  } catch (e) {
+    throw wrapTimetablesError(e);
   }
-
-  if (typeof window === 'undefined') return;
-  const all = await loadTimetables(year).then((t) => t.filter((x) => x.id !== id));
-  localStorage.setItem(`chillapp_timetables_${year}`, JSON.stringify(all));
 }
 
-/** Haal alle jaren op die roosters hebben */
+/** Haal schooljaren op die roosters hebben in Supabase */
 export async function getTimetableYears(): Promise<string[]> {
-  if (shouldUseSupabaseForTimetables() && supabase) {
-    const { data, error } = await supabase
+  const client = requireSupabase();
+  try {
+    const { data, error } = await client
       .from('timetables')
       .select('year')
       .order('year', { ascending: false });
-    if (!error) {
-      markTimetablesAvailable();
-      const years = [...new Set((data || []).map((r: { year: string }) => r.year))];
-      if (years.length > 0) return years;
-    } else if (isMissingTableError(error)) {
-      markTimetablesUnavailable();
-    }
-  }
 
-  if (typeof window === 'undefined') return [];
-  const keys = Object.keys(localStorage).filter((k) =>
-    k.startsWith('chillapp_timetables_')
-  );
-  return keys
-    .map((k) => k.replace('chillapp_timetables_', ''))
-    .filter(Boolean)
-    .sort()
-    .reverse();
+    if (error) throw error;
+    const years = [...new Set((data || []).map((r: { year: string }) => r.year))];
+    return years.sort().reverse();
+  } catch (e) {
+    throw wrapTimetablesError(e);
+  }
 }

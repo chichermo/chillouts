@@ -128,11 +128,15 @@ export default function ReportsPage() {
       const mapByYear: Record<string, Record<string, Timetable>> = {};
       await Promise.all(
         years.map(async (year) => {
-          const timetables = await loadTimetables(year);
           mapByYear[year] = {};
-          timetables.forEach((t) => {
-            mapByYear[year][t.klas] = t;
-          });
+          try {
+            const timetables = await loadTimetables(year);
+            timetables.forEach((t) => {
+              mapByYear[year][t.klas] = t;
+            });
+          } catch (err) {
+            console.warn(`Roosters ${year} niet geladen:`, err);
+          }
         })
       );
 

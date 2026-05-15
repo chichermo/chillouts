@@ -1,7 +1,7 @@
 import { supabase, isSupabaseEnabled } from './supabase';
 import { AppData, Student, DailyRecord, AuditLog } from '@/types';
 
-// Función helper para usar Supabase o localStorage como fallback
+// Gegevenslaag: alleen Supabase (geen localStorage voor app-data)
 async function loadFromSupabase(): Promise<AppData | null> {
   if (!isSupabaseEnabled) {
     console.log('Supabase no está habilitado');
@@ -96,63 +96,31 @@ async function saveToSupabase(data: AppData): Promise<boolean> {
   }
 }
 
-// Funciones principales que usan Supabase si está disponible, sino localStorage
+// Alle gegevens alleen via Supabase (geen localStorage-fallback)
 export async function loadData(): Promise<AppData> {
-  // Intentar cargar de Supabase primero si está habilitado
-  if (isSupabaseEnabled) {
-    try {
-      const supabaseData = await loadFromSupabase();
-      // Si Supabase devuelve datos (aunque estén vacíos), usarlos
-      // Esto asegura que en producción siempre use Supabase
-      if (supabaseData !== null) {
-        return supabaseData;
-      }
-    } catch (error) {
-      console.error('Error loading from Supabase, falling back to localStorage:', error);
-    }
+  if (!isSupabaseEnabled) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
   }
 
-  // Fallback a localStorage (solo en desarrollo o si Supabase falla)
-  if (typeof window === 'undefined') {
-    return {
-      students: [],
-      dailyRecords: {},
-      weeklyTotals: {},
-    };
+  const supabaseData = await loadFromSupabase();
+  if (supabaseData === null) {
+    throw new Error('Kon gegevens niet laden van Supabase. Controleer je verbinding en tabellen.');
   }
-
-  const STORAGE_KEY = 'chillapp_data';
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch (e) {
-      console.error('Error loading data:', e);
-    }
-  }
-
-  return {
-    students: [],
-    dailyRecords: {},
-    weeklyTotals: {},
-  };
+  return supabaseData;
 }
 
 export async function saveData(data: AppData): Promise<void> {
-  // Intentar guardar en Supabase primero
-  if (isSupabaseEnabled) {
-    const success = await saveToSupabase(data);
-    if (success) return;
+  if (!isSupabaseEnabled) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
   }
 
-  // Fallback a localStorage
-  if (typeof window === 'undefined') return;
-  
-  try {
-    const STORAGE_KEY = 'chillapp_data';
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Error saving data:', e);
+  const success = await saveToSupabase(data);
+  if (!success) {
+    throw new Error('Kon gegevens niet opslaan in Supabase.');
   }
 }
 
@@ -217,13 +185,7 @@ export async function deleteStudent(studentId: string): Promise<void> {
     }
   }
   
-  // Eliminar del array local
-  data.students = data.students.filter(s => s.id !== studentId);
-  
-  // Guardar en localStorage si no se usó Supabase
-  if (!isSupabaseEnabled) {
-    await saveData(data);
-  }
+  data.students = data.students.filter((s) => s.id !== studentId);
 }
 
 export async function saveDailyRecord(record: DailyRecord): Promise<void> {
@@ -278,24 +240,6 @@ async function logAuditAction(params: {
       }
     } catch (error) {
       console.error('Error guardando log de auditoría:', error);
-    }
-  } else {
-    // Fallback a localStorage
-    if (typeof window === 'undefined') return;
-    
-    try {
-      const STORAGE_KEY = 'chillapp_audit_logs';
-      const stored = localStorage.getItem(STORAGE_KEY);
-      const logs: AuditLog[] = stored ? JSON.parse(stored) : [];
-      
-      logs.push({
-        ...auditLog,
-        id: auditLogId,
-      });
-      
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-    } catch (e) {
-      console.error('Error guardando log de auditoría en localStorage:', e);
     }
   }
 }
@@ -369,19 +313,9 @@ export async function getAuditLogs(): Promise<AuditLog[]> {
       console.error('Error cargando logs de auditoría:', error);
       return [];
     }
-  } else {
-    // Fallback a localStorage
-    if (typeof window === 'undefined') return [];
-    
-    try {
-      const STORAGE_KEY = 'chillapp_audit_logs';
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      console.error('Error cargando logs de auditoría:', e);
-      return [];
-    }
   }
+
+  return [];
 }
 
 export async function revertAuditLog(auditLogId: string): Promise<void> {
@@ -432,39 +366,7 @@ export async function revertAuditLog(auditLogId: string): Promise<void> {
       throw updateError;
     }
   } else {
-    // Fallback a localStorage
-    if (typeof window === 'undefined') return;
-    
-    const STORAGE_KEY = 'chillapp_audit_logs';
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const logs: AuditLog[] = stored ? JSON.parse(stored) : [];
-    
-    const logIndex = logs.findIndex(l => l.id === auditLogId);
-    if (logIndex === -1) {
-      throw new Error('Log de auditoría no encontrado');
-    }
-    
-    const log = logs[logIndex];
-    if (log.reverted) {
-      throw new Error('Este cambio ya fue revertido');
-    }
-    
-    // Revertir acción
-    const data = await loadData();
-    
-    if (log.action === 'deleted' && log.studentData) {
-      // Restaurar estudiante
-      data.students.push(log.studentData);
-    } else if (log.action === 'created') {
-      // Eliminar estudiante
-      data.students = data.students.filter(s => s.id !== log.studentId);
-    }
-    
-    await saveData(data);
-    
-    // Marcar como revertido
-    logs[logIndex].reverted = true;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+    throw new Error('Supabase is vereist om auditlogs te beheren.');
   }
 }
 

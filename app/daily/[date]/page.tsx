@@ -6,7 +6,8 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
 import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
-import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen, getCustomKlassenOrder, saveCustomKlassenOrder } from '@/lib/utils';
+import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen } from '@/lib/utils';
+import { loadKlassenOrder, saveKlassenOrder } from '@/lib/app-settings';
 import { isAdmin } from '@/lib/auth';
 import { loadTimetables, getSchoolYear, getTeacherForSlot } from '@/lib/timetables';
 import type { Timetable } from '@/types';
@@ -24,6 +25,7 @@ export default function DailyPage() {
   const [filterKlas, setFilterKlas] = useState<string>('');
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderedKlassen, setOrderedKlassen] = useState<string[]>([]);
+  const [klassen, setKlassen] = useState<string[]>([]);
   const [timetableMap, setTimetableMap] = useState<Record<string, Timetable>>({});
 
   useEffect(() => {
@@ -56,11 +58,15 @@ export default function DailyPage() {
     if (!dateStr || !record) return;
     const dateObj = new Date(dateStr);
     const year = getSchoolYear(dateObj);
-    loadTimetables(year).then((timetables) => {
-      const map: Record<string, Timetable> = {};
-      timetables.forEach((t) => { map[t.klas] = t; });
-      setTimetableMap(map);
-    });
+    loadTimetables(year)
+      .then((timetables) => {
+        const map: Record<string, Timetable> = {};
+        timetables.forEach((t) => {
+          map[t.klas] = t;
+        });
+        setTimetableMap(map);
+      })
+      .catch((err) => console.warn('Roosters niet geladen:', err));
   }, [dateStr, record]);
 
   // Migreer oude records naar nieuw formaat
@@ -202,8 +208,17 @@ export default function DailyPage() {
   };
 
   // Calculate klassen with useMemo to ensure stable reference
-  const uniqueKlassen = useMemo(() => [...new Set(students.map(s => s.klas))], [students]);
-  const klassen = useMemo(() => getCustomKlassenOrder(uniqueKlassen), [uniqueKlassen]);
+  const uniqueKlassen = useMemo(() => [...new Set(students.map((s) => s.klas))], [students]);
+
+  useEffect(() => {
+    if (uniqueKlassen.length === 0) {
+      setKlassen([]);
+      return;
+    }
+    loadKlassenOrder(uniqueKlassen)
+      .then(setKlassen)
+      .catch(() => setKlassen(sortKlassen(uniqueKlassen)));
+  }, [uniqueKlassen]);
   
   // Initialize ordered klassen for modal
   useEffect(() => {
@@ -238,17 +253,25 @@ export default function DailyPage() {
     setOrderedKlassen(newOrder);
   };
   
-  const handleSaveOrder = () => {
-    saveCustomKlassenOrder(orderedKlassen);
-    setShowOrderModal(false);
-    // Force reload to apply new order
-    window.location.reload();
+  const handleSaveOrder = async () => {
+    try {
+      await saveKlassenOrder(orderedKlassen);
+      setKlassen(orderedKlassen);
+      setShowOrderModal(false);
+    } catch (e) {
+      alert('Fout bij opslaan volgorde: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    }
   };
-  
-  const handleResetOrder = () => {
+
+  const handleResetOrder = async () => {
     const defaultOrder = sortKlassen(uniqueKlassen);
     setOrderedKlassen(defaultOrder);
-    saveCustomKlassenOrder(defaultOrder);
+    try {
+      await saveKlassenOrder(defaultOrder);
+      setKlassen(defaultOrder);
+    } catch (e) {
+      alert('Fout bij resetten: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    }
   };
 
   const dateObj = new Date(dateStr);

@@ -34,10 +34,23 @@ export default function TimetablesPage() {
       const klassen = sortKlassen([...new Set(data.students.map((s) => s.klas))]);
       setKlassenFromStudents(klassen);
 
-      const y = await getTimetableYears();
-      setYears(y);
-      if (y.length > 0) {
-        setSelectedYear((prev) => prev || y[0]);
+      try {
+        const y = await getTimetableYears();
+        setYears(y);
+        if (y.length > 0) {
+          setSelectedYear((prev) => prev || y[0]);
+        } else {
+          const current = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
+          setYears([current]);
+          setSelectedYear(current);
+        }
+      } catch (err) {
+        console.error(err);
+        alert(
+          err instanceof Error
+            ? err.message
+            : 'Kon roosters niet laden. Voer supabase/setup_extra_tables.sql uit in Supabase.'
+        );
       }
     };
     load();
