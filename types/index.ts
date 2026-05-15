@@ -55,3 +55,17 @@ export interface AuditLog {
   reverted: boolean;
 }
 
+// Rooster: docent per klas, dag en lesuur (dag 0=Ma, 1=Di, 2=Wo, 3=Do, 4=Vr; lesuur 1-7)
+export interface TimetableSlots {
+  [key: string]: string; // key = "dayIndex_hour" bv. "0_1" = Ma lesuur 1
+}
+
+export interface Timetable {
+  id: string;
+  year: string; // bv. "2025-2026"
+  klas: string;
+  slots: TimetableSlots;
+  created_at?: string;
+  updated_at?: string;
+}
+

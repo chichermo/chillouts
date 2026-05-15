@@ -8,35 +8,10 @@ import { Student, DailyRecord, ChillOutType } from '@/types';
 import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
 import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen, getCustomKlassenOrder, saveCustomKlassenOrder } from '@/lib/utils';
 import { isAdmin } from '@/lib/auth';
-
-type Timetable = {
-  klas: string;
-  slots: Record<string, string>;
-};
-
-const getSchoolYear = (date: Date): string => {
-  const y = date.getFullYear();
-  return date.getMonth() >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
-};
-
-const getTeacherForSlot = (slots: Record<string, string>, date: Date, hour: number): string => {
-  const day = date.getDay(); // 0=Sun, 1=Mon, ... 5=Fri
-  if (day === 0 || day > 5) return '';
-  const dayIndex = day - 1; // Mon=0 ... Fri=4
-  return slots[`${dayIndex}_${hour}`] || '';
-};
-
-const loadTimetables = async (year: string): Promise<Timetable[]> => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(`chillapp_timetables_${year}`);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
+import { loadTimetables, getSchoolYear, getTeacherForSlot } from '@/lib/timetables';
+import type { Timetable } from '@/types';
+import LesuurColumnHeader from '@/components/daily/LesuurColumnHeader';
+import StickyTableWrap from '@/components/StickyTableWrap';
 
 export default function DailyPage() {
   const params = useParams();
@@ -425,28 +400,22 @@ export default function DailyPage() {
                   <h3 className="text-xl font-semibold mb-4 text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 p-3 rounded-lg border-l-4 border-yellow-400/50">
                     {klas}
                   </h3>
-                  <div className="overflow-x-auto">
+                  <StickyTableWrap>
                     <table className="w-full border-collapse text-xs">
                       <thead>
                         <tr className="bg-white/10">
                           <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam</th>
-                          {[1, 2, 3, 4, 5, 6, 7].map(hour => {
-                            const teacher = getTeacherForSlot(
-                              timetableMap[klas]?.slots || {},
-                              new Date(dateStr),
-                              hour
-                            );
-                            return (
-                              <th key={hour} className="border border-white/20 px-1 py-1 text-center font-semibold text-xs text-white">
-                                <div>{hour}</div>
-                                {teacher && (
-                                  <div className="text-[9px] font-normal text-white/70 truncate max-w-[60px] mx-auto" title={teacher}>
-                                    {teacher}
-                                  </div>
-                                )}
-                              </th>
-                            );
-                          })}
+                          {[1, 2, 3, 4, 5, 6, 7].map((hour) => (
+                            <LesuurColumnHeader
+                              key={hour}
+                              hour={hour}
+                              teacher={getTeacherForSlot(
+                                timetableMap[klas]?.slots || {},
+                                new Date(dateStr),
+                                hour
+                              )}
+                            />
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
@@ -574,7 +543,7 @@ export default function DailyPage() {
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  </StickyTableWrap>
                 </div>
               );
             })}
@@ -589,28 +558,22 @@ export default function DailyPage() {
                   <h3 className="text-xl font-semibold mb-4 text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 p-3 rounded-lg border-l-4 border-yellow-400/50">
                     {klas}
                   </h3>
-                  <div className="overflow-x-auto">
+                  <StickyTableWrap>
                     <table className="w-full border-collapse text-xs">
                       <thead>
                         <tr className="bg-white/10">
                           <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam</th>
-                          {[1, 2, 3, 4, 5, 6, 7].map(hour => {
-                            const teacher = getTeacherForSlot(
-                              timetableMap[klas]?.slots || {},
-                              new Date(dateStr),
-                              hour
-                            );
-                            return (
-                              <th key={hour} className="border border-white/20 px-1 py-1 text-center font-semibold text-xs text-white">
-                                <div>{hour}</div>
-                                {teacher && (
-                                  <div className="text-[9px] font-normal text-white/70 truncate max-w-[60px] mx-auto" title={teacher}>
-                                    {teacher}
-                                  </div>
-                                )}
-                              </th>
-                            );
-                          })}
+                          {[1, 2, 3, 4, 5, 6, 7].map((hour) => (
+                            <LesuurColumnHeader
+                              key={hour}
+                              hour={hour}
+                              teacher={getTeacherForSlot(
+                                timetableMap[klas]?.slots || {},
+                                new Date(dateStr),
+                                hour
+                              )}
+                            />
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
@@ -738,7 +701,7 @@ export default function DailyPage() {
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  </StickyTableWrap>
                 </div>
               );
             })}

@@ -5,6 +5,9 @@ import Navigation from '@/components/Navigation';
 import { loadData } from '@/lib/storage';
 import { calculateDailyTotals, formatDateDisplay } from '@/lib/utils';
 import { DailyRecord } from '@/types';
+import ChilloutStackedBarChart from '@/components/charts/ChilloutStackedBarChart';
+import StickyTableWrap from '@/components/StickyTableWrap';
+import { CHILLOUT_CHART_COLORS } from '@/lib/chartTheme';
 
 export default function StatsPage() {
   const [stats, setStats] = useState({
@@ -241,90 +244,33 @@ export default function StatsPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Gráfico por hora */}
           <div className="glass-effect rounded-lg shadow-md p-4 border border-white/20">
             <h2 className="text-lg font-bold mb-3 text-white">Chill-outs per Lesuur</h2>
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5, 6, 7].map(hour => {
-                const hourData = stats.byHour[hour] || { total: 0, vr: 0, vl: 0, generic: 0 };
-                const percentage = maxHourTotal > 0 ? (hourData.total / maxHourTotal) * 100 : 0;
-                return (
-                  <div key={hour}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-white">Lesuur {hour}</span>
-                      <span className="text-sm font-bold text-white">{hourData.total}</span>
-                    </div>
-                    <div className="w-full bg-white/20 rounded-full h-6 overflow-hidden">
-                      <div className="flex h-full">
-                        <div
-                          className="transition-all duration-500"
-                          style={{ width: `${(hourData.vr / maxHourTotal) * 100}%`, backgroundColor: COLORS.vr }}
-                          title={`VR: ${hourData.vr}`}
-                        />
-                        <div
-                          className="transition-all duration-500"
-                          style={{ width: `${(hourData.vl / maxHourTotal) * 100}%`, backgroundColor: COLORS.vl }}
-                          title={`VL: ${hourData.vl}`}
-                        />
-                        <div
-                          className="transition-all duration-500"
-                          style={{ width: `${(hourData.generic / maxHourTotal) * 100}%`, backgroundColor: COLORS.generic }}
-                          title={`Chillouts: ${hourData.generic}`}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-4 mt-1 text-xs">
-                      <span className="text-blue-200">VR: {hourData.vr}</span>
-                      <span className="text-emerald-200">VL: {hourData.vl}</span>
-                      <span style={{ color: COLORS.generic }}>Chillouts: {hourData.generic}</span>
-                    </div>
-                  </div>
-                );
+            <ChilloutStackedBarChart
+              data={[1, 2, 3, 4, 5, 6, 7].map((hour) => {
+                const h = stats.byHour[hour] || { total: 0, vr: 0, vl: 0, generic: 0 };
+                return { label: `L${hour}`, vr: h.vr, vl: h.vl, generic: h.generic };
               })}
-            </div>
+              layout="vertical"
+              height={300}
+              ariaLabel="Gestapelde balken chill-outs per lesuur"
+            />
           </div>
 
           {/* Gráfico por clase */}
           <div className="glass-effect rounded-lg shadow-md p-4 border border-white/20">
             <h2 className="text-lg font-bold mb-3 text-white">Chill-outs per Klas</h2>
-            <div className="space-y-3 max-h-[400px] overflow-y-auto">
-              {Object.keys(stats.byKlas).sort((a, b) => stats.byKlas[b].total - stats.byKlas[a].total).map(klas => {
-                const klasData = stats.byKlas[klas];
-                const percentage = maxKlasTotal > 0 ? (klasData.total / maxKlasTotal) * 100 : 0;
-                return (
-                  <div key={klas}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-white">{klas}</span>
-                      <span className="text-sm font-bold text-white">{klasData.total}</span>
-                    </div>
-                    <div className="w-full bg-white/20 rounded-full h-6 overflow-hidden">
-                      <div className="flex h-full">
-                        <div
-                          className="transition-all duration-500"
-                          style={{ width: `${(klasData.vr / maxKlasTotal) * 100}%`, backgroundColor: COLORS.vr }}
-                          title={`VR: ${klasData.vr}`}
-                        />
-                        <div
-                          className="transition-all duration-500"
-                          style={{ width: `${(klasData.vl / maxKlasTotal) * 100}%`, backgroundColor: COLORS.vl }}
-                          title={`VL: ${klasData.vl}`}
-                        />
-                        <div
-                          className="transition-all duration-500"
-                          style={{ width: `${(klasData.generic / maxKlasTotal) * 100}%`, backgroundColor: COLORS.generic }}
-                          title={`Chillouts: ${klasData.generic}`}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-4 mt-1 text-xs">
-                      <span className="text-blue-200">VR: {klasData.vr}</span>
-                      <span className="text-emerald-200">VL: {klasData.vl}</span>
-                      <span style={{ color: COLORS.generic }}>Chillouts: {klasData.generic}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ChilloutStackedBarChart
+              data={Object.keys(stats.byKlas)
+                .sort((a, b) => stats.byKlas[b].total - stats.byKlas[a].total)
+                .map((klas) => {
+                  const k = stats.byKlas[klas];
+                  return { label: klas, vr: k.vr, vl: k.vl, generic: k.generic };
+                })}
+              layout="horizontal"
+              height={Math.max(280, Object.keys(stats.byKlas).length * 36)}
+              ariaLabel="Gestapelde balken chill-outs per klas"
+            />
           </div>
         </div>
 
@@ -354,7 +300,7 @@ export default function StatsPage() {
         {Object.keys(stats.byStudent).length > 0 && (
           <div className="glass-effect rounded-lg shadow-md p-4 mt-4 border border-white/20">
             <h2 className="text-lg font-bold mb-3 text-white">Statistieken per Student</h2>
-            <div className="overflow-x-auto">
+            <StickyTableWrap>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/20 bg-white/10">
@@ -394,7 +340,7 @@ export default function StatsPage() {
                     })}
                 </tbody>
               </table>
-            </div>
+            </StickyTableWrap>
           </div>
         )}
       </div>

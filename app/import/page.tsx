@@ -6,6 +6,12 @@ import { loadData } from '@/lib/storage';
 import { calculateDailyTotals, formatDateDisplay, getDayName } from '@/lib/utils';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import jsPDF from 'jspdf';
+import LesuurPerDagBarChart from '@/components/charts/LesuurPerDagBarChart';
+import DayHourHeatmap from '@/components/charts/DayHourHeatmap';
+import StickyTableWrap from '@/components/StickyTableWrap';
+import { BAR_TOP_RADIUS, CHART_AXIS_TICK, CHART_GRID_STROKE, CHART_TOOLTIP_STYLE } from '@/lib/chartTheme';
+import { loadTimetables, getSchoolYear, getTeacherForSlot } from '@/lib/timetables';
+import type { Timetable } from '@/types';
 
 // Importeer jspdf-autotable om jsPDF uit te breiden
 if (typeof window !== 'undefined') {
@@ -27,35 +33,6 @@ interface CapturedChart {
   title: string;
   dataUrl: string;
 }
-
-type Timetable = {
-  klas: string;
-  slots: Record<string, string>;
-};
-
-const getSchoolYear = (date: Date): string => {
-  const y = date.getFullYear();
-  return date.getMonth() >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
-};
-
-const getTeacherForSlot = (slots: Record<string, string>, date: Date, hour: number): string => {
-  const day = date.getDay(); // 0=Sun, 1=Mon, ... 5=Fri
-  if (day === 0 || day > 5) return '';
-  const dayIndex = day - 1; // Mon=0 ... Fri=4
-  return slots[`${dayIndex}_${hour}`] || '';
-};
-
-const loadTimetables = async (year: string): Promise<Timetable[]> => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(`chillapp_timetables_${year}`);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
 
 const waitForNextFrame = async () =>
   new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -440,6 +417,7 @@ export default function ReportsPage() {
         { id: 'chart-klas', title: 'Chill-outs per Klas' },
         { id: 'chart-tendens', title: 'Tendens' },
         { id: 'chart-lesuur-dag', title: 'Chill-outs per Lesuur per Dag' },
+        { id: 'chart-heatmap', title: 'Heatmap Dag x Lesuur' },
       ];
 
       const results: CapturedChart[] = [];
@@ -1179,6 +1157,47 @@ export default function ReportsPage() {
           </div>
         </div>
 
+
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <span className="text-xs font-medium text-white/55 uppercase tracking-wide w-full sm:w-auto">
+              Actieve filters
+            </span>
+            {appliedFilters.klas && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/25 text-blue-100 border border-blue-400/30">
+                Klas: {appliedFilters.klas}
+              </span>
+            )}
+            {appliedFilters.student && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/25 text-purple-100 border border-purple-400/30">
+                Student: {stats.byStudent.find((s) => s.name)?.name || appliedFilters.student}
+              </span>
+            )}
+            {appliedFilters.hour && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/25 text-amber-100 border border-amber-400/30">
+                Lesuur {appliedFilters.hour}
+              </span>
+            )}
+            {appliedFilters.weekday && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/25 text-emerald-100 border border-emerald-400/30">
+                {appliedFilters.weekday}
+              </span>
+            )}
+            {(appliedFilters.dateFrom || appliedFilters.dateTo) && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white/90 border border-white/20">
+                {appliedFilters.dateFrom || '…'} – {appliedFilters.dateTo || '…'}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="px-3 py-1 rounded-full text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 border border-white/15 transition-colors"
+            >
+              Alles wissen
+            </button>
+          </div>
+        )}
+
         {/* Grafieken */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Distributie grafiek */}
@@ -1208,7 +1227,7 @@ export default function ReportsPage() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#2a2a3a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -1222,15 +1241,15 @@ export default function ReportsPage() {
                 {appliedFilters.hour ? `Chill-outs voor Lesuur ${appliedFilters.hour}` : 'Chill-outs per Lesuur'}
               </h2>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.byHour}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="hour" stroke="rgba(255,255,255,0.7)" />
-                  <YAxis stroke="rgba(255,255,255,0.7)" />
-                  <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
-                  <Legend />
-                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" isAnimationActive={!isExportingCharts} />
-                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" isAnimationActive={!isExportingCharts} />
-                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" isAnimationActive={!isExportingCharts} />
+                <BarChart data={stats.byHour} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+                  <XAxis dataKey="hour" stroke="transparent" tick={CHART_AXIS_TICK} />
+                  <YAxis stroke="transparent" tick={CHART_AXIS_TICK} allowDecimals={false} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: 'rgba(255,255,255,0.06)' }} />
+                  <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }} />
+                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" radius={BAR_TOP_RADIUS} maxBarSize={40} isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" radius={BAR_TOP_RADIUS} maxBarSize={40} isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" radius={BAR_TOP_RADIUS} maxBarSize={40} isAnimationActive={!isExportingCharts} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1241,21 +1260,22 @@ export default function ReportsPage() {
             <div id="chart-klas" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
               <ResponsiveContainer width="100%" height={klasChartHeight}>
-                <BarChart data={klasChartData} layout="vertical" margin={{ left: 10, right: 20, top: 10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis type="number" stroke="rgba(255,255,255,0.7)" />
+                <BarChart data={klasChartData} layout="vertical" margin={{ left: 10, right: 20, top: 10, bottom: 10 }} barCategoryGap="18%">
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} horizontal={false} />
+                  <XAxis type="number" stroke="transparent" tick={CHART_AXIS_TICK} allowDecimals={false} />
                   <YAxis
                     dataKey="klas"
                     type="category"
-                    stroke="rgba(255,255,255,0.7)"
+                    stroke="transparent"
+                    tick={CHART_AXIS_TICK}
                     width={klasYAxisWidth}
                     interval={0}
                   />
-                  <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
-                  <Legend />
-                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" isAnimationActive={!isExportingCharts} />
-                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" isAnimationActive={!isExportingCharts} />
-                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" isAnimationActive={!isExportingCharts} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: 'rgba(255,255,255,0.06)' }} />
+                  <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }} />
+                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" radius={[0, 6, 6, 0]} maxBarSize={22} isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" radius={[0, 6, 6, 0]} maxBarSize={22} isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" radius={[0, 6, 6, 0]} maxBarSize={22} isAnimationActive={!isExportingCharts} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1272,11 +1292,11 @@ export default function ReportsPage() {
                   : 'Tendens'}
               </h2>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={stats.byDay}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="date" stroke="rgba(255,255,255,0.7)" angle={-45} textAnchor="end" height={80} />
-                  <YAxis stroke="rgba(255,255,255,0.7)" />
-                  <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
+                <LineChart data={stats.byDay} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+                  <XAxis dataKey="date" stroke="transparent" tick={CHART_AXIS_TICK} angle={-35} textAnchor="end" height={72} />
+                  <YAxis stroke="transparent" tick={CHART_AXIS_TICK} allowDecimals={false} />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   <Legend />
                   <Line type="monotone" dataKey="total" stroke={COLORS.total} strokeWidth={2} name="Totaal" isAnimationActive={!isExportingCharts} />
                   <Line type="monotone" dataKey="vr" stroke={COLORS.vr} strokeWidth={2} name="VR" isAnimationActive={!isExportingCharts} />
@@ -1286,32 +1306,33 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {/* Nuevo gráfico: Chill-outs per Lesuur over Time */}
+          {/* Chill-outs per lesuur per dag */}
           {stats.byDayAndHour && stats.byDayAndHour.length > 0 && (
-            <div id="chart-lesuur-dag" className="glass-effect rounded-lg p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4 text-white">
-                {appliedFilters.student 
-                  ? `Chill-outs per Lesuur per Dag - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
+            <div id="chart-lesuur-dag" className="glass-effect rounded-lg p-6 border border-white/20 lg:col-span-2">
+              <h2 className="text-xl font-bold mb-1 text-white">
+                {appliedFilters.student
+                  ? `Chill-outs per Lesuur per Dag - ${stats.byStudent.find((s) => s.name)?.name || 'Student'}`
                   : appliedFilters.klas
-                  ? `Chill-outs per Lesuur per Dag - ${appliedFilters.klas}`
-                  : 'Chill-outs per Lesuur per Dag'}
+                    ? `Chill-outs per Lesuur per Dag - ${appliedFilters.klas}`
+                    : 'Chill-outs per Lesuur per Dag'}
               </h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={stats.byDayAndHour}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="date" stroke="rgba(255,255,255,0.7)" angle={-45} textAnchor="end" height={80} />
-                  <YAxis stroke="rgba(255,255,255,0.7)" />
-                  <Tooltip contentStyle={{ backgroundColor: '#1e3a8a', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#fff' }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="1" stroke="#3b82f6" strokeWidth={2} name="Lesuur 1" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="2" stroke="#10b981" strokeWidth={2} name="Lesuur 2" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="3" stroke="#f59e0b" strokeWidth={2} name="Lesuur 3" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="4" stroke="#ef4444" strokeWidth={2} name="Lesuur 4" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="5" stroke="#8b5cf6" strokeWidth={2} name="Lesuur 5" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="6" stroke="#ec4899" strokeWidth={2} name="Lesuur 6" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="7" stroke="#06b6d4" strokeWidth={2} name="Lesuur 7" dot={{ r: 3 }} isAnimationActive={!isExportingCharts} />
-                </LineChart>
-              </ResponsiveContainer>
+              <p className="text-xs text-white/55 mb-4">
+                Gegroepeerde verticale balken per dag — elke kleur is een lesuur
+              </p>
+              <LesuurPerDagBarChart
+                data={stats.byDayAndHour}
+                isAnimationActive={!isExportingCharts}
+                compact={isExportingCharts}
+                ariaLabel="Chill-outs per lesuur per dag"
+              />
+            </div>
+          )}
+
+          {stats.byDayAndHour && stats.byDayAndHour.length > 0 && (
+            <div id="chart-heatmap" className="glass-effect rounded-lg p-6 border border-white/20 lg:col-span-2">
+              <h2 className="text-xl font-bold mb-1 text-white">Heatmap — Dag × Lesuur</h2>
+              <p className="text-xs text-white/55 mb-4">Donkere kleur = meer chill-outs</p>
+              <DayHourHeatmap data={stats.byDayAndHour} title="Heatmap chill-outs" />
             </div>
           )}
         </div>
@@ -1320,7 +1341,7 @@ export default function ReportsPage() {
         {!appliedFilters.student && stats.byKlas.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20 mb-8">
             <h2 className="text-xl font-bold mb-4 text-white">Statistieken per Klas</h2>
-            <div className="overflow-x-auto">
+            <StickyTableWrap>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/20 bg-white/10">
@@ -1355,7 +1376,7 @@ export default function ReportsPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </StickyTableWrap>
           </div>
         )}
 
@@ -1366,7 +1387,7 @@ export default function ReportsPage() {
             <p className="text-white/70 text-sm mb-4">
               Gekoppeld via roosters. Configureer roosters in het menu Roosters om docenten te koppelen.
             </p>
-            <div className="overflow-x-auto">
+            <StickyTableWrap>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/20 bg-white/10">
@@ -1389,7 +1410,7 @@ export default function ReportsPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </StickyTableWrap>
           </div>
         )}
 
@@ -1403,7 +1424,7 @@ export default function ReportsPage() {
                 ? `Statistieken per Student - ${appliedFilters.klas}`
                 : 'Statistieken per Student'}
             </h2>
-            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <StickyTableWrap maxHeight="600px">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-blue-900/50 backdrop-blur">
                   <tr className="border-b border-white/20">
@@ -1430,7 +1451,7 @@ export default function ReportsPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </StickyTableWrap>
           </div>
         )}
       </div>

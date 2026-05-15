@@ -46,7 +46,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     } else {
       // Verificar rutas que requieren ser admin
-      if (pathname === '/users' || pathname === '/nablijven') {
+      if (pathname === '/users' || pathname === '/nablijven' || pathname === '/timetables') {
         if (!user || user.role !== 'admin') {
           router.push('/');
           return;

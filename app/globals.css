@@ -129,5 +129,23 @@ p, span, div, .text-body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Sticky eerste kolom bij horizontaal scrollen (mobiel) */
+  .table-scroll-sticky table th:first-child,
+  .table-scroll-sticky table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: rgba(42, 42, 58, 0.97);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.25);
+  }
+
+  .table-scroll-sticky thead th {
+    z-index: 6;
+  }
+
+  .table-scroll-sticky thead th:first-child {
+    z-index: 7;
+  }
 }
 
