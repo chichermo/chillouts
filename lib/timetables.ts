@@ -38,6 +38,36 @@ export function getTeacherForSlot(
   return slots[key] || '';
 }
 
+function loadTimetablesFromLocalStorage(year: string): Timetable[] {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(`chillapp_timetables_${year}`);
+  if (!stored) return [];
+  try {
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Schooljaren die in de daily records voorkomen (optioneel binnen datumfilter) */
+export function getSchoolYearsFromDates(
+  recordDates: string[],
+  dateFrom?: string,
+  dateTo?: string
+): string[] {
+  const years = new Set<string>();
+  for (const date of recordDates) {
+    if (dateFrom && date < dateFrom) continue;
+    if (dateTo && date > dateTo) continue;
+    years.add(getSchoolYear(new Date(`${date}T12:00:00`)));
+  }
+  if (years.size === 0) {
+    years.add(getSchoolYear(new Date()));
+  }
+  return Array.from(years).sort();
+}
+
 /** Laad alle roosters voor een jaar */
 export async function loadTimetables(year: string): Promise<Timetable[]> {
   if (isSupabaseEnabled && supabase) {
@@ -47,11 +77,8 @@ export async function loadTimetables(year: string): Promise<Timetable[]> {
       .eq('year', year)
       .order('klas', { ascending: true });
 
-    if (error) {
-      console.error('Error loading timetables:', error);
-      return [];
-    }
-    return (data || []).map((row: any) => ({
+    if (!error) {
+      return (data || []).map((row: any) => ({
       id: row.id,
       year: row.year,
       klas: row.klas,
@@ -59,18 +86,13 @@ export async function loadTimetables(year: string): Promise<Timetable[]> {
       created_at: row.created_at,
       updated_at: row.updated_at,
     }));
+    }
+
+    // Tabel ontbreekt of andere fout → localStorage (geen lege array die data verbergt)
+    return loadTimetablesFromLocalStorage(year);
   }
 
-  if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem(`chillapp_timetables_${year}`);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return [];
-    }
-  }
-  return [];
+  return loadTimetablesFromLocalStorage(year);
 }
 
 /** Laad één rooster voor klas en jaar */
@@ -103,12 +125,11 @@ export async function saveTimetable(timetable: Timetable): Promise<void> {
       },
       { onConflict: 'year,klas' }
     );
-    if (error) throw error;
-    return;
+    if (!error) return;
   }
 
   if (typeof window === 'undefined') return;
-  const all = await loadTimetables(timetable.year);
+  const all = loadTimetablesFromLocalStorage(timetable.year);
   const idx = all.findIndex((t) => t.id === id || t.klas === timetable.klas);
   if (idx >= 0) all[idx] = toSave;
   else all.push(toSave);
@@ -135,9 +156,10 @@ export async function getTimetableYears(): Promise<string[]> {
       .from('timetables')
       .select('year')
       .order('year', { ascending: false });
-    if (error) return [];
-    const years = [...new Set((data || []).map((r: any) => r.year))];
-    return years;
+    if (!error) {
+      const years = [...new Set((data || []).map((r: any) => r.year))];
+      if (years.length > 0) return years;
+    }
   }
 
   if (typeof window === 'undefined') return [];

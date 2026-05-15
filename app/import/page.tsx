@@ -10,7 +10,7 @@ import LesuurPerDagBarChart from '@/components/charts/LesuurPerDagBarChart';
 import DayHourHeatmap from '@/components/charts/DayHourHeatmap';
 import StickyTableWrap from '@/components/StickyTableWrap';
 import { BAR_TOP_RADIUS, CHART_AXIS_TICK, CHART_GRID_STROKE, CHART_TOOLTIP_STYLE } from '@/lib/chartTheme';
-import { loadTimetables, getSchoolYear, getTeacherForSlot } from '@/lib/timetables';
+import { loadTimetables, getTeacherForSlot, getSchoolYearsFromDates, getSchoolYear } from '@/lib/timetables';
 import type { Timetable } from '@/types';
 
 // Importeer jspdf-autotable om jsPDF uit te breiden
@@ -85,53 +85,52 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setMounted(true);
-    const loadDataAsync = async () => {
-      const data = await loadData();
-      
-      // Verkrijg alle klassen en studenten
-      const klassen = [...new Set(data.students.map(s => s.klas))].sort();
-      const students = data.students
-        .filter(s => s.status === 'Actief')
-        .map(s => ({ id: s.id, name: s.name, klas: s.klas }));
-      
-      setAllKlassen(klassen);
-      setAllStudents(students);
-      setFilteredStudents(students);
-      
-      // Inicializar appliedFilters con los mismos valores que filters
-      setAppliedFilters({ ...filters });
-      calculateStats(data, filters);
-    };
-    loadDataAsync();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (mounted) {
-      const loadDataAsync = async () => {
-        const data = await loadData();
-        // Bepaal jaren voor roosters (uit datumfilter of huidige jaar)
-        const from = appliedFilters.dateFrom || '2020-01-01';
-        const to = appliedFilters.dateTo || '2030-12-31';
-        const years = new Set<string>();
-        const d = new Date(from);
-        const end = new Date(to);
-        while (d <= end) {
-          years.add(getSchoolYear(d));
-          d.setMonth(d.getMonth() + 1);
-        }
-        if (years.size === 0) years.add(getSchoolYear(new Date()));
-        const mapByYear: Record<string, Record<string, Timetable>> = {};
-        for (const year of years) {
-          const timetables = await loadTimetables(year);
-          mapByYear[year] = {};
-          timetables.forEach((t) => { mapByYear[year][t.klas] = t; });
-        }
-        setTimetableMapByYear(mapByYear);
-        calculateStats(data, appliedFilters, mapByYear);
-      };
-      loadDataAsync();
-    }
+    if (!mounted) return;
+
+    let cancelled = false;
+
+    const loadDataAsync = async () => {
+      const data = await loadData();
+      if (cancelled) return;
+
+      const klassen = [...new Set(data.students.map((s) => s.klas))].sort();
+      const students = data.students
+        .filter((s) => s.status === 'Actief')
+        .map((s) => ({ id: s.id, name: s.name, klas: s.klas }));
+
+      setAllKlassen(klassen);
+      setAllStudents(students);
+      setFilteredStudents(students);
+
+      const years = getSchoolYearsFromDates(
+        Object.keys(data.dailyRecords),
+        appliedFilters.dateFrom || undefined,
+        appliedFilters.dateTo || undefined
+      );
+
+      const mapByYear: Record<string, Record<string, Timetable>> = {};
+      for (const year of years) {
+        const timetables = await loadTimetables(year);
+        if (cancelled) return;
+        mapByYear[year] = {};
+        timetables.forEach((t) => {
+          mapByYear[year][t.klas] = t;
+        });
+      }
+
+      if (cancelled) return;
+      setTimetableMapByYear(mapByYear);
+      calculateStats(data, appliedFilters, mapByYear);
+    };
+
+    loadDataAsync();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters, mounted]);
 
