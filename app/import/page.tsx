@@ -11,10 +11,12 @@ import {
   getHourSlot,
   parseRecordDate,
 } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import jsPDF from 'jspdf';
 import LesuurPerDagBarChart from '@/components/charts/LesuurPerDagBarChart';
 import DayHourHeatmap from '@/components/charts/DayHourHeatmap';
+import TrendLineChart from '@/components/charts/TrendLineChart';
+import { buildTrendSeries, type TrendPoint } from '@/lib/chartTrend';
 import StickyTableWrap from '@/components/StickyTableWrap';
 import { BAR_TOP_RADIUS, CHART_AXIS_TICK, CHART_GRID_STROKE, CHART_TOOLTIP_STYLE } from '@/lib/chartTheme';
 import { loadTimetables, getTeacherForSlot, getSchoolYearsFromDates, getSchoolYear } from '@/lib/timetables';
@@ -55,6 +57,7 @@ export default function ReportsPage() {
     byKlas: [] as { klas: string; total: number; vr: number; vl: number; generic: number; percentage: number }[],
     byStudent: [] as { name: string; klas: string; total: number; vr: number; vl: number; generic: number }[],
     byDay: [] as { date: string; total: number; vr: number; vl: number; generic: number }[],
+    trend: [] as TrendPoint[],
     byDayAndHour: [] as { date: string; [key: string]: string | number }[],
     weeklyTrend: [] as { week: string; total: number; vr: number; vl: number }[],
     byTeacher: [] as { teacher: string; total: number; vr: number; vl: number; generic: number }[],
@@ -387,6 +390,7 @@ export default function ReportsPage() {
       byKlas: byKlasArray,
       byStudent: byStudentArray,
       byDay: byDayArray,
+      trend: buildTrendSeries(byDayData),
       byDayAndHour: dayAndHourLineData,
       weeklyTrend: [],
       byTeacher: byTeacherArray,
@@ -1291,27 +1295,23 @@ export default function ReportsPage() {
           )}
 
           {/* Dagelijkse trend grafiek */}
-          {stats.byDay.length > 0 && (
+          {stats.trend.length > 0 && (
             <div id="chart-tendens" className="glass-effect rounded-lg p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4 text-white">
-                {appliedFilters.student 
-                  ? `Tendens - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
+              <h2 className="text-xl font-bold mb-1 text-white">
+                {appliedFilters.student
+                  ? `Tendens - ${stats.byStudent.find((s) => s.name)?.name || 'Student'}`
                   : appliedFilters.klas
-                  ? `Tendens - ${appliedFilters.klas}`
-                  : 'Tendens'}
+                    ? `Tendens - ${appliedFilters.klas}`
+                    : 'Tendens'}
               </h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={stats.byDay} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
-                  <XAxis dataKey="date" stroke="transparent" tick={CHART_AXIS_TICK} angle={-35} textAnchor="end" height={72} />
-                  <YAxis stroke="transparent" tick={CHART_AXIS_TICK} allowDecimals={false} />
-                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                  <Legend />
-                  <Line type="monotone" dataKey="total" stroke={COLORS.total} strokeWidth={2} name="Totaal" isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="vr" stroke={COLORS.vr} strokeWidth={2} name="VR" isAnimationActive={!isExportingCharts} />
-                  <Line type="monotone" dataKey="vl" stroke={COLORS.vl} strokeWidth={2} name="VL" isAnimationActive={!isExportingCharts} />
-                </LineChart>
-              </ResponsiveContainer>
+              <p className="text-xs text-white/55 mb-4">
+                Alleen dagen met chill-outs; bij veel data wordt per week gegroepeerd
+              </p>
+              <TrendLineChart
+                data={stats.trend}
+                isAnimationActive={!isExportingCharts}
+                ariaLabel="Tendens van chill-outs in de tijd"
+              />
             </div>
           )}
 
