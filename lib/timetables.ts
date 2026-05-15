@@ -4,16 +4,20 @@ import type { Timetable, TimetableSlots } from '@/types';
 const DAY_NAMES = ['Ma', 'Di', 'Wo', 'Do', 'Vr'];
 const HOURS = [1, 2, 3, 4, 5, 6, 7];
 const UNAVAILABLE_KEY = 'chillapp_timetables_no_supabase';
+const AVAILABLE_KEY = 'chillapp_timetables_supabase_ok';
 
 export { DAY_NAMES, HOURS };
 
-/** Na eerste 404 geen Supabase-calls meer voor timetables deze sessie */
 let timetablesSupabaseAvailable: boolean | null = null;
-let timetablesProbePromise: Promise<boolean> | null = null;
+
+function readBrowserFlag(key: string): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(key) === '1' || sessionStorage.getItem(key) === '1';
+}
 
 function readCachedUnavailable(): boolean {
   if (timetablesSupabaseAvailable === false) return true;
-  if (typeof window !== 'undefined' && sessionStorage.getItem(UNAVAILABLE_KEY) === '1') {
+  if (readBrowserFlag(UNAVAILABLE_KEY)) {
     timetablesSupabaseAvailable = false;
     return true;
   }
@@ -23,8 +27,30 @@ function readCachedUnavailable(): boolean {
 function markTimetablesUnavailable(): void {
   timetablesSupabaseAvailable = false;
   if (typeof window !== 'undefined') {
+    localStorage.setItem(UNAVAILABLE_KEY, '1');
+    localStorage.removeItem(AVAILABLE_KEY);
     sessionStorage.setItem(UNAVAILABLE_KEY, '1');
   }
+}
+
+function markTimetablesAvailable(): void {
+  timetablesSupabaseAvailable = true;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(AVAILABLE_KEY, '1');
+    localStorage.removeItem(UNAVAILABLE_KEY);
+    sessionStorage.removeItem(UNAVAILABLE_KEY);
+  }
+}
+
+/**
+ * Supabase roosters alleen als expliciet ingeschakeld (geen automatische probe → geen 404).
+ * Zet NEXT_PUBLIC_TIMETABLES_SUPABASE=true in Vercel nadat supabase/timetables_schema.sql is uitgevoerd.
+ */
+function shouldUseSupabaseForTimetables(): boolean {
+  if (!isSupabaseEnabled || !supabase) return false;
+  if (readCachedUnavailable()) return false;
+  if (readBrowserFlag(AVAILABLE_KEY)) return true;
+  return process.env.NEXT_PUBLIC_TIMETABLES_SUPABASE === 'true';
 }
 
 function isMissingTableError(error: {
@@ -51,33 +77,6 @@ function isMissingTableError(error: {
     details.includes('does not exist') ||
     msg.includes('404')
   );
-}
-
-/** Eén probe per sessie — voorkomt meerdere 404's in de console */
-async function ensureTimetablesSupabase(): Promise<boolean> {
-  if (readCachedUnavailable()) return false;
-  if (timetablesSupabaseAvailable === true) return true;
-  if (!isSupabaseEnabled || !supabase) return false;
-
-  if (!timetablesProbePromise) {
-    timetablesProbePromise = (async () => {
-      const { error } = await supabase!
-        .from('timetables')
-        .select('id')
-        .limit(1);
-
-      if (!error) {
-        timetablesSupabaseAvailable = true;
-        return true;
-      }
-      if (isMissingTableError(error)) {
-        markTimetablesUnavailable();
-      }
-      return false;
-    })();
-  }
-
-  return timetablesProbePromise;
 }
 
 /** Bepaal schooljaar voor een datum (bv. sept 2025 = 2025-2026) */
@@ -124,6 +123,26 @@ function loadTimetablesFromLocalStorage(year: string): Timetable[] {
   }
 }
 
+function mapTimetableRows(
+  data: {
+    id: string;
+    year: string;
+    klas: string;
+    slots?: TimetableSlots;
+    created_at?: string;
+    updated_at?: string;
+  }[]
+): Timetable[] {
+  return data.map((row) => ({
+    id: row.id,
+    year: row.year,
+    klas: row.klas,
+    slots: row.slots || {},
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }));
+}
+
 /** Schooljaren die in de daily records voorkomen (optioneel binnen datumfilter) */
 export function getSchoolYearsFromDates(
   recordDates: string[],
@@ -151,12 +170,7 @@ export function getSchoolYearsFromDates(
 
 /** Laad alle roosters voor een jaar */
 export async function loadTimetables(year: string): Promise<Timetable[]> {
-  if (readCachedUnavailable()) {
-    return loadTimetablesFromLocalStorage(year);
-  }
-
-  const canUseSupabase = await ensureTimetablesSupabase();
-  if (!canUseSupabase || !supabase) {
+  if (!shouldUseSupabaseForTimetables() || !supabase) {
     return loadTimetablesFromLocalStorage(year);
   }
 
@@ -167,21 +181,8 @@ export async function loadTimetables(year: string): Promise<Timetable[]> {
     .order('klas', { ascending: true });
 
   if (!error) {
-    return (data || []).map((row: {
-      id: string;
-      year: string;
-      klas: string;
-      slots?: TimetableSlots;
-      created_at?: string;
-      updated_at?: string;
-    }) => ({
-      id: row.id,
-      year: row.year,
-      klas: row.klas,
-      slots: row.slots || {},
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    }));
+    markTimetablesAvailable();
+    return mapTimetableRows(data || []);
   }
 
   if (isMissingTableError(error)) {
@@ -209,22 +210,22 @@ export async function saveTimetable(timetable: Timetable): Promise<void> {
   const id = timetable.id || timetableId(timetable.year, timetable.klas);
   const toSave = { ...timetable, id };
 
-  if (!readCachedUnavailable() && isSupabaseEnabled && supabase) {
-    const available = await ensureTimetablesSupabase();
-    if (available) {
-      const { error } = await supabase.from('timetables').upsert(
-        {
-          id,
-          year: toSave.year,
-          klas: toSave.klas,
-          slots: toSave.slots,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'year,klas' }
-      );
-      if (!error) return;
-      if (isMissingTableError(error)) markTimetablesUnavailable();
+  if (shouldUseSupabaseForTimetables() && supabase) {
+    const { error } = await supabase.from('timetables').upsert(
+      {
+        id,
+        year: toSave.year,
+        klas: toSave.klas,
+        slots: toSave.slots,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'year,klas' }
+    );
+    if (!error) {
+      markTimetablesAvailable();
+      return;
     }
+    if (isMissingTableError(error)) markTimetablesUnavailable();
   }
 
   if (typeof window === 'undefined') return;
@@ -237,13 +238,10 @@ export async function saveTimetable(timetable: Timetable): Promise<void> {
 
 /** Verwijder rooster */
 export async function deleteTimetable(id: string, year: string): Promise<void> {
-  if (!readCachedUnavailable() && isSupabaseEnabled && supabase) {
-    const available = await ensureTimetablesSupabase();
-    if (available) {
-      const { error } = await supabase.from('timetables').delete().eq('id', id);
-      if (!error) return;
-      if (isMissingTableError(error)) markTimetablesUnavailable();
-    }
+  if (shouldUseSupabaseForTimetables() && supabase) {
+    const { error } = await supabase.from('timetables').delete().eq('id', id);
+    if (!error) return;
+    if (isMissingTableError(error)) markTimetablesUnavailable();
   }
 
   if (typeof window === 'undefined') return;
@@ -253,19 +251,17 @@ export async function deleteTimetable(id: string, year: string): Promise<void> {
 
 /** Haal alle jaren op die roosters hebben */
 export async function getTimetableYears(): Promise<string[]> {
-  if (!readCachedUnavailable() && isSupabaseEnabled && supabase) {
-    const available = await ensureTimetablesSupabase();
-    if (available) {
-      const { data, error } = await supabase
-        .from('timetables')
-        .select('year')
-        .order('year', { ascending: false });
-      if (!error) {
-        const years = [...new Set((data || []).map((r: { year: string }) => r.year))];
-        if (years.length > 0) return years;
-      } else if (isMissingTableError(error)) {
-        markTimetablesUnavailable();
-      }
+  if (shouldUseSupabaseForTimetables() && supabase) {
+    const { data, error } = await supabase
+      .from('timetables')
+      .select('year')
+      .order('year', { ascending: false });
+    if (!error) {
+      markTimetablesAvailable();
+      const years = [...new Set((data || []).map((r: { year: string }) => r.year))];
+      if (years.length > 0) return years;
+    } else if (isMissingTableError(error)) {
+      markTimetablesUnavailable();
     }
   }
 
