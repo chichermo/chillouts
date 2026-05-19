@@ -23,7 +23,29 @@ export function parseRecordDate(dateStr: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** Ondersteunt array-formaat én oud Supabase-formaat { count, type } */
+/** Maximum chill-outs per lesuur (zelfde als Dagelijks UI) */
+export const MAX_CHILLOUTS_PER_HOUR = 3;
+
+export type ChillOutCounts = {
+  total: number;
+  vr: number;
+  vl: number;
+  generic: number;
+};
+
+export function emptyChillOutCounts(): ChillOutCounts {
+  return { total: 0, vr: 0, vl: 0, generic: 0 };
+}
+
+function chillOutsInEntry(entry: unknown): number {
+  if (!entry || typeof entry !== 'object') return 0;
+  const e = entry as { count?: number };
+  const raw = 'count' in e ? Number(e.count) : 1;
+  const n = Number.isFinite(raw) ? raw : 1;
+  return Math.min(MAX_CHILLOUTS_PER_HOUR, Math.max(0, n || 1));
+}
+
+/** Eén bron van waarheid: array [{count,type},…] én legacy {count,type} per lesuur */
 export function forEachChillOutAtHour(
   slot: unknown,
   onEntry: (type: ChillOutType | null) => void
@@ -31,15 +53,76 @@ export function forEachChillOutAtHour(
   if (!slot) return;
   if (Array.isArray(slot)) {
     slot.forEach((entry) => {
-      if (entry) onEntry(entry.type ?? null);
+      if (!entry) return;
+      const type =
+        typeof entry === 'object' && entry !== null && 'type' in entry
+          ? (entry as { type: ChillOutType | null }).type ?? null
+          : null;
+      const n = chillOutsInEntry(entry);
+      for (let i = 0; i < n; i++) onEntry(type);
     });
     return;
   }
   if (typeof slot === 'object' && slot !== null && 'count' in slot) {
     const old = slot as { count: number; type: ChillOutType | null };
-    const n = Math.min(3, Math.max(0, Number(old.count) || 0));
+    const n = Math.min(MAX_CHILLOUTS_PER_HOUR, Math.max(0, Number(old.count) || 0));
     for (let i = 0; i < n; i++) onEntry(old.type ?? null);
   }
+}
+
+export function addChillOutCount(counts: ChillOutCounts, type: ChillOutType | null): void {
+  counts.total += 1;
+  if (type === 'VR') counts.vr += 1;
+  else if (type === 'VL') counts.vl += 1;
+  else counts.generic += 1;
+}
+
+/** Tel chill-outs in één lesuur-slot */
+export function countChillOutsInSlot(slot: unknown): ChillOutCounts {
+  const counts = emptyChillOutCounts();
+  forEachChillOutAtHour(slot, (type) => addChillOutCount(counts, type));
+  return counts;
+}
+
+export function forEachHourInStudentEntries(
+  studentEntries: Record<string | number, unknown> | undefined,
+  onHour: (hour: number, slot: unknown) => void
+): void {
+  if (!studentEntries) return;
+  for (let hour = 1; hour <= 7; hour++) {
+    const slot = getHourSlot(studentEntries, hour);
+    if (slot) onHour(hour, slot);
+  }
+}
+
+/** Tel alle chill-outs van één student op één dag */
+export function countChillOutsInStudentEntries(
+  studentEntries: Record<string | number, unknown> | undefined
+): ChillOutCounts {
+  const counts = emptyChillOutCounts();
+  forEachHourInStudentEntries(studentEntries, (_hour, slot) => {
+    const slotCounts = countChillOutsInSlot(slot);
+    counts.total += slotCounts.total;
+    counts.vr += slotCounts.vr;
+    counts.vl += slotCounts.vl;
+    counts.generic += slotCounts.generic;
+  });
+  return counts;
+}
+
+/** Tel alle chill-outs in een dagrecord */
+export function countChillOutsInRecord(record: DailyRecord): ChillOutCounts {
+  const counts = emptyChillOutCounts();
+  Object.values(record.entries).forEach((studentEntries) => {
+    const studentCounts = countChillOutsInStudentEntries(
+      studentEntries as Record<string | number, unknown>
+    );
+    counts.total += studentCounts.total;
+    counts.vr += studentCounts.vr;
+    counts.vl += studentCounts.vl;
+    counts.generic += studentCounts.generic;
+  });
+  return counts;
 }
 
 export function getHourSlot(
@@ -89,38 +172,14 @@ export function calculateDailyTotals(record: DailyRecord, students: Student[]): 
     vl[hour] = 0;
   }
 
-  // Bereken totalen per lesuur
-  Object.keys(record.entries).forEach(studentId => {
-    const studentEntries = record.entries[studentId];
-    Object.keys(studentEntries).forEach(hourStr => {
-      const hour = parseInt(hourStr);
-      const entries = studentEntries[hour];
-      
-      // Behandel zowel oud formaat (object) als nieuw formaat (array)
-      if (Array.isArray(entries)) {
-        entries.forEach(entry => {
-          if (entry) {
-            totals[hour] = (totals[hour] || 0) + 1;
-            if (entry.type === 'VR') {
-              vr[hour] = (vr[hour] || 0) + 1;
-            } else if (entry.type === 'VL') {
-              vl[hour] = (vl[hour] || 0) + 1;
-            }
-            // Generieke chill-outs (type === null) worden geteld in totals maar niet in VR/VL
-          }
-        });
-      } else if (entries && !Array.isArray(entries)) {
-        // Oud formaat (compatibiliteit)
-        const oldEntry = entries as { count: number; type: ChillOutType | null };
-        if (oldEntry.count > 0) {
-          totals[hour] += oldEntry.count;
-          if (oldEntry.type === 'VR') {
-            vr[hour] += oldEntry.count;
-          } else if (oldEntry.type === 'VL') {
-            vl[hour] += oldEntry.count;
-          }
-        }
-      }
+  Object.keys(record.entries).forEach((studentId) => {
+    const studentEntries = record.entries[studentId] as Record<string | number, unknown>;
+    forEachHourInStudentEntries(studentEntries, (hour, slot) => {
+      forEachChillOutAtHour(slot, (type) => {
+        totals[hour] = (totals[hour] || 0) + 1;
+        if (type === 'VR') vr[hour] = (vr[hour] || 0) + 1;
+        else if (type === 'VL') vl[hour] = (vl[hour] || 0) + 1;
+      });
     });
   });
 
@@ -165,35 +224,13 @@ export function calculateWeeklyTotals(
         let klasVR = 0;
         let klasVL = 0;
         
-      klasStudents.forEach(student => {
-        const studentEntries = record.entries[student.id] || {};
-        Object.values(studentEntries).forEach(entries => {
-          // Behandel zowel oud formaat (object) als nieuw formaat (array)
-          if (Array.isArray(entries)) {
-            entries.forEach(entry => {
-              if (entry) {
-                klasTotal += 1;
-                if (entry.type === 'VR') {
-                  klasVR += 1;
-                } else if (entry.type === 'VL') {
-                  klasVL += 1;
-                }
-                // Generieke chill-outs (type === null) worden geteld in klasTotal maar niet in VR/VL
-              }
-            });
-          } else if (entries && !Array.isArray(entries)) {
-            // Oud formaat (compatibiliteit)
-            const oldEntry = entries as { count: number; type: ChillOutType | null };
-            if (oldEntry.count > 0) {
-              klasTotal += oldEntry.count;
-              if (oldEntry.type === 'VR') {
-                klasVR += oldEntry.count;
-              } else if (oldEntry.type === 'VL') {
-                klasVL += oldEntry.count;
-              }
-            }
-          }
-        });
+      klasStudents.forEach((student) => {
+        const c = countChillOutsInStudentEntries(
+          record.entries[student.id] as Record<string | number, unknown> | undefined
+        );
+        klasTotal += c.total;
+        klasVR += c.vr;
+        klasVL += c.vl;
       });
         
         totals[klas][dayName] = {
@@ -244,44 +281,15 @@ export function calculateWeeklyTotalsByStudent(
       const dayName = weekDays[i];
       
       // Procesar cada estudiante
-      students.forEach(student => {
-        const studentEntries = record.entries[student.id] || {};
-        let studentTotal = 0;
-        let studentVR = 0;
-        let studentVL = 0;
-        
-        Object.values(studentEntries).forEach(entries => {
-          // Manejar tanto formato antiguo (objeto) como nuevo formato (array)
-          if (Array.isArray(entries)) {
-            entries.forEach(entry => {
-              if (entry) {
-                studentTotal += 1;
-                if (entry.type === 'VR') {
-                  studentVR += 1;
-                } else if (entry.type === 'VL') {
-                  studentVL += 1;
-                }
-              }
-            });
-          } else if (entries && !Array.isArray(entries)) {
-            // Formato antiguo (compatibilidad)
-            const oldEntry = entries as { count: number; type: ChillOutType | null };
-            if (oldEntry.count > 0) {
-              studentTotal += oldEntry.count;
-              if (oldEntry.type === 'VR') {
-                studentVR += oldEntry.count;
-              } else if (oldEntry.type === 'VL') {
-                studentVL += oldEntry.count;
-              }
-            }
-          }
-        });
-        
+      students.forEach((student) => {
+        const c = countChillOutsInStudentEntries(
+          record.entries[student.id] as Record<string | number, unknown> | undefined
+        );
         if (studentTotals[student.id]) {
           studentTotals[student.id].totals[dayName] = {
-            total: studentTotal,
-            vr: studentVR,
-            vl: studentVL,
+            total: c.total,
+            vr: c.vr,
+            vl: c.vl,
           };
         }
       });

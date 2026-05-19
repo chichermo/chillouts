@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import Logo from '@/components/Logo';
 import { loadData } from '@/lib/storage';
-import { formatDate, getDayName } from '@/lib/utils';
+import { countChillOutsInRecord, formatDate, getDayName } from '@/lib/utils';
 import { getCurrentUser, hasPermission, isAdmin } from '@/lib/auth';
 import type { UserPermissions } from '@/lib/users';
 
@@ -35,36 +35,15 @@ export default function Home() {
       setActiveStudents(data.students.filter(s => s.status === 'Actief').length);
       setTotalDays(Object.keys(data.dailyRecords).length);
       
-      // Calcular totales de chill-outs
       let total = 0;
-      Object.values(data.dailyRecords).forEach(record => {
-        Object.values(record.entries).forEach(studentEntries => {
-          Object.values(studentEntries).forEach(entries => {
-            if (Array.isArray(entries)) {
-              total += entries.length;
-            }
-          });
-        });
+      Object.values(data.dailyRecords).forEach((record) => {
+        total += countChillOutsInRecord(record).total;
       });
       setTotalChillOuts(total);
-      
-      // Chill-outs de hoy
-      const todayDate = new Date();
-      const todayStrFormatted = formatDate(todayDate);
+
+      const todayStrFormatted = formatDate(new Date());
       const todayRecord = data.dailyRecords[todayStrFormatted];
-      if (todayRecord) {
-        let todayTotal = 0;
-        Object.values(todayRecord.entries).forEach(studentEntries => {
-          Object.values(studentEntries).forEach(entries => {
-            if (Array.isArray(entries)) {
-              todayTotal += entries.length;
-            }
-          });
-        });
-        setTodayChillOuts(todayTotal);
-      } else {
-        setTodayChillOuts(0);
-      }
+      setTodayChillOuts(todayRecord ? countChillOutsInRecord(todayRecord).total : 0);
     };
     loadDataAsync();
   }, []);

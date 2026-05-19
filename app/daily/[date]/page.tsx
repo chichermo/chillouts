@@ -166,45 +166,9 @@ export default function DailyPage() {
     return record.entries[studentId][hour].length;
   };
 
-  // Herbereken totalen met het nieuwe formaat
   const calculateTotals = () => {
-    if (!record) {
-      return { totals: {}, vr: {}, vl: {} };
-    }
-
-    const totals: { [hour: number]: number } = {};
-    const vr: { [hour: number]: number } = {};
-    const vl: { [hour: number]: number } = {};
-
-    // Initialiseer lesuren 1-7
-    for (let hour = 1; hour <= 7; hour++) {
-      totals[hour] = 0;
-      vr[hour] = 0;
-      vl[hour] = 0;
-    }
-
-    // Bereken totalen per lesuur
-    Object.keys(record.entries).forEach(studentId => {
-      const studentEntries = record.entries[studentId];
-      Object.keys(studentEntries).forEach(hourStr => {
-        const hour = parseInt(hourStr);
-        const entries = studentEntries[hour] || [];
-        
-        entries.forEach(entry => {
-          if (entry) {
-            totals[hour] = (totals[hour] || 0) + 1;
-            if (entry.type === 'VR') {
-              vr[hour] = (vr[hour] || 0) + 1;
-            } else if (entry.type === 'VL') {
-              vl[hour] = (vl[hour] || 0) + 1;
-            }
-            // Generieke chill-outs (type === null) worden geteld in totals maar niet in VR/VL
-          }
-        });
-      });
-    });
-
-    return { totals, vr, vl };
+    if (!record) return { totals: {}, vr: {}, vl: {} };
+    return calculateDailyTotals(record, students);
   };
 
   // Calculate klassen with useMemo to ensure stable reference

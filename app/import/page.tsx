@@ -1430,13 +1430,16 @@ export default function ReportsPage() {
         {/* Tabel per student */}
         {stats.byStudent.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20">
-            <h2 className="text-xl font-bold mb-4 text-white">
+            <h2 className="text-xl font-bold mb-1 text-white">
               {appliedFilters.student 
                 ? `Statistieken - ${stats.byStudent[0]?.name || 'Student'}`
                 : appliedFilters.klas
                 ? `Statistieken per Student - ${appliedFilters.klas}`
                 : 'Statistieken per Student'}
             </h2>
+            <p className="text-xs text-white/55 mb-4">
+              Totaal = VR + VL + Chillouts. Kolom &quot;Chillouts&quot; = alleen zonder type (geen VR/VL).
+            </p>
             <StickyTableWrap maxHeight="600px">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-blue-900/50 backdrop-blur">

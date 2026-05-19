@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { loadData } from '@/lib/storage';
-import { calculateDailyTotals, formatDateDisplay } from '@/lib/utils';
+import {
+  calculateDailyTotals,
+  countChillOutsInStudentEntries,
+  formatDateDisplay,
+} from '@/lib/utils';
 import { DailyRecord } from '@/types';
 import ChilloutStackedBarChart from '@/components/charts/ChilloutStackedBarChart';
 import StickyTableWrap from '@/components/StickyTableWrap';
@@ -97,38 +101,23 @@ export default function StatsPage() {
       }
 
       // Por clase y por estudiante
-      data.students.forEach(student => {
-        if (student.status === 'Actief') {
-          const studentEntries = record.entries[student.id] || {};
-          Object.values(studentEntries).forEach(entries => {
-            if (Array.isArray(entries)) {
-              entries.forEach(entry => {
-                if (entry) {
-                  // Contar en clase
-                  byKlas[student.klas].total += 1;
-                  if (entry.type === 'VR') {
-                    byKlas[student.klas].vr += 1;
-                  } else if (entry.type === 'VL') {
-                    byKlas[student.klas].vl += 1;
-                  } else {
-                    byKlas[student.klas].generic += 1;
-                  }
-                  
-                  // Contar en estudiante
-                  if (byStudent[student.id]) {
-                    byStudent[student.id].total += 1;
-                    if (entry.type === 'VR') {
-                      byStudent[student.id].vr += 1;
-                    } else if (entry.type === 'VL') {
-                      byStudent[student.id].vl += 1;
-                    } else {
-                      byStudent[student.id].generic += 1;
-                    }
-                  }
-                }
-              });
-            }
-          });
+      data.students.forEach((student) => {
+        if (student.status !== 'Actief') return;
+        const dayCounts = countChillOutsInStudentEntries(
+          record.entries[student.id] as Record<string | number, unknown> | undefined
+        );
+        if (dayCounts.total === 0) return;
+
+        byKlas[student.klas].total += dayCounts.total;
+        byKlas[student.klas].vr += dayCounts.vr;
+        byKlas[student.klas].vl += dayCounts.vl;
+        byKlas[student.klas].generic += dayCounts.generic;
+
+        if (byStudent[student.id]) {
+          byStudent[student.id].total += dayCounts.total;
+          byStudent[student.id].vr += dayCounts.vr;
+          byStudent[student.id].vl += dayCounts.vl;
+          byStudent[student.id].generic += dayCounts.generic;
         }
       });
 
