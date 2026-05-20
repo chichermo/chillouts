@@ -37,15 +37,31 @@ export function emptyChillOutCounts(): ChillOutCounts {
   return { total: 0, vr: 0, vl: 0, generic: 0 };
 }
 
-function chillOutsInEntry(entry: unknown): number {
-  if (!entry || typeof entry !== 'object') return 0;
-  const e = entry as { count?: number };
-  const raw = 'count' in e ? Number(e.count) : 1;
-  const n = Number.isFinite(raw) ? raw : 1;
-  return Math.min(MAX_CHILLOUTS_PER_HOUR, Math.max(0, n || 1));
+/** Normaliseer type uit DB (bv. "vr", lege string) naar VR | VL | null */
+export function normalizeChillOutType(raw: unknown): ChillOutType | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw !== 'string') return null;
+  const t = raw.trim().toUpperCase();
+  if (t === 'VR') return 'VR';
+  if (t === 'VL') return 'VL';
+  return null;
 }
 
-/** Eén bron van waarheid: array [{count,type},…] én legacy {count,type} per lesuur */
+function isValidArrayEntry(entry: unknown): entry is { type?: unknown; count?: number } {
+  if (!entry || typeof entry !== 'object') return false;
+  const e = entry as { count?: number };
+  if ('count' in e) {
+    const n = Number(e.count);
+    if (!Number.isFinite(n) || n <= 0) return false;
+  }
+  return true;
+}
+
+/**
+ * Eén bron van waarheid — zelfde regels als Dagelijks:
+ * - Array: precies 1 chill-out per element (array.length), negeer count > 1 op elementen
+ * - Legacy object { count, type }: tel count (max 3 per lesuur)
+ */
 export function forEachChillOutAtHour(
   slot: unknown,
   onEntry: (type: ChillOutType | null) => void
@@ -53,20 +69,24 @@ export function forEachChillOutAtHour(
   if (!slot) return;
   if (Array.isArray(slot)) {
     slot.forEach((entry) => {
-      if (!entry) return;
-      const type =
+      if (!isValidArrayEntry(entry)) return;
+      const type = normalizeChillOutType(
         typeof entry === 'object' && entry !== null && 'type' in entry
-          ? (entry as { type: ChillOutType | null }).type ?? null
-          : null;
-      const n = chillOutsInEntry(entry);
-      for (let i = 0; i < n; i++) onEntry(type);
+          ? (entry as { type: unknown }).type
+          : null
+      );
+      onEntry(type);
     });
     return;
   }
   if (typeof slot === 'object' && slot !== null && 'count' in slot) {
-    const old = slot as { count: number; type: ChillOutType | null };
-    const n = Math.min(MAX_CHILLOUTS_PER_HOUR, Math.max(0, Number(old.count) || 0));
-    for (let i = 0; i < n; i++) onEntry(old.type ?? null);
+    const old = slot as { count: number; type?: unknown };
+    const n = Math.min(
+      MAX_CHILLOUTS_PER_HOUR,
+      Math.max(0, Number(old.count) || 0)
+    );
+    const type = normalizeChillOutType(old.type);
+    for (let i = 0; i < n; i++) onEntry(type);
   }
 }
 

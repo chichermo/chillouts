@@ -6,7 +6,13 @@ import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
 import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
-import { formatDate, formatDateDisplay, calculateDailyTotals, sortKlassen } from '@/lib/utils';
+import {
+  formatDate,
+  formatDateDisplay,
+  calculateDailyTotals,
+  normalizeChillOutType,
+  sortKlassen,
+} from '@/lib/utils';
 import { loadKlassenOrder, saveKlassenOrder } from '@/lib/app-settings';
 import { isAdmin } from '@/lib/auth';
 import { loadTimetables, getSchoolYear, getTeacherForSlot } from '@/lib/timetables';
@@ -149,14 +155,18 @@ export default function DailyPage() {
     if (!record || !record.entries[studentId] || !record.entries[studentId][hour]) {
       return 0;
     }
-    return record.entries[studentId][hour].filter(e => e.type === type).length;
+    return record.entries[studentId][hour].filter(
+      (e) => normalizeChillOutType(e?.type) === type
+    ).length;
   };
 
   const getGenericChillOutCount = (studentId: string, hour: number): number => {
     if (!record || !record.entries[studentId] || !record.entries[studentId][hour]) {
       return 0;
     }
-    return record.entries[studentId][hour].filter(e => e.type === null).length;
+    return record.entries[studentId][hour].filter(
+      (e) => normalizeChillOutType(e?.type) === null
+    ).length;
   };
 
   const getTotalChillOuts = (studentId: string, hour: number): number => {
