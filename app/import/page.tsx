@@ -93,6 +93,7 @@ export default function ReportsPage() {
   const [allKlassen, setAllKlassen] = useState<string[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<{ id: string; name: string; klas: string }[]>([]);
   const [timetableMapByYear, setTimetableMapByYear] = useState<Record<string, Record<string, Timetable>>>({});
+  const [rosterStatus, setRosterStatus] = useState<{ year: string; klasCount: number }[]>([]);
   const loadGenRef = useRef(0);
 
   const COLORS = {
@@ -154,6 +155,15 @@ export default function ReportsPage() {
 
       if (gen !== loadGenRef.current) return;
       setTimetableMapByYear(mapByYear);
+      setRosterStatus(
+        yearsToLoad.map((year) => {
+          const map = mapByYear[year] || {};
+          const unique = new Set(
+            Object.values(map).map((t) => t.klas)
+          );
+          return { year, klasCount: unique.size };
+        })
+      );
       calculateStats(data, filters, mapByYear);
     };
 
@@ -1476,12 +1486,32 @@ export default function ReportsPage() {
               stats.byTeacher[0]?.teacher === '(Onbekend)' && (
                 <p className="text-amber-200/90 text-sm mb-4 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2">
                   Geen docent gevonden voor {stats.teachersWithoutRoster} chill-out
-                  {stats.teachersWithoutRoster === 1 ? '' : 's'} — controleer rooster voor schooljaar en klas
-                  {filters.klas ? ` (${filters.klas})` : ''} in{' '}
-                  <a href="/timetables" className="underline font-medium hover:text-white">
-                    Roosters
-                  </a>
-                  .
+                  {stats.teachersWithoutRoster === 1 ? '' : 's'}.
+                  {rosterStatus.length === 0 ||
+                  rosterStatus.every((r) => r.klasCount === 0) ? (
+                    <>
+                      {' '}
+                      Er staan <strong>geen roosters</strong> in Supabase — vul ze in via{' '}
+                      <a href="/timetables" className="underline font-medium hover:text-white">
+                        Roosters
+                      </a>{' '}
+                      (schooljaar bv. 2024-2025 en 2025-2026, klas 3 MGB per dag/lesuur).
+                    </>
+                  ) : (
+                    <>
+                      {' '}
+                      Geladen roosters:{' '}
+                      {rosterStatus
+                        .filter((r) => r.klasCount > 0)
+                        .map((r) => `${r.year} (${r.klasCount} klassen)`)
+                        .join(', ') || 'geen'}
+                      . Controleer of <strong>3 MGB</strong> en het juiste schooljaar zijn ingevuld in{' '}
+                      <a href="/timetables" className="underline font-medium hover:text-white">
+                        Roosters
+                      </a>
+                      .
+                    </>
+                  )}
                 </p>
               )}
             <StickyTableWrap>

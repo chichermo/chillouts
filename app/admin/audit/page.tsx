@@ -70,6 +70,7 @@ export default function AuditStudentPage() {
   const [repairingAll, setRepairingAll] = useState(false);
   const [repairMsg, setRepairMsg] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState('');
+  const [dataQualityMsg, setDataQualityMsg] = useState('');
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
@@ -79,6 +80,7 @@ export default function AuditStudentPage() {
   const runAudit = async () => {
     setLoading(true);
     setRepairMsg('');
+    setDataQualityMsg('');
     try {
       const data = await loadData();
       const q = name.trim().toLowerCase();
@@ -94,6 +96,7 @@ export default function AuditStudentPage() {
         setStudentId('');
         setRows([]);
         setTotals({ total: 0, vr: 0, vl: 0, generic: 0 });
+        setDataQualityMsg('');
         return;
       }
 
@@ -131,7 +134,7 @@ export default function AuditStudentPage() {
           const slotParts: string[] = [];
           for (let hour = 1; hour <= 7; hour++) {
             const slot = getHourSlot(entries, hour);
-            if (slot) slotParts.push(`L${hour}:${slotSummary(slot)}`);
+            if (slot.length > 0) slotParts.push(`L${hour}:${slotSummary(slot)}`);
           }
 
           const parsed = parseRecordDate(dateIso);
@@ -149,6 +152,19 @@ export default function AuditStudentPage() {
 
       setRows(dayRows);
       setTotals(sum);
+
+      const sumOk =
+        sum.total === dayRows.reduce((acc, r) => acc + r.total, 0) &&
+        sum.vr === dayRows.reduce((acc, r) => acc + r.vr, 0) &&
+        sum.vl === dayRows.reduce((acc, r) => acc + r.vl, 0);
+
+      if (sumOk && sum.total > 0) {
+        setDataQualityMsg(
+          `Gegevens in orde: ${dayRows.length} dagen met chill-outs, som = ${sum.total} (VR ${sum.vr} + VL ${sum.vl} + zonder type ${sum.generic}). ` +
+            `Repareren wijzigt dit meestal niet — het formaat is al array per lesuur. ` +
+            `Om het totaal te verlagen moet je per dag chill-outs verwijderen via Dagelijks.`
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -274,15 +290,28 @@ export default function AuditStudentPage() {
 
         {studentInfo && <p className="mb-4 font-medium text-white/90">{studentInfo}</p>}
 
+        {dataQualityMsg && (
+          <p className="text-sm text-emerald-100/95 mb-4 p-3 rounded-lg border border-emerald-400/35 bg-emerald-500/15">
+            {dataQualityMsg}
+          </p>
+        )}
+
         {totals.total > 0 && (
           <div className="glass-effect rounded-lg p-4 mb-6 border border-white/20">
             <p>
               <strong>Totaal:</strong> {totals.total} · <strong>VR:</strong> {totals.vr} ·{' '}
               <strong>VL:</strong> {totals.vl} · <strong>Zonder VR/VL:</strong> {totals.generic}
+              {rows.length > 0 && (
+                <span className="text-white/55 font-normal">
+                  {' '}
+                  · {rows.length} dagen
+                </span>
+              )}
             </p>
             <p className="text-xs text-white/50 mt-2">
-              Kolom &quot;Zonder VR/VL&quot; in Rapporten = chill-outs zonder type. Totaal = VR + VL
-              + zonder type.
+              &quot;Zonder VR/VL&quot; = chill-outs zonder VR/VL aangevinkt (niet hetzelfde als
+              &quot;fout&quot;). Totaal = VR + VL + zonder type. Reparatie fixeert alleen
+              opslagfouten, niet te hoge aantallen.
             </p>
           </div>
         )}
