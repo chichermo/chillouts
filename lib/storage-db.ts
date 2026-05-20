@@ -247,6 +247,65 @@ export async function repairStudentChilloutEntries(studentId: string): Promise<{
   return { datesUpdated, datesChecked, before, after };
 }
 
+/** Repareer alle studenten in alle dagrecords (canonieke opslag in Supabase) */
+export async function repairAllChilloutEntries(): Promise<{
+  datesUpdated: number;
+  datesChecked: number;
+  studentsTouched: number;
+  before: ChillOutCounts;
+  after: ChillOutCounts;
+}> {
+  const data = await loadData();
+  const before = emptyChillOutCounts();
+  const after = emptyChillOutCounts();
+  let datesUpdated = 0;
+  let datesChecked = 0;
+  const studentsTouched = new Set<string>();
+
+  for (const record of Object.values(data.dailyRecords)) {
+    datesChecked++;
+    let recordChanged = false;
+
+    for (const studentId of Object.keys(record.entries)) {
+      const raw = record.entries[studentId] as Record<string | number, unknown> | undefined;
+      if (!raw) continue;
+
+      const b = countChillOutsInStudentEntries(raw);
+      before.total += b.total;
+      before.vr += b.vr;
+      before.vl += b.vl;
+      before.generic += b.generic;
+
+      const sanitized = sanitizeStudentEntries(raw);
+      const a = countChillOutsInStudentEntries(sanitized);
+      after.total += a.total;
+      after.vr += a.vr;
+      after.vl += a.vl;
+      after.generic += a.generic;
+
+      if (JSON.stringify(raw) !== JSON.stringify(sanitized)) {
+        record.entries[studentId] = sanitized;
+        studentsTouched.add(studentId);
+        recordChanged = true;
+      }
+    }
+
+    if (recordChanged) datesUpdated++;
+  }
+
+  if (datesUpdated > 0) {
+    await saveData(data);
+  }
+
+  return {
+    datesUpdated,
+    datesChecked,
+    studentsTouched: studentsTouched.size,
+    before,
+    after,
+  };
+}
+
 export async function getDailyRecord(date: string): Promise<DailyRecord | null> {
   const data = await loadData();
   return data.dailyRecords[date] || null;

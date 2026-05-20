@@ -72,15 +72,18 @@ export function forEachChillOutAtHour(
 ): void {
   if (!slot) return;
   if (Array.isArray(slot)) {
-    slot.forEach((entry) => {
-      if (!isValidArrayEntry(entry)) return;
+    let n = 0;
+    for (const entry of slot) {
+      if (n >= MAX_CHILLOUTS_PER_HOUR) break;
+      if (!isValidArrayEntry(entry)) continue;
       const type = normalizeChillOutType(
         typeof entry === 'object' && entry !== null && 'type' in entry
           ? (entry as { type: unknown }).type
           : null
       );
       onEntry(type);
-    });
+      n += 1;
+    }
     return;
   }
   if (typeof slot === 'object' && slot !== null && 'count' in slot) {
@@ -110,12 +113,12 @@ export function countChillOutsInSlot(slot: unknown): ChillOutCounts {
 
 export function forEachHourInStudentEntries(
   studentEntries: Record<string | number, unknown> | undefined,
-  onHour: (hour: number, slot: unknown) => void
+  onHour: (hour: number, slot: ChillOutEntry[]) => void
 ): void {
   if (!studentEntries) return;
   for (let hour = 1; hour <= 7; hour++) {
     const slot = getHourSlot(studentEntries, hour);
-    if (slot) onHour(hour, slot);
+    if (slot.length > 0) onHour(hour, slot);
   }
 }
 
@@ -149,13 +152,11 @@ export function countChillOutsInRecord(record: DailyRecord): ChillOutCounts {
   return counts;
 }
 
-/** Kies het lesuur-slot met de meeste geldige chill-outs (voorkomt [] die "2" verbergt) */
-export function getHourSlot(
-  studentEntries: Record<string | number, unknown> | undefined,
+/** Ruwe slot uit DB (kiest sterkste van hour vs "hour", geen dubbele telling) */
+function pickRawHourSlot(
+  studentEntries: Record<string | number, unknown>,
   hour: number
 ): unknown {
-  if (!studentEntries) return undefined;
-
   const candidates: unknown[] = [];
   const a = studentEntries[hour];
   const b = studentEntries[String(hour)];
@@ -173,6 +174,17 @@ export function getHourSlot(
     }
   }
   return bestTotal > 0 ? best : undefined;
+}
+
+/**
+ * Canoniek lesuur-slot (max 3 per uur, dubbele keys 2 + "2" samengevoegd).
+ */
+export function getHourSlot(
+  studentEntries: Record<string | number, unknown> | undefined,
+  hour: number
+): ChillOutEntry[] {
+  if (!studentEntries) return [];
+  return normalizeSlotToArray(pickRawHourSlot(studentEntries, hour));
 }
 
 /** Converteer elk lesuur naar array van { count: 1, type } (canonieke opslag) */
@@ -214,8 +226,7 @@ export function sanitizeStudentEntries(
   if (!raw) return out;
 
   for (let hour = 1; hour <= 7; hour++) {
-    const slot = getHourSlot(raw, hour);
-    const arr = normalizeSlotToArray(slot);
+    const arr = normalizeSlotToArray(pickRawHourSlot(raw, hour));
     if (arr.length > 0) out[hour] = arr;
   }
   return out;

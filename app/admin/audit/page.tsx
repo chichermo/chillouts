@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { loadData, repairStudentChilloutEntries } from '@/lib/storage';
+import { loadData, repairStudentChilloutEntries, repairAllChilloutEntries } from '@/lib/storage';
 import {
   countChillOutsInStudentEntries,
   formatDateDisplay,
@@ -13,7 +13,7 @@ import {
 import { isAdmin } from '@/lib/auth';
 
 function slotSummary(slot: unknown): string {
-  if (!slot) return '—';
+  if (!slot || (Array.isArray(slot) && slot.length === 0)) return '—';
   if (Array.isArray(slot)) {
     const len = slot.length;
     const empty = slot.filter(
@@ -38,6 +38,26 @@ type DayRow = {
   slots: string;
 };
 
+type AppDataShape = Awaited<ReturnType<typeof loadData>>;
+type StudentMatch = AppDataShape['students'][number];
+
+async function sumAllMatches(data: AppDataShape, matches: StudentMatch[]) {
+  const sum = { total: 0, vr: 0, vl: 0, generic: 0 };
+  for (const student of matches) {
+    for (const record of Object.values(data.dailyRecords)) {
+      const entries = record.entries[student.id] as
+        | Record<string | number, unknown>
+        | undefined;
+      const c = countChillOutsInStudentEntries(entries);
+      sum.total += c.total;
+      sum.vr += c.vr;
+      sum.vl += c.vl;
+      sum.generic += c.generic;
+    }
+  }
+  return sum;
+}
+
 export default function AuditStudentPage() {
   const [name, setName] = useState('Amber');
   const [klas, setKlas] = useState('MGB');
@@ -47,7 +67,9 @@ export default function AuditStudentPage() {
   const [studentId, setStudentId] = useState('');
   const [loading, setLoading] = useState(false);
   const [repairing, setRepairing] = useState(false);
+  const [repairingAll, setRepairingAll] = useState(false);
   const [repairMsg, setRepairMsg] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState('');
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
@@ -75,9 +97,22 @@ export default function AuditStudentPage() {
         return;
       }
 
+      if (matches.length > 1) {
+        setDuplicateWarning(
+          `Let op: ${matches.length} studenten met deze naam/klas. Totalen hieronder zijn alleen voor de eerste. IDs: ${matches.map((s) => s.id).join(', ')}`
+        );
+      } else {
+        setDuplicateWarning('');
+      }
+
       const student = matches[0];
       setStudentId(student.id);
-      setStudentInfo(`${student.name} | ${student.klas} | id: ${student.id}`);
+      const combined = matches.length > 1 ? await sumAllMatches(data, matches) : null;
+      setStudentInfo(
+        combined
+          ? `${student.name} | ${student.klas} | ${matches.length} profielen — gecombineerd totaal: ${combined.total} (VR ${combined.vr}, VL ${combined.vl}, zonder type ${combined.generic})`
+          : `${student.name} | ${student.klas} | id: ${student.id}`
+      );
 
       const dayRows: DayRow[] = [];
       const sum = { total: 0, vr: 0, vl: 0, generic: 0 };
@@ -116,6 +151,27 @@ export default function AuditStudentPage() {
       setTotals(sum);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runRepairAll = async () => {
+    const ok = window.confirm(
+      'Dit normaliseert ALLE chill-outs van ALLE studenten in Supabase. Alleen doen als tellingen systematisch te hoog zijn. Doorgaan?'
+    );
+    if (!ok) return;
+    setRepairingAll(true);
+    setRepairMsg('');
+    try {
+      const result = await repairAllChilloutEntries();
+      setRepairMsg(
+        `Alles gerepareerd: ${result.datesUpdated} van ${result.datesChecked} dagen, ${result.studentsTouched} studenten. ` +
+          `Voor: ${result.before.total} chill-outs → Na: ${result.after.total} (VR ${result.after.vr}, VL ${result.after.vl}, zonder type ${result.after.generic}).`
+      );
+      await runAudit();
+    } catch (e) {
+      setRepairMsg('Fout: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    } finally {
+      setRepairingAll(false);
     }
   };
 
@@ -186,10 +242,18 @@ export default function AuditStudentPage() {
           <button
             type="button"
             onClick={runRepair}
-            disabled={!studentId || repairing || loading}
+            disabled={!studentId || repairing || repairingAll || loading}
             className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 disabled:opacity-50"
           >
-            {repairing ? 'Repareren…' : 'Repareer in Supabase'}
+            {repairing ? 'Repareren…' : 'Repareer deze student'}
+          </button>
+          <button
+            type="button"
+            onClick={runRepairAll}
+            disabled={repairing || repairingAll || loading}
+            className="px-4 py-2 rounded bg-red-700 hover:bg-red-600 disabled:opacity-50"
+          >
+            {repairingAll ? 'Alles repareren…' : 'Repareer alle data'}
           </button>
           <Link href="/import" className="px-4 py-2 rounded bg-white/10 border border-white/20">
             ← Rapporten
@@ -199,6 +263,12 @@ export default function AuditStudentPage() {
         {repairMsg && (
           <p className="text-sm text-amber-100/90 mb-4 p-3 rounded bg-amber-500/15 border border-amber-400/30">
             {repairMsg}
+          </p>
+        )}
+
+        {duplicateWarning && (
+          <p className="text-sm text-amber-100/90 mb-4 p-3 rounded bg-amber-500/15 border border-amber-400/30">
+            {duplicateWarning}
           </p>
         )}
 

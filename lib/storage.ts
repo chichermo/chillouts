@@ -8,6 +8,7 @@ export {
   saveDailyRecord,
   getDailyRecord,
   repairStudentChilloutEntries,
+  repairAllChilloutEntries,
   getAuditLogs,
   revertAuditLog,
   renameKlas,
