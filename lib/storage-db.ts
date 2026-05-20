@@ -1,12 +1,86 @@
 import { supabase, isSupabaseEnabled } from './supabase';
 import { AppData, Student, DailyRecord, AuditLog } from '@/types';
 import {
+  countChillOutsInRecord,
   countChillOutsInStudentEntries,
+  countChillOutsInStudentEntriesLegacy,
   emptyChillOutCounts,
   sanitizeDailyRecord,
   sanitizeStudentEntries,
   type ChillOutCounts,
 } from './utils';
+import { getAppSetting, setAppSetting } from './app-settings';
+
+const CHILLOUT_MIGRATION_KEY = 'chillout_storage_migration_v3';
+
+export type ChilloutMigrationSummary = {
+  version: number;
+  completedAt: string;
+  recordsChecked: number;
+  recordsUpdated: number;
+  chilloutsBefore: number;
+  chilloutsAfter: number;
+  legacyInflatedBefore: number;
+  studentsAffected: number;
+};
+
+/** Normaliseer alle daily_records naar canonieke opslag (1 chill-out = 1 array-item) */
+export function migrateCanonicalChilloutStorage(data: AppData): {
+  changed: boolean;
+  summary: ChilloutMigrationSummary;
+} {
+  let recordsUpdated = 0;
+  let recordsChecked = 0;
+  let chilloutsBefore = 0;
+  let chilloutsAfter = 0;
+  let legacyInflatedBefore = 0;
+  const studentsAffected = new Set<string>();
+
+  for (const record of Object.values(data.dailyRecords)) {
+    recordsChecked++;
+    const before = countChillOutsInRecord(record);
+    chilloutsBefore += before.total;
+
+    for (const studentId of Object.keys(record.entries)) {
+      const raw = record.entries[studentId] as Record<string | number, unknown> | undefined;
+      const legacy = countChillOutsInStudentEntriesLegacy(raw);
+      legacyInflatedBefore += legacy.total;
+    }
+
+    const sanitized = sanitizeDailyRecord(record);
+    const after = countChillOutsInRecord(sanitized);
+    chilloutsAfter += after.total;
+
+    const rawJson = JSON.stringify(record.entries);
+    const sanitizedJson = JSON.stringify(sanitized.entries);
+    if (rawJson !== sanitizedJson) {
+      for (const studentId of Object.keys(record.entries)) {
+        const raw = record.entries[studentId] as Record<string | number, unknown> | undefined;
+        const b = countChillOutsInStudentEntries(raw);
+        const a = countChillOutsInStudentEntries(
+          sanitized.entries[studentId] as Record<string | number, unknown>
+        );
+        if (b.total !== a.total) studentsAffected.add(studentId);
+      }
+      data.dailyRecords[record.date] = sanitized;
+      recordsUpdated++;
+    }
+  }
+
+  return {
+    changed: recordsUpdated > 0,
+    summary: {
+      version: 3,
+      completedAt: new Date().toISOString(),
+      recordsChecked,
+      recordsUpdated,
+      chilloutsBefore,
+      chilloutsAfter,
+      legacyInflatedBefore,
+      studentsAffected: studentsAffected.size,
+    },
+  };
+}
 
 // Gegevenslaag: alleen Supabase (geen localStorage voor app-data)
 async function loadFromSupabase(): Promise<AppData | null> {
@@ -115,6 +189,27 @@ export async function loadData(): Promise<AppData> {
   if (supabaseData === null) {
     throw new Error('Kon gegevens niet laden van Supabase. Controleer je verbinding en tabellen.');
   }
+
+  const { changed, summary } = migrateCanonicalChilloutStorage(supabaseData);
+
+  if (changed) {
+    console.log(
+      `[chillout-migratie] ${summary.recordsUpdated} dagen bijgewerkt in Supabase: ` +
+        `${summary.chilloutsBefore} → ${summary.chilloutsAfter} chill-outs ` +
+        `(oude Rapporten-telling: ${summary.legacyInflatedBefore})`
+    );
+    const saved = await saveToSupabase(supabaseData);
+    if (!saved) {
+      throw new Error('Migratie mislukt: kon genormaliseerde chill-outs niet opslaan in Supabase.');
+    }
+  }
+
+  try {
+    await setAppSetting(CHILLOUT_MIGRATION_KEY, summary);
+  } catch {
+    /* niet blokkeren */
+  }
+
   return supabaseData;
 }
 

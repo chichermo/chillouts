@@ -152,39 +152,88 @@ export function countChillOutsInRecord(record: DailyRecord): ChillOutCounts {
   return counts;
 }
 
-/** Ruwe slot uit DB (kiest sterkste van hour vs "hour", geen dubbele telling) */
+/** Voeg slots samen van hour én "hour" zonder dubbele entries (fix dubbele DB-keys) */
 function pickRawHourSlot(
   studentEntries: Record<string | number, unknown>,
   hour: number
-): unknown {
-  const candidates: unknown[] = [];
-  const a = studentEntries[hour];
-  const b = studentEntries[String(hour)];
-  if (a !== undefined && a !== null) candidates.push(a);
-  if (b !== undefined && b !== null && b !== a) candidates.push(b);
-  if (candidates.length === 0) return undefined;
+): ChillOutEntry[] {
+  const merged: ChillOutEntry[] = [];
+  const seen = new Set<string>();
 
-  let best = candidates[0];
-  let bestTotal = countChillOutsInSlot(best).total;
-  for (let i = 1; i < candidates.length; i++) {
-    const t = countChillOutsInSlot(candidates[i]).total;
-    if (t > bestTotal) {
-      best = candidates[i];
-      bestTotal = t;
+  for (const key of [hour, String(hour)] as const) {
+    const raw = studentEntries[key];
+    if (raw === undefined || raw === null) continue;
+    for (const entry of normalizeSlotToArray(raw)) {
+      const dedupeKey = JSON.stringify(entry);
+      if (seen.has(dedupeKey)) continue;
+      seen.add(dedupeKey);
+      merged.push(entry);
+      if (merged.length >= MAX_CHILLOUTS_PER_HOUR) return merged;
     }
   }
-  return bestTotal > 0 ? best : undefined;
+  return merged;
 }
 
-/**
- * Canoniek lesuur-slot (max 3 per uur, dubbele keys 2 + "2" samengevoegd).
- */
+/** Canoniek lesuur-slot (max 3 per uur, samengevoegde keys) */
 export function getHourSlot(
   studentEntries: Record<string | number, unknown> | undefined,
   hour: number
 ): ChillOutEntry[] {
   if (!studentEntries) return [];
-  return normalizeSlotToArray(pickRawHourSlot(studentEntries, hour));
+  return pickRawHourSlot(studentEntries, hour);
+}
+
+/**
+ * Oude Rapporten-logica (t/m f28c5ba): telde count>1 op array-elementen en lege {} mee.
+ * Alleen voor diagnose / migratie-log.
+ */
+export function countChillOutsInStudentEntriesLegacy(
+  studentEntries: Record<string | number, unknown> | undefined
+): ChillOutCounts {
+  const counts = emptyChillOutCounts();
+  if (!studentEntries) return counts;
+
+  const legacyEntryWeight = (entry: unknown): number => {
+    if (!entry || typeof entry !== 'object') return 0;
+    const e = entry as { count?: number };
+    const raw = 'count' in e ? Number(e.count) : 1;
+    const n = Number.isFinite(raw) ? raw : 1;
+    return Math.min(MAX_CHILLOUTS_PER_HOUR, Math.max(0, n || 1));
+  };
+
+  const addLegacySlot = (slot: unknown) => {
+    if (!slot) return;
+    if (Array.isArray(slot)) {
+      for (const entry of slot) {
+        if (!entry) continue;
+        const type = normalizeChillOutType(
+          typeof entry === 'object' && entry !== null && 'type' in entry
+            ? (entry as { type: unknown }).type
+            : null
+        );
+        const n = legacyEntryWeight(entry);
+        for (let i = 0; i < n; i++) addChillOutCount(counts, type);
+      }
+      return;
+    }
+    if (typeof slot === 'object' && slot !== null && 'count' in slot) {
+      const old = slot as { count: number; type?: unknown };
+      const n = Math.min(
+        MAX_CHILLOUTS_PER_HOUR,
+        Math.max(0, Number(old.count) || 0)
+      );
+      const type = normalizeChillOutType(old.type);
+      for (let i = 0; i < n; i++) addChillOutCount(counts, type);
+    }
+  };
+
+  for (let hour = 1; hour <= 7; hour++) {
+    const a = studentEntries[hour];
+    const b = studentEntries[String(hour)];
+    if (a !== undefined && a !== null) addLegacySlot(a);
+    if (b !== undefined && b !== null && b !== a) addLegacySlot(b);
+  }
+  return counts;
 }
 
 /** Converteer elk lesuur naar array van { count: 1, type } (canonieke opslag) */
@@ -226,7 +275,7 @@ export function sanitizeStudentEntries(
   if (!raw) return out;
 
   for (let hour = 1; hour <= 7; hour++) {
-    const arr = normalizeSlotToArray(pickRawHourSlot(raw, hour));
+    const arr = pickRawHourSlot(raw, hour);
     if (arr.length > 0) out[hour] = arr;
   }
   return out;

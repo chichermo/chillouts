@@ -3,9 +3,16 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { loadData, repairStudentChilloutEntries, repairAllChilloutEntries } from '@/lib/storage';
+import {
+  loadData,
+  repairStudentChilloutEntries,
+  repairAllChilloutEntries,
+  type ChilloutMigrationSummary,
+} from '@/lib/storage';
+import { getAppSetting } from '@/lib/app-settings';
 import {
   countChillOutsInStudentEntries,
+  countChillOutsInStudentEntriesLegacy,
   formatDateDisplay,
   getHourSlot,
   parseRecordDate,
@@ -71,6 +78,8 @@ export default function AuditStudentPage() {
   const [repairMsg, setRepairMsg] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState('');
   const [dataQualityMsg, setDataQualityMsg] = useState('');
+  const [migrationLog, setMigrationLog] = useState<ChilloutMigrationSummary | null>(null);
+  const [legacyTotal, setLegacyTotal] = useState<number | null>(null);
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
@@ -119,6 +128,14 @@ export default function AuditStudentPage() {
 
       const dayRows: DayRow[] = [];
       const sum = { total: 0, vr: 0, vl: 0, generic: 0 };
+      let legacySum = 0;
+
+      try {
+        const log = await getAppSetting<ChilloutMigrationSummary>('chillout_storage_migration_v3');
+        setMigrationLog(log);
+      } catch {
+        setMigrationLog(null);
+      }
 
       Object.keys(data.dailyRecords)
         .sort()
@@ -129,6 +146,7 @@ export default function AuditStudentPage() {
           if (!entries) return;
 
           const c = countChillOutsInStudentEntries(entries);
+          legacySum += countChillOutsInStudentEntriesLegacy(entries).total;
           if (c.total === 0) return;
 
           const slotParts: string[] = [];
@@ -152,6 +170,7 @@ export default function AuditStudentPage() {
 
       setRows(dayRows);
       setTotals(sum);
+      setLegacyTotal(legacySum > sum.total ? legacySum : null);
 
       const sumOk =
         sum.total === dayRows.reduce((acc, r) => acc + r.total, 0) &&
@@ -289,6 +308,31 @@ export default function AuditStudentPage() {
         )}
 
         {studentInfo && <p className="mb-4 font-medium text-white/90">{studentInfo}</p>}
+
+        {migrationLog && (
+          <p className="text-sm text-blue-100/95 mb-4 p-3 rounded-lg border border-blue-400/35 bg-blue-500/15">
+            <strong>Supabase-migratie (v{migrationLog.version}):</strong>{' '}
+            {migrationLog.recordsUpdated > 0
+              ? `${migrationLog.recordsUpdated} dagen opgeschoond — chill-outs ${migrationLog.chilloutsBefore} → ${migrationLog.chilloutsAfter}`
+              : `geen opslagwijziging (${migrationLog.chilloutsAfter} chill-outs in ${migrationLog.recordsChecked} dagen)`}
+            {migrationLog.legacyInflatedBefore > migrationLog.chilloutsBefore && (
+              <>
+                {' '}
+                · oude foutieve Rapporten-telling was {migrationLog.legacyInflatedBefore}
+              </>
+            )}
+            {' '}
+            · {new Date(migrationLog.completedAt).toLocaleString('nl-NL')}
+          </p>
+        )}
+
+        {legacyTotal !== null && legacyTotal > totals.total && (
+          <p className="text-sm text-amber-100/95 mb-4 p-3 rounded-lg border border-amber-400/30 bg-amber-500/10">
+            Met de oude tel-logica (vóór fix f28c5ba) zou deze student{' '}
+            <strong>{legacyTotal}</strong> tonen i.p.v. <strong>{totals.total}</strong> — verschil
+            door count-velden op array-items en dubbele lesuur-keys.
+          </p>
+        )}
 
         {dataQualityMsg && (
           <p className="text-sm text-emerald-100/95 mb-4 p-3 rounded-lg border border-emerald-400/35 bg-emerald-500/15">

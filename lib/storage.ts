@@ -9,6 +9,8 @@ export {
   getDailyRecord,
   repairStudentChilloutEntries,
   repairAllChilloutEntries,
+  migrateCanonicalChilloutStorage,
+  type ChilloutMigrationSummary,
   getAuditLogs,
   revertAuditLog,
   renameKlas,
