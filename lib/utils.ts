@@ -47,10 +47,14 @@ export function normalizeChillOutType(raw: unknown): ChillOutType | null {
   return null;
 }
 
+/** Alleen echte chill-out entries tellen (geen lege {} uit corrupte imports) */
 function isValidArrayEntry(entry: unknown): entry is { type?: unknown; count?: number } {
   if (!entry || typeof entry !== 'object') return false;
-  const e = entry as { count?: number };
-  if ('count' in e) {
+  const e = entry as { type?: unknown; count?: number };
+  const hasTypeField = 'type' in e;
+  const hasCountField = 'count' in e;
+  if (!hasTypeField && !hasCountField) return false;
+  if (hasCountField) {
     const n = Number(e.count);
     if (!Number.isFinite(n) || n <= 0) return false;
   }
