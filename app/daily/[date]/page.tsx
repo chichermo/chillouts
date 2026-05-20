@@ -11,6 +11,7 @@ import {
   formatDateDisplay,
   calculateDailyTotals,
   normalizeChillOutType,
+  sanitizeStudentEntries,
   sortKlassen,
 } from '@/lib/utils';
 import { loadKlassenOrder, saveKlassenOrder } from '@/lib/app-settings';
@@ -75,36 +76,14 @@ export default function DailyPage() {
       .catch((err) => console.warn('Roosters niet geladen:', err));
   }, [dateStr, record]);
 
-  // Migreer oude records naar nieuw formaat
   function migrateRecord(oldRecord: DailyRecord): DailyRecord {
-    const newRecord: DailyRecord = {
-      ...oldRecord,
-      entries: {},
-    };
-
-    Object.keys(oldRecord.entries).forEach(studentId => {
-      newRecord.entries[studentId] = {};
-      Object.keys(oldRecord.entries[studentId]).forEach(hourStr => {
-        const hour = parseInt(hourStr);
-        const oldEntry = oldRecord.entries[studentId][hour];
-        
-        // Si es el formato antiguo (objeto), convertir a array
-        if (oldEntry && !Array.isArray(oldEntry)) {
-          const oldEntryObj = oldEntry as { count: number; type: ChillOutType | null };
-          const entries: { count: number; type: ChillOutType | null }[] = [];
-          for (let i = 0; i < oldEntryObj.count; i++) {
-            entries.push({ count: 1, type: oldEntryObj.type });
-          }
-          newRecord.entries[studentId][hour] = entries;
-        } else if (Array.isArray(oldEntry)) {
-          newRecord.entries[studentId][hour] = oldEntry;
-        } else {
-          newRecord.entries[studentId][hour] = [];
-        }
-      });
+    const entries: DailyRecord['entries'] = {};
+    Object.keys(oldRecord.entries).forEach((studentId) => {
+      entries[studentId] = sanitizeStudentEntries(
+        oldRecord.entries[studentId] as Record<string | number, unknown>
+      );
     });
-
-    return newRecord;
+    return { ...oldRecord, entries };
   }
 
   const handleCheckboxChange = (studentId: string, hour: number, type: ChillOutType, targetCount: number, checked: boolean) => {
@@ -119,8 +98,12 @@ export default function DailyPage() {
     }
 
     const currentEntries = [...updatedRecord.entries[studentId][hour]];
-    const typeEntries = currentEntries.filter(e => e.type === type);
-    const otherEntries = currentEntries.filter(e => e.type !== type);
+    const typeEntries = currentEntries.filter(
+      (e) => normalizeChillOutType(e?.type) === type
+    );
+    const otherEntries = currentEntries.filter(
+      (e) => normalizeChillOutType(e?.type) !== type
+    );
     const currentTypeCount = typeEntries.length;
     
     // Tel andere typen (exclusief huidig type)

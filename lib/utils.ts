@@ -1,4 +1,4 @@
-import { DailyRecord, WeeklyTotal, Student, ChillOutType } from '@/types';
+import { ChillOutEntry, DailyRecord, WeeklyTotal, Student, ChillOutType } from '@/types';
 
 export function formatDate(date: Date | string): string {
   if (typeof date === 'string') {
@@ -149,12 +149,86 @@ export function countChillOutsInRecord(record: DailyRecord): ChillOutCounts {
   return counts;
 }
 
+/** Kies het lesuur-slot met de meeste geldige chill-outs (voorkomt [] die "2" verbergt) */
 export function getHourSlot(
   studentEntries: Record<string | number, unknown> | undefined,
   hour: number
 ): unknown {
   if (!studentEntries) return undefined;
-  return studentEntries[hour] ?? studentEntries[String(hour)];
+
+  const candidates: unknown[] = [];
+  const a = studentEntries[hour];
+  const b = studentEntries[String(hour)];
+  if (a !== undefined && a !== null) candidates.push(a);
+  if (b !== undefined && b !== null && b !== a) candidates.push(b);
+  if (candidates.length === 0) return undefined;
+
+  let best = candidates[0];
+  let bestTotal = countChillOutsInSlot(best).total;
+  for (let i = 1; i < candidates.length; i++) {
+    const t = countChillOutsInSlot(candidates[i]).total;
+    if (t > bestTotal) {
+      best = candidates[i];
+      bestTotal = t;
+    }
+  }
+  return bestTotal > 0 ? best : undefined;
+}
+
+/** Converteer elk lesuur naar array van { count: 1, type } (canonieke opslag) */
+export function normalizeSlotToArray(slot: unknown): ChillOutEntry[] {
+  if (!slot) return [];
+  const result: ChillOutEntry[] = [];
+
+  if (Array.isArray(slot)) {
+    for (const entry of slot) {
+      if (!isValidArrayEntry(entry)) continue;
+      const type = normalizeChillOutType(
+        typeof entry === 'object' && entry !== null && 'type' in entry
+          ? (entry as { type: unknown }).type
+          : null
+      );
+      result.push({ count: 1, type });
+    }
+    return result.slice(0, MAX_CHILLOUTS_PER_HOUR);
+  }
+
+  if (typeof slot === 'object' && slot !== null && 'count' in slot) {
+    const old = slot as { count: number; type?: unknown };
+    const n = Math.min(
+      MAX_CHILLOUTS_PER_HOUR,
+      Math.max(0, Number(old.count) || 0)
+    );
+    const type = normalizeChillOutType(old.type);
+    for (let i = 0; i < n; i++) result.push({ count: 1, type });
+  }
+
+  return result;
+}
+
+/** Opschonen: alleen lesuren 1–7, geen lege arrays, legacy → array */
+export function sanitizeStudentEntries(
+  raw: Record<string | number, unknown> | undefined
+): Record<number, ChillOutEntry[]> {
+  const out: Record<number, ChillOutEntry[]> = {};
+  if (!raw) return out;
+
+  for (let hour = 1; hour <= 7; hour++) {
+    const slot = getHourSlot(raw, hour);
+    const arr = normalizeSlotToArray(slot);
+    if (arr.length > 0) out[hour] = arr;
+  }
+  return out;
+}
+
+export function sanitizeDailyRecord(record: DailyRecord): DailyRecord {
+  const entries: DailyRecord['entries'] = {};
+  for (const studentId of Object.keys(record.entries)) {
+    entries[studentId] = sanitizeStudentEntries(
+      record.entries[studentId] as Record<string | number, unknown>
+    );
+  }
+  return { ...record, entries };
 }
 
 export function formatDateDisplay(date: Date | string): string {

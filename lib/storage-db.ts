@@ -1,5 +1,12 @@
 import { supabase, isSupabaseEnabled } from './supabase';
 import { AppData, Student, DailyRecord, AuditLog } from '@/types';
+import {
+  countChillOutsInStudentEntries,
+  emptyChillOutCounts,
+  sanitizeDailyRecord,
+  sanitizeStudentEntries,
+  type ChillOutCounts,
+} from './utils';
 
 // Gegevenslaag: alleen Supabase (geen localStorage voor app-data)
 async function loadFromSupabase(): Promise<AppData | null> {
@@ -190,8 +197,54 @@ export async function deleteStudent(studentId: string): Promise<void> {
 
 export async function saveDailyRecord(record: DailyRecord): Promise<void> {
   const data = await loadData();
-  data.dailyRecords[record.date] = record;
+  data.dailyRecords[record.date] = sanitizeDailyRecord(record);
   await saveData(data);
+}
+
+/** Repareer opgeslagen entries voor één student (canonieke arrays, dubbele lesuur-keys) */
+export async function repairStudentChilloutEntries(studentId: string): Promise<{
+  datesUpdated: number;
+  datesChecked: number;
+  before: ChillOutCounts;
+  after: ChillOutCounts;
+}> {
+  const data = await loadData();
+  const before = emptyChillOutCounts();
+  const after = emptyChillOutCounts();
+  let datesUpdated = 0;
+  let datesChecked = 0;
+
+  for (const record of Object.values(data.dailyRecords)) {
+    const raw = record.entries[studentId] as Record<string | number, unknown> | undefined;
+    if (!raw) continue;
+
+    datesChecked++;
+    const b = countChillOutsInStudentEntries(raw);
+    before.total += b.total;
+    before.vr += b.vr;
+    before.vl += b.vl;
+    before.generic += b.generic;
+
+    const sanitized = sanitizeStudentEntries(raw);
+    const a = countChillOutsInStudentEntries(sanitized);
+    after.total += a.total;
+    after.vr += a.vr;
+    after.vl += a.vl;
+    after.generic += a.generic;
+
+    const rawJson = JSON.stringify(raw);
+    const sanitizedJson = JSON.stringify(sanitized);
+    if (rawJson !== sanitizedJson) {
+      record.entries[studentId] = sanitized;
+      datesUpdated++;
+    }
+  }
+
+  if (datesUpdated > 0) {
+    await saveData(data);
+  }
+
+  return { datesUpdated, datesChecked, before, after };
 }
 
 export async function getDailyRecord(date: string): Promise<DailyRecord | null> {

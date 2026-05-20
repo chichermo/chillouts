@@ -7,6 +7,7 @@ export {
   deleteStudent,
   saveDailyRecord,
   getDailyRecord,
+  repairStudentChilloutEntries,
   getAuditLogs,
   revertAuditLog,
   renameKlas,

@@ -1362,7 +1362,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Chillouts</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">Zonder VR/VL</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">Percentage</th>
                   </tr>
                 </thead>
@@ -1408,7 +1408,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Chillouts</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">Zonder VR/VL</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1438,7 +1438,7 @@ export default function ReportsPage() {
                 : 'Statistieken per Student'}
             </h2>
             <p className="text-xs text-white/55 mb-4">
-              Totaal = VR + VL + Chillouts. Kolom &quot;Chillouts&quot; = alleen zonder type (geen VR/VL).
+              Totaal = VR + VL + zonder type. Kolom &quot;Zonder VR/VL&quot; = chill-outs zonder VR of VL.
             </p>
             <StickyTableWrap maxHeight="600px">
               <table className="w-full text-sm">
@@ -1449,7 +1449,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Chillouts</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">Zonder VR/VL</th>
                   </tr>
                 </thead>
                 <tbody>
