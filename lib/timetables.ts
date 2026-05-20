@@ -97,6 +97,55 @@ export function getTeacherForSlot(
   return slots[slotKey(dayIndex, hour)] || '';
 }
 
+/** Normaliseer klasnaam voor lookup (spaties, hoofdletters) */
+export function normalizeKlasForLookup(klas: string): string {
+  return klas.trim().replace(/\s+/g, ' ').toUpperCase();
+}
+
+/** Indexeer roosters per klas + genormaliseerde sleutel */
+export function indexTimetablesByKlas(timetables: Timetable[]): Record<string, Timetable> {
+  const map: Record<string, Timetable> = {};
+  for (const t of timetables) {
+    map[t.klas] = t;
+    map[normalizeKlasForLookup(t.klas)] = t;
+  }
+  return map;
+}
+
+/** Zoek rooster ongeacht spaties / hoofdletters in de klasnaam */
+export function findTimetableInMap(
+  map: Record<string, Timetable> | undefined,
+  klas: string
+): Timetable | undefined {
+  if (!map || !klas) return undefined;
+  if (map[klas]) return map[klas];
+  const key = normalizeKlasForLookup(klas);
+  if (map[key]) return map[key];
+  for (const [k, t] of Object.entries(map)) {
+    if (normalizeKlasForLookup(k) === key) return t;
+  }
+  return undefined;
+}
+
+/** Schooljaar van datum, daarna fallback naar andere jaren met rooster voor dezelfde klas */
+export function resolveTimetableForKlas(
+  mapByYear: Record<string, Record<string, Timetable>>,
+  klas: string,
+  recordDate: Date
+): Timetable | undefined {
+  const primaryYear = getSchoolYear(recordDate);
+  const fromPrimary = findTimetableInMap(mapByYear[primaryYear], klas);
+  if (fromPrimary) return fromPrimary;
+
+  const years = Object.keys(mapByYear).sort().reverse();
+  for (const year of years) {
+    if (year === primaryYear) continue;
+    const found = findTimetableInMap(mapByYear[year], klas);
+    if (found) return found;
+  }
+  return undefined;
+}
+
 export function getSchoolYearsFromDates(
   recordDates: string[],
   dateFrom?: string,
@@ -112,7 +161,7 @@ export function getSchoolYearsFromDates(
     if (Number.isNaN(parsed.getTime())) continue;
     const schoolYear = getSchoolYear(parsed);
     const startYear = parseInt(schoolYear.split('-')[0], 10);
-    if (startYear < 2018 || startYear > currentYear + 1) continue;
+    if (startYear < 2018 || startYear > currentYear + 2) continue;
     years.add(schoolYear);
   }
   if (years.size === 0) {

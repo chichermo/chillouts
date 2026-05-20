@@ -19,8 +19,23 @@ import TrendLineChart from '@/components/charts/TrendLineChart';
 import { buildTrendSeries, type TrendPoint } from '@/lib/chartTrend';
 import StickyTableWrap from '@/components/StickyTableWrap';
 import { BAR_TOP_RADIUS, CHART_AXIS_TICK, CHART_GRID_STROKE, CHART_TOOLTIP_STYLE } from '@/lib/chartTheme';
-import { loadTimetables, getTeacherForSlot, getSchoolYearsFromDates, getSchoolYear } from '@/lib/timetables';
+import {
+  loadTimetables,
+  getTeacherForSlot,
+  getSchoolYearsFromDates,
+  getTimetableYears,
+  indexTimetablesByKlas,
+  resolveTimetableForKlas,
+} from '@/lib/timetables';
 import type { Timetable } from '@/types';
+
+const WEEKDAY_LABELS: Record<string, string> = {
+  Ma: 'Maandag',
+  Di: 'Dinsdag',
+  Wo: 'Woensdag',
+  Do: 'Donderdag',
+  Vr: 'Vrijdag',
+};
 
 // Importeer jspdf-autotable om jsPDF uit te breiden
 if (typeof window !== 'undefined') {
@@ -61,18 +76,11 @@ export default function ReportsPage() {
     byDayAndHour: [] as { date: string; [key: string]: string | number }[],
     weeklyTrend: [] as { week: string; total: number; vr: number; vl: number }[],
     byTeacher: [] as { teacher: string; total: number; vr: number; vl: number; generic: number }[],
+    baselineTotal: null as number | null,
+    teachersWithoutRoster: 0,
   });
   const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
-    klas: '',
-    student: '',
-    dateFrom: '',
-    dateTo: '',
-    generatedBy: '',
-    hour: '',
-    weekday: '',
-  });
-  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
     klas: '',
     student: '',
     dateFrom: '',
@@ -116,38 +124,42 @@ export default function ReportsPage() {
       setAllStudents(students);
       setFilteredStudents(students);
 
-      // Toon chill-out statistieken meteen (zonder te wachten op roosters)
-      calculateStats(data, appliedFilters, {});
+      calculateStats(data, filters, {});
 
-      const years = getSchoolYearsFromDates(
+      const yearsFromRecords = getSchoolYearsFromDates(
         Object.keys(data.dailyRecords),
-        appliedFilters.dateFrom || undefined,
-        appliedFilters.dateTo || undefined
+        filters.dateFrom || undefined,
+        filters.dateTo || undefined
       );
+      let yearsToLoad = yearsFromRecords;
+      try {
+        const yearsInDb = await getTimetableYears();
+        yearsToLoad = [...new Set([...yearsFromRecords, ...yearsInDb])];
+      } catch (err) {
+        console.warn('Schooljaren uit roosters niet geladen:', err);
+      }
 
       const mapByYear: Record<string, Record<string, Timetable>> = {};
       await Promise.all(
-        years.map(async (year) => {
-          mapByYear[year] = {};
+        yearsToLoad.map(async (year) => {
           try {
             const timetables = await loadTimetables(year);
-            timetables.forEach((t) => {
-              mapByYear[year][t.klas] = t;
-            });
+            mapByYear[year] = indexTimetablesByKlas(timetables);
           } catch (err) {
             console.warn(`Roosters ${year} niet geladen:`, err);
+            mapByYear[year] = {};
           }
         })
       );
 
       if (gen !== loadGenRef.current) return;
       setTimetableMapByYear(mapByYear);
-      calculateStats(data, appliedFilters, mapByYear);
+      calculateStats(data, filters, mapByYear);
     };
 
     loadDataAsync();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedFilters, mounted]);
+  }, [filters, mounted]);
 
   useEffect(() => {
     if (filters.klas) {
@@ -175,6 +187,9 @@ export default function ReportsPage() {
     let totalVR = 0;
     let totalVL = 0;
     let totalGeneric = 0;
+    let baselineTotal = 0;
+    let teachersWithoutRoster = 0;
+    const hasNarrowingFilter = !!(currentFilters.weekday || currentFilters.hour);
     
     const byHourData: { [hour: number]: { total: number; vr: number; vl: number; generic: number } } = {};
     const byKlasData: { [klas: string]: { total: number; vr: number; vl: number; generic: number } } = {};
@@ -257,11 +272,15 @@ export default function ReportsPage() {
             if (timetableMapByYear) {
               const recordDate = parseRecordDate(date);
               if (recordDate) {
-                const year = getSchoolYear(recordDate);
-                const timetable = timetableMapByYear[year]?.[student.klas];
+                const timetable = resolveTimetableForKlas(
+                  timetableMapByYear,
+                  student.klas,
+                  recordDate
+                );
                 const teacher = timetable
                   ? getTeacherForSlot(timetable.slots, recordDate, hour)
                   : '';
+                if (!teacher) teachersWithoutRoster += 1;
                 const teacherKey = teacher || '(Onbekend)';
                 if (!byTeacherData[teacherKey]) {
                   byTeacherData[teacherKey] = { total: 0, vr: 0, vl: 0, generic: 0 };
@@ -303,6 +322,26 @@ export default function ReportsPage() {
       totalVL += dayVL;
       totalGeneric += dayGeneric;
     });
+
+    if (hasNarrowingFilter) {
+      const widerFilters = { ...currentFilters, weekday: '', hour: '' };
+      const widerHour = widerFilters.hour ? parseInt(widerFilters.hour) : null;
+      Object.keys(data.dailyRecords).forEach((date) => {
+        if (widerFilters.dateFrom && date < widerFilters.dateFrom) return;
+        if (widerFilters.dateTo && date > widerFilters.dateTo) return;
+        const record = data.dailyRecords[date];
+        const hours = widerHour ? [widerHour] : [1, 2, 3, 4, 5, 6, 7];
+        studentsToProcess.forEach((student: { id: string }) => {
+          const studentEntries = record.entries[student.id] || {};
+          hours.forEach((hour) => {
+            const slot = getHourSlot(studentEntries, hour);
+            forEachChillOutAtHour(slot, () => {
+              baselineTotal += 1;
+            });
+          });
+        });
+      });
+    }
 
     // Converteer naar arrays voor grafieken
     // Si hay filtro de hora específico, solo mostrar esa hora
@@ -398,6 +437,8 @@ export default function ReportsPage() {
       byDayAndHour: dayAndHourLineData,
       weeklyTrend: [],
       byTeacher: byTeacherArray,
+      baselineTotal: hasNarrowingFilter ? baselineTotal : null,
+      teachersWithoutRoster,
     });
   };
 
@@ -412,7 +453,7 @@ export default function ReportsPage() {
     return {
       date: dateStr,
       day: dayName,
-      generatedBy: appliedFilters.generatedBy || 'Systeem',
+      generatedBy: filters.generatedBy || 'Systeem',
     };
   };
 
@@ -470,11 +511,11 @@ export default function ReportsPage() {
     
     // Blad 1: Algemeen Overzicht
     let reportTitle = 'Rapport Chill-outs';
-    if (appliedFilters.student) {
-      const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+    if (filters.student) {
+      const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
       reportTitle = `Rapport Chill-outs - ${studentName}`;
-    } else if (appliedFilters.klas) {
-      reportTitle = `Rapport Chill-outs - ${appliedFilters.klas}`;
+    } else if (filters.klas) {
+      reportTitle = `Rapport Chill-outs - ${filters.klas}`;
     }
     const summaryData = [
       [reportTitle],
@@ -485,12 +526,12 @@ export default function ReportsPage() {
       ['Gegenereerd door:', header.generatedBy],
       [''],
       ['Filter Instellingen'],
-      ['Klas filter:', appliedFilters.klas || 'Alle klassen'],
-      ['Student filter:', appliedFilters.student ? filteredStudents.find(s => s.id === appliedFilters.student)?.name || '' : 'Alle studenten'],
-      ['Lesuur filter:', appliedFilters.hour ? `Lesuur ${appliedFilters.hour}` : 'Alle lesuren'],
-      ['Dag filter:', appliedFilters.weekday || 'Alle dagen'],
-      ['Van datum:', appliedFilters.dateFrom || 'Geen'],
-      ['Tot datum:', appliedFilters.dateTo || 'Geen'],
+      ['Klas filter:', filters.klas || 'Alle klassen'],
+      ['Student filter:', filters.student ? filteredStudents.find(s => s.id === filters.student)?.name || '' : 'Alle studenten'],
+      ['Lesuur filter:', filters.hour ? `Lesuur ${filters.hour}` : 'Alle lesuren'],
+      ['Dag filter:', filters.weekday || 'Alle dagen'],
+      ['Van datum:', filters.dateFrom || 'Geen'],
+      ['Tot datum:', filters.dateTo || 'Geen'],
       [''],
       ['Algemeen Overzicht'],
       ['Totaal Chill-outs', stats.totalChillOuts],
@@ -584,11 +625,11 @@ export default function ReportsPage() {
 
     // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
     let filenameSuffix = '';
-    if (appliedFilters.student) {
-      const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+    if (filters.student) {
+      const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
       filenameSuffix = `_${studentName.replace(/\s+/g, '_')}`;
-    } else if (appliedFilters.klas) {
-      filenameSuffix = `_${appliedFilters.klas.replace(/\s+/g, '_')}`;
+    } else if (filters.klas) {
+      filenameSuffix = `_${filters.klas.replace(/\s+/g, '_')}`;
     }
 
     const filename = `Chill-outs_Rapport${filenameSuffix}_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -616,11 +657,11 @@ export default function ReportsPage() {
       // Titel - incluir información de filtros si están aplicados
       doc.setFontSize(20);
       let reportTitle = 'Rapport Chill-outs';
-      if (appliedFilters.student) {
-        const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+      if (filters.student) {
+        const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
         reportTitle = `Rapport Chill-outs - ${studentName}`;
-      } else if (appliedFilters.klas) {
-        reportTitle = `Rapport Chill-outs - ${appliedFilters.klas}`;
+      } else if (filters.klas) {
+        reportTitle = `Rapport Chill-outs - ${filters.klas}`;
       }
       doc.text(reportTitle, pageWidth / 2, yPos, { align: 'center' });
       yPos += 10;
@@ -639,23 +680,23 @@ export default function ReportsPage() {
       doc.setTextColor(100, 100, 100);
       doc.text('Filter Instellingen:', 14, yPos);
       yPos += 6;
-      doc.text(`Klas: ${appliedFilters.klas || 'Alle klassen'}`, 14, yPos);
+      doc.text(`Klas: ${filters.klas || 'Alle klassen'}`, 14, yPos);
       yPos += 6;
-      if (appliedFilters.student) {
-        const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+      if (filters.student) {
+        const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
         doc.text(`Student: ${studentName}`, 14, yPos);
         yPos += 6;
       }
-      if (appliedFilters.weekday) {
-        doc.text(`Dag: ${appliedFilters.weekday}`, 14, yPos);
+      if (filters.weekday) {
+        doc.text(`Dag: ${filters.weekday}`, 14, yPos);
         yPos += 6;
       }
-      if (appliedFilters.hour) {
-        doc.text(`Lesuur: ${appliedFilters.hour}`, 14, yPos);
+      if (filters.hour) {
+        doc.text(`Lesuur: ${filters.hour}`, 14, yPos);
         yPos += 6;
       }
-      if (appliedFilters.dateFrom || appliedFilters.dateTo) {
-        doc.text(`Periode: ${appliedFilters.dateFrom || 'Begin'} - ${appliedFilters.dateTo || 'Einde'}`, 14, yPos);
+      if (filters.dateFrom || filters.dateTo) {
+        doc.text(`Periode: ${filters.dateFrom || 'Begin'} - ${filters.dateTo || 'Einde'}`, 14, yPos);
         yPos += 6;
       }
       yPos += 5;
@@ -760,7 +801,7 @@ export default function ReportsPage() {
       // Tabel per Student (als er ruimte is)
       if (stats.byStudent.length > 0 && yPos < 250) {
         doc.setFontSize(14);
-        doc.text(appliedFilters.student ? 'Statistieken per Student' : 'Top Studenten', 14, yPos);
+        doc.text(filters.student ? 'Statistieken per Student' : 'Top Studenten', 14, yPos);
         yPos += 10;
         
         const studentHeaders = ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Chillouts'];
@@ -861,11 +902,11 @@ export default function ReportsPage() {
 
       // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
       let filenameSuffix = '';
-      if (appliedFilters.student) {
-        const studentName = filteredStudents.find(s => s.id === appliedFilters.student)?.name || '';
+      if (filters.student) {
+        const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
         filenameSuffix = `_${studentName.replace(/\s+/g, '_')}`;
-      } else if (appliedFilters.klas) {
-        filenameSuffix = `_${appliedFilters.klas.replace(/\s+/g, '_')}`;
+      } else if (filters.klas) {
+        filenameSuffix = `_${filters.klas.replace(/\s+/g, '_')}`;
       }
 
       doc.save(`Chill-outs_Rapport${filenameSuffix}_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -909,12 +950,8 @@ export default function ReportsPage() {
     }
   };
 
-  const applyFilters = () => {
-    setAppliedFilters({ ...filters });
-  };
-
   const resetFilters = () => {
-    const emptyFilters = {
+    setFilters({
       klas: '',
       student: '',
       dateFrom: '',
@@ -922,9 +959,7 @@ export default function ReportsPage() {
       generatedBy: '',
       hour: '',
       weekday: '',
-    };
-    setFilters(emptyFilters);
-    setAppliedFilters(emptyFilters);
+    });
   };
 
   if (!mounted) {
@@ -944,7 +979,7 @@ export default function ReportsPage() {
     { name: 'Chillouts', value: stats.totalGeneric, color: COLORS.generic },
   ].filter(item => item.value > 0);
 
-  const hasActiveFilters = appliedFilters.klas || appliedFilters.student || appliedFilters.dateFrom || appliedFilters.dateTo || appliedFilters.hour || appliedFilters.weekday;
+  const hasActiveFilters = filters.klas || filters.student || filters.dateFrom || filters.dateTo || filters.hour || filters.weekday;
   const klasChartData = stats.byKlas;
   const maxKlasLabelLength = klasChartData.reduce((max, item) => Math.max(max, item.klas.length), 0);
   const klasYAxisWidth = Math.min(240, Math.max(120, maxKlasLabelLength * 9));
@@ -1005,7 +1040,15 @@ export default function ReportsPage() {
               <label className="block text-sm font-medium text-white/90 mb-2">Klas</label>
               <select
                 value={filters.klas}
-                onChange={(e) => setFilters(prev => ({ ...prev, klas: e.target.value, student: '' }))}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    klas: e.target.value,
+                    student: '',
+                    weekday: '',
+                    hour: '',
+                  }))
+                }
                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Alle klassen</option>
@@ -1020,7 +1063,14 @@ export default function ReportsPage() {
               <label className="block text-sm font-medium text-white/90 mb-2">Student</label>
               <select
                 value={filters.student}
-                onChange={(e) => setFilters(prev => ({ ...prev, student: e.target.value }))}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    student: e.target.value,
+                    weekday: '',
+                    hour: '',
+                  }))
+                }
                 disabled={!filters.klas}
                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -1099,19 +1149,81 @@ export default function ReportsPage() {
             </div>
           </div>
           
-          {/* Botón Aplicar Filtros */}
-          <div className="mt-4 flex justify-end">
+          <p className="mt-4 text-xs text-white/55">
+            Filters worden direct toegepast. Bij het kiezen van een student worden dag- en lesuurfilters gewist.
+          </p>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="text-xs font-medium text-white/55 uppercase tracking-wide w-full sm:w-auto">
+              Actieve filters
+            </span>
+            {filters.klas && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/25 text-blue-100 border border-blue-400/30">
+                Klas: {filters.klas}
+              </span>
+            )}
+            {filters.student && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/25 text-purple-100 border border-purple-400/30">
+                Student: {stats.byStudent.find((s) => s.name)?.name || filters.student}
+              </span>
+            )}
+            {filters.hour && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/25 text-amber-100 border border-amber-400/30">
+                Lesuur {filters.hour}
+              </span>
+            )}
+            {filters.weekday && (
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/30 text-amber-50 border border-amber-400/50">
+                Alleen {WEEKDAY_LABELS[filters.weekday] || filters.weekday} ({filters.weekday})
+              </span>
+            )}
+            {(filters.dateFrom || filters.dateTo) && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white/90 border border-white/20">
+                {filters.dateFrom || '…'} – {filters.dateTo || '…'}
+              </span>
+            )}
             <button
-              onClick={applyFilters}
-              className="px-6 py-2 bg-brand-blue text-white rounded-lg hover:bg-blue-600 font-semibold transition-colors flex items-center gap-2"
+              type="button"
+              onClick={resetFilters}
+              className="px-3 py-1 rounded-full text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 border border-white/15 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              Filters Toepassen
+              Alles wissen
             </button>
           </div>
-        </div>
+        )}
+
+        {stats.baselineTotal !== null &&
+          stats.baselineTotal !== stats.totalChillOuts && (
+            <div
+              role="status"
+              className="mb-6 rounded-lg border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-50"
+            >
+              <strong className="font-semibold">Let op — beperkte selectie:</strong> je ziet nu{' '}
+              <strong>{stats.totalChillOuts}</strong> chill-outs
+              {filters.weekday && (
+                <>
+                  {' '}
+                  (alleen {WEEKDAY_LABELS[filters.weekday] || filters.weekday})
+                </>
+              )}
+              {filters.hour && <> (alleen lesuur {filters.hour})</>}. Zonder dag-/lesuurfilters:{' '}
+              <strong>{stats.baselineTotal}</strong> chill-outs in dezelfde periode.
+              {(filters.student || filters.klas) && (
+                <>
+                  {' '}
+                  <button
+                    type="button"
+                    onClick={() => setFilters((prev) => ({ ...prev, weekday: '', hour: '' }))}
+                    className="underline font-medium hover:text-white"
+                  >
+                    Toon volledig totaal
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
         {/* Hoofdstatistieken */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -1174,57 +1286,16 @@ export default function ReportsPage() {
           </div>
         </div>
 
-
-        {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <span className="text-xs font-medium text-white/55 uppercase tracking-wide w-full sm:w-auto">
-              Actieve filters
-            </span>
-            {appliedFilters.klas && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-500/25 text-blue-100 border border-blue-400/30">
-                Klas: {appliedFilters.klas}
-              </span>
-            )}
-            {appliedFilters.student && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/25 text-purple-100 border border-purple-400/30">
-                Student: {stats.byStudent.find((s) => s.name)?.name || appliedFilters.student}
-              </span>
-            )}
-            {appliedFilters.hour && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/25 text-amber-100 border border-amber-400/30">
-                Lesuur {appliedFilters.hour}
-              </span>
-            )}
-            {appliedFilters.weekday && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/25 text-emerald-100 border border-emerald-400/30">
-                {appliedFilters.weekday}
-              </span>
-            )}
-            {(appliedFilters.dateFrom || appliedFilters.dateTo) && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white/90 border border-white/20">
-                {appliedFilters.dateFrom || '…'} – {appliedFilters.dateTo || '…'}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="px-3 py-1 rounded-full text-xs font-medium text-white/70 hover:text-white hover:bg-white/10 border border-white/15 transition-colors"
-            >
-              Alles wissen
-            </button>
-          </div>
-        )}
-
         {/* Grafieken */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Distributie grafiek */}
           {pieData.length > 0 && (
             <div id="chart-distributie" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
-                {appliedFilters.student 
+                {filters.student 
                   ? `Distributie Chill-outs - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
-                  : appliedFilters.klas
-                  ? `Distributie Chill-outs - ${appliedFilters.klas}`
+                  : filters.klas
+                  ? `Distributie Chill-outs - ${filters.klas}`
                   : 'Distributie Chill-outs'}
               </h2>
               <ResponsiveContainer width="100%" height={300}>
@@ -1255,7 +1326,7 @@ export default function ReportsPage() {
           {stats.byHour.length > 0 && (
             <div id="chart-lesuur" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
-                {appliedFilters.hour ? `Chill-outs voor Lesuur ${appliedFilters.hour}` : 'Chill-outs per Lesuur'}
+                {filters.hour ? `Chill-outs voor Lesuur ${filters.hour}` : 'Chill-outs per Lesuur'}
               </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={stats.byHour} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
@@ -1273,7 +1344,7 @@ export default function ReportsPage() {
           )}
 
           {/* Grafiek per klas - Solo mostrar si no hay filtro de estudiante específico */}
-          {!appliedFilters.student && stats.byKlas.length > 0 && (
+          {!filters.student && stats.byKlas.length > 0 && (
             <div id="chart-klas" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
               <ResponsiveContainer width="100%" height={klasChartHeight}>
@@ -1302,10 +1373,10 @@ export default function ReportsPage() {
           {stats.trend.length > 0 && (
             <div id="chart-tendens" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-1 text-white">
-                {appliedFilters.student
+                {filters.student
                   ? `Tendens - ${stats.byStudent.find((s) => s.name)?.name || 'Student'}`
-                  : appliedFilters.klas
-                    ? `Tendens - ${appliedFilters.klas}`
+                  : filters.klas
+                    ? `Tendens - ${filters.klas}`
                     : 'Tendens'}
               </h2>
               <p className="text-xs text-white/55 mb-4">
@@ -1323,10 +1394,10 @@ export default function ReportsPage() {
           {stats.byDayAndHour && stats.byDayAndHour.length > 0 && (
             <div id="chart-lesuur-dag" className="glass-effect rounded-lg p-6 border border-white/20 lg:col-span-2">
               <h2 className="text-xl font-bold mb-1 text-white">
-                {appliedFilters.student
+                {filters.student
                   ? `Chill-outs per Lesuur per Dag - ${stats.byStudent.find((s) => s.name)?.name || 'Student'}`
-                  : appliedFilters.klas
-                    ? `Chill-outs per Lesuur per Dag - ${appliedFilters.klas}`
+                  : filters.klas
+                    ? `Chill-outs per Lesuur per Dag - ${filters.klas}`
                     : 'Chill-outs per Lesuur per Dag'}
               </h2>
               <p className="text-xs text-white/55 mb-4">
@@ -1351,7 +1422,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Gedetailleerde tabel per klas - Solo mostrar si no hay filtro de estudiante específico */}
-        {!appliedFilters.student && stats.byKlas.length > 0 && (
+        {!filters.student && stats.byKlas.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20 mb-8">
             <h2 className="text-xl font-bold mb-4 text-white">Statistieken per Klas</h2>
             <StickyTableWrap>
@@ -1400,6 +1471,19 @@ export default function ReportsPage() {
             <p className="text-white/70 text-sm mb-4">
               Gekoppeld via roosters. Configureer roosters in het menu Roosters om docenten te koppelen.
             </p>
+            {stats.teachersWithoutRoster > 0 &&
+              stats.byTeacher.length === 1 &&
+              stats.byTeacher[0]?.teacher === '(Onbekend)' && (
+                <p className="text-amber-200/90 text-sm mb-4 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2">
+                  Geen docent gevonden voor {stats.teachersWithoutRoster} chill-out
+                  {stats.teachersWithoutRoster === 1 ? '' : 's'} — controleer rooster voor schooljaar en klas
+                  {filters.klas ? ` (${filters.klas})` : ''} in{' '}
+                  <a href="/timetables" className="underline font-medium hover:text-white">
+                    Roosters
+                  </a>
+                  .
+                </p>
+              )}
             <StickyTableWrap>
               <table className="w-full text-sm">
                 <thead>
@@ -1431,10 +1515,10 @@ export default function ReportsPage() {
         {stats.byStudent.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20">
             <h2 className="text-xl font-bold mb-1 text-white">
-              {appliedFilters.student 
+              {filters.student 
                 ? `Statistieken - ${stats.byStudent[0]?.name || 'Student'}`
-                : appliedFilters.klas
-                ? `Statistieken per Student - ${appliedFilters.klas}`
+                : filters.klas
+                ? `Statistieken per Student - ${filters.klas}`
                 : 'Statistieken per Student'}
             </h2>
             <p className="text-xs text-white/55 mb-4">

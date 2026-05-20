@@ -16,7 +16,13 @@ import {
 } from '@/lib/utils';
 import { loadKlassenOrder, saveKlassenOrder } from '@/lib/app-settings';
 import { isAdmin } from '@/lib/auth';
-import { loadTimetables, getSchoolYear, getTeacherForSlot } from '@/lib/timetables';
+import {
+  loadTimetables,
+  getSchoolYear,
+  getTeacherForSlot,
+  indexTimetablesByKlas,
+  findTimetableInMap,
+} from '@/lib/timetables';
 import type { Timetable } from '@/types';
 import LesuurColumnHeader from '@/components/daily/LesuurColumnHeader';
 import StickyTableWrap from '@/components/StickyTableWrap';
@@ -67,11 +73,7 @@ export default function DailyPage() {
     const year = getSchoolYear(dateObj);
     loadTimetables(year)
       .then((timetables) => {
-        const map: Record<string, Timetable> = {};
-        timetables.forEach((t) => {
-          map[t.klas] = t;
-        });
-        setTimetableMap(map);
+        setTimetableMap(indexTimetablesByKlas(timetables));
       })
       .catch((err) => console.warn('Roosters niet geladen:', err));
   }, [dateStr, record]);
@@ -390,8 +392,8 @@ export default function DailyPage() {
                               key={hour}
                               hour={hour}
                               teacher={getTeacherForSlot(
-                                timetableMap[klas]?.slots || {},
-                                new Date(dateStr),
+                                findTimetableInMap(timetableMap, klas)?.slots || {},
+                                new Date(`${dateStr}T12:00:00`),
                                 hour
                               )}
                             />
@@ -548,8 +550,8 @@ export default function DailyPage() {
                               key={hour}
                               hour={hour}
                               teacher={getTeacherForSlot(
-                                timetableMap[klas]?.slots || {},
-                                new Date(dateStr),
+                                findTimetableInMap(timetableMap, klas)?.slots || {},
+                                new Date(`${dateStr}T12:00:00`),
                                 hour
                               )}
                             />
