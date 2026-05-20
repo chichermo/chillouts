@@ -8,6 +8,7 @@ export {
   saveDailyRecord,
   getDailyRecord,
   repairStudentChilloutEntries,
+  correctStudentOverregisteredChillouts,
   repairAllChilloutEntries,
   migrateCanonicalChilloutStorage,
   type ChilloutMigrationSummary,

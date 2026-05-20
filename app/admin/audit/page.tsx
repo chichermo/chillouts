@@ -6,6 +6,7 @@ import Navigation from '@/components/Navigation';
 import {
   loadData,
   repairStudentChilloutEntries,
+  correctStudentOverregisteredChillouts,
   repairAllChilloutEntries,
   type ChilloutMigrationSummary,
 } from '@/lib/storage';
@@ -74,6 +75,7 @@ export default function AuditStudentPage() {
   const [studentId, setStudentId] = useState('');
   const [loading, setLoading] = useState(false);
   const [repairing, setRepairing] = useState(false);
+  const [correcting, setCorrecting] = useState(false);
   const [repairingAll, setRepairingAll] = useState(false);
   const [repairMsg, setRepairMsg] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState('');
@@ -210,6 +212,35 @@ export default function AuditStudentPage() {
     }
   };
 
+  const runCorrectOvercount = async () => {
+    if (!studentId) return;
+    const ok = window.confirm(
+      'Dit verwijdert chill-outs op verkeerde dagen (niet-dinsdag) en houdt maximaal 1 VR en 1 VL over het schooljaar. ' +
+        'Generieke chill-outs blijven alleen op dinsdag. Doorgaan?'
+    );
+    if (!ok) return;
+
+    setCorrecting(true);
+    setRepairMsg('');
+    try {
+      const result = await correctStudentOverregisteredChillouts(studentId, {
+        primaryWeekday: 'Di',
+        maxVr: 1,
+        maxVl: 1,
+      });
+      setRepairMsg(
+        `Overtelling gecorrigeerd: ${result.datesUpdated} van ${result.datesChecked} dagen. ` +
+          `Voor: ${result.before.total} → Na: ${result.after.total} ` +
+          `(VR ${result.after.vr}, VL ${result.after.vl}, zonder type ${result.after.generic}).`
+      );
+      await runAudit();
+    } catch (e) {
+      setRepairMsg('Fout: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    } finally {
+      setCorrecting(false);
+    }
+  };
+
   const runRepair = async () => {
     if (!studentId) return;
     const ok = window.confirm(
@@ -277,10 +308,19 @@ export default function AuditStudentPage() {
           <button
             type="button"
             onClick={runRepair}
-            disabled={!studentId || repairing || repairingAll || loading}
+            disabled={!studentId || repairing || correcting || repairingAll || loading}
             className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 disabled:opacity-50"
           >
-            {repairing ? 'Repareren…' : 'Repareer deze student'}
+            {repairing ? 'Repareren…' : 'Repareer formaat'}
+          </button>
+          <button
+            type="button"
+            onClick={runCorrectOvercount}
+            disabled={!studentId || repairing || correcting || repairingAll || loading}
+            className="px-4 py-2 rounded bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50"
+            title="Verwijdert per ongeluk geregistreerde chill-outs op niet-dinsdag; max 1 VR en 1 VL"
+          >
+            {correcting ? 'Corrigeren…' : 'Corrigeer overtelling'}
           </button>
           <button
             type="button"

@@ -7,7 +7,11 @@ import {
   emptyChillOutCounts,
   sanitizeDailyRecord,
   sanitizeStudentEntries,
+  pruneStudentEntriesForDay,
+  parseRecordDate,
+  getDayName,
   type ChillOutCounts,
+  type PruneChilloutRegistrationOptions,
 } from './utils';
 import { getAppSetting, setAppSetting } from './app-settings';
 
@@ -331,6 +335,71 @@ export async function repairStudentChilloutEntries(studentId: string): Promise<{
     const sanitizedJson = JSON.stringify(sanitized);
     if (rawJson !== sanitizedJson) {
       record.entries[studentId] = sanitized;
+      datesUpdated++;
+    }
+  }
+
+  if (datesUpdated > 0) {
+    await saveData(data);
+  }
+
+  return { datesUpdated, datesChecked, before, after };
+}
+
+/**
+ * Corrigeert overtelling: generics alleen op primaire lesdag (bv. Di),
+ * maximaal 1 VR en 1 VL over het hele schooljaar.
+ */
+export async function correctStudentOverregisteredChillouts(
+  studentId: string,
+  options: PruneChilloutRegistrationOptions = {}
+): Promise<{
+  datesUpdated: number;
+  datesChecked: number;
+  before: ChillOutCounts;
+  after: ChillOutCounts;
+}> {
+  const data = await loadData();
+  const before = emptyChillOutCounts();
+  const after = emptyChillOutCounts();
+  let datesUpdated = 0;
+  let datesChecked = 0;
+  const caps = {
+    vrRemaining: options.maxVr ?? 1,
+    vlRemaining: options.maxVl ?? 1,
+  };
+
+  const sortedDates = Object.keys(data.dailyRecords).sort();
+
+  for (const date of sortedDates) {
+    const record = data.dailyRecords[date];
+    const raw = record.entries[studentId] as Record<string | number, unknown> | undefined;
+    if (!raw) continue;
+
+    datesChecked++;
+    const b = countChillOutsInStudentEntries(raw);
+    before.total += b.total;
+    before.vr += b.vr;
+    before.vl += b.vl;
+    before.generic += b.generic;
+
+    const parsed = parseRecordDate(date);
+    const weekday = parsed ? getDayName(parsed) : record.dayName;
+    const pruned = pruneStudentEntriesForDay(raw, weekday, options, caps);
+    const a = countChillOutsInStudentEntries(pruned);
+    after.total += a.total;
+    after.vr += a.vr;
+    after.vl += a.vl;
+    after.generic += a.generic;
+
+    const rawJson = JSON.stringify(sanitizeStudentEntries(raw));
+    const prunedJson = JSON.stringify(pruned);
+    if (rawJson !== prunedJson) {
+      if (Object.keys(pruned).length === 0) {
+        delete record.entries[studentId];
+      } else {
+        record.entries[studentId] = pruned;
+      }
       datesUpdated++;
     }
   }

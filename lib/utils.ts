@@ -489,6 +489,63 @@ export function sortKlassen(klassen: string[]): string[] {
   return sorted;
 }
 
+export type PruneChilloutRegistrationOptions = {
+  /** Lesdag waar generics geldig zijn (standaard Dinsdag) */
+  primaryWeekday?: string;
+  maxVr?: number;
+  maxVl?: number;
+};
+
+/**
+ * Verwijdert per ongeluk geregistreerde generics op niet-primaire dagen en
+ * beperkt VR/VL tot maxVr/maxVl over alle dagen (chronologisch eerste blijven).
+ */
+export function pruneStudentEntriesForDay(
+  studentEntries: Record<string | number, unknown> | undefined,
+  recordWeekday: string,
+  options: PruneChilloutRegistrationOptions,
+  caps: { vrRemaining: number; vlRemaining: number }
+): Record<number, ChillOutEntry[]> {
+  const primary = options.primaryWeekday ?? 'Di';
+  const sanitized = sanitizeStudentEntries(studentEntries);
+  const out: Record<number, ChillOutEntry[]> = {};
+
+  for (let hour = 1; hour <= 7; hour++) {
+    const slot = sanitized[hour];
+    if (!slot?.length) continue;
+
+    const kept: ChillOutEntry[] = [];
+    for (const entry of slot) {
+      const type = normalizeChillOutType(entry.type);
+      if (recordWeekday === primary) {
+        kept.push(entry);
+        continue;
+      }
+      if (type === 'VR') {
+        if (caps.vrRemaining > 0) {
+          kept.push(entry);
+          caps.vrRemaining -= 1;
+        }
+        continue;
+      }
+      if (type === 'VL') {
+        if (caps.vlRemaining > 0) {
+          kept.push(entry);
+          caps.vlRemaining -= 1;
+        }
+        continue;
+      }
+      /* generic op verkeerde dag: weg */
+    }
+
+    if (kept.length > 0) {
+      out[hour] = kept.slice(0, MAX_CHILLOUTS_PER_HOUR);
+    }
+  }
+
+  return out;
+}
+
 /** @deprecated Gebruik loadKlassenOrder / saveKlassenOrder uit lib/app-settings.ts */
 export { applyKlassenOrder, loadKlassenOrder, saveKlassenOrder } from './app-settings';
 
