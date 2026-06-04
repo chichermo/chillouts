@@ -77,6 +77,19 @@ function requireSupabase() {
   return supabase;
 }
 
+function assertRowsAffected(
+  data: unknown[] | null,
+  error: { message: string } | null,
+  action: string
+): void {
+  if (error) throw new Error(error.message);
+  if (!data?.length) {
+    throw new Error(
+      `${action} mislukt: geen rijen gewijzigd in Supabase. Controleer rechten (RLS) of gebruiker-ID.`
+    );
+  }
+}
+
 async function hashPassword(password: string): Promise<string> {
   if (typeof window !== 'undefined' && window.crypto?.subtle) {
     const encoder = new TextEncoder();
@@ -139,14 +152,16 @@ export async function getUserByUsername(username: string): Promise<User | null> 
   return data || null;
 }
 
-export async function getAllUsers(): Promise<User[]> {
+export async function getAllUsers(options?: { includeInactive?: boolean }): Promise<User[]> {
   const client = requireSupabase();
-  const { data, error } = await client
-    .from('users')
-    .select('*')
-    .order('username', { ascending: true });
+  let query = client.from('users').select('*').order('username', { ascending: true });
 
-  if (error) return [];
+  if (!options?.includeInactive) {
+    query = query.eq('active', true);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
   return data || [];
 }
 
@@ -175,14 +190,30 @@ export async function updateUser(
     updateData.permissions = updates.permissions;
   }
 
-  const { error } = await client.from('users').update(updateData).eq('id', userId);
-  if (error) throw error;
+  if (Object.keys(updateData).length === 0) {
+    throw new Error('Geen wijzigingen om op te slaan.');
+  }
+
+  updateData.updated_at = new Date().toISOString();
+
+  const { data, error } = await client
+    .from('users')
+    .update(updateData)
+    .eq('id', userId)
+    .select('id');
+
+  assertRowsAffected(data, error, 'Bijwerken');
 }
 
 export async function deleteUser(userId: string): Promise<void> {
+  if (!userId || userId === 'admin_temp') {
+    throw new Error('Deze gebruiker kan niet worden verwijderd.');
+  }
+
   const client = requireSupabase();
-  const { error } = await client.from('users').update({ active: false }).eq('id', userId);
-  if (error) throw error;
+  const { data, error } = await client.from('users').delete().eq('id', userId).select('id');
+
+  assertRowsAffected(data, error, 'Verwijderen');
 }
 
 export async function authenticateUser(username: string, password: string): Promise<User | null> {

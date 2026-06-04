@@ -19,11 +19,12 @@ export default function UsersPage() {
   const [showPassword, setShowPassword] = useState<{ [key: string]: boolean }>({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showInactive, setShowInactive] = useState(false);
 
   useEffect(() => {
     checkAccess();
     loadUsers();
-  }, []);
+  }, [showInactive]);
 
   const checkAccess = () => {
     if (!isAdmin()) {
@@ -35,7 +36,8 @@ export default function UsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const allUsers = await getAllUsers();
+      setError('');
+      const allUsers = await getAllUsers({ includeInactive: showInactive });
       setUsers(allUsers);
     } catch (error: any) {
       setError(`Fout bij laden gebruikers: ${error.message}`);
@@ -51,14 +53,16 @@ export default function UsersPage() {
     }
 
     try {
+      setError('');
       await createUser(newUser.username, newUser.password, newUser.role);
       setSuccess(`Gebruiker ${newUser.username} succesvol aangemaakt.`);
       setNewUser({ username: '', password: '', role: 'reports_access' });
       setShowAddForm(false);
-      loadUsers();
+      await loadUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       setError(`Fout bij aanmaken: ${error.message}`);
+      setSuccess('');
     }
   };
 
@@ -75,9 +79,8 @@ export default function UsersPage() {
 
   const handleUpdate = async (userId: string) => {
     try {
-      // Crear objeto de actualización sin password vacío
-      const updateData: any = { ...editingUser };
-      // Solo incluir password si tiene un valor real
+      setError('');
+      const updateData: Partial<User> & { password?: string } = { ...editingUser };
       if (!updateData.password || updateData.password.trim() === '') {
         delete updateData.password;
       }
@@ -85,25 +88,36 @@ export default function UsersPage() {
       setSuccess('Gebruiker succesvol bijgewerkt.');
       setEditingId(null);
       setEditingUser({});
-      loadUsers();
+      await loadUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       setError(`Fout bij bijwerken: ${error.message}`);
+      setSuccess('');
     }
   };
 
   const handleDelete = async (userId: string) => {
-    if (!confirm('Weet je zeker dat je deze gebruiker wilt verwijderen?')) {
+    const current = getCurrentUser();
+    if (current?.id === userId) {
+      setError('Je kunt je eigen account niet verwijderen terwijl je bent ingelogd.');
+      return;
+    }
+
+    if (!confirm('Weet je zeker dat je deze gebruiker wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
       return;
     }
 
     try {
+      setError('');
       await deleteUser(userId);
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
       setSuccess('Gebruiker succesvol verwijderd.');
-      loadUsers();
+      await loadUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       setError(`Fout bij verwijderen: ${error.message}`);
+      setSuccess('');
+      await loadUsers();
     }
   };
 
@@ -112,12 +126,14 @@ export default function UsersPage() {
     if (!newPassword) return;
 
     try {
+      setError('');
       await updateUser(userId, { password: newPassword });
       setSuccess('Wachtwoord succesvol gereset.');
-      loadUsers();
+      await loadUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch (error: any) {
       setError(`Fout bij resetten wachtwoord: ${error.message}`);
+      setSuccess('');
     }
   };
 
@@ -238,7 +254,18 @@ export default function UsersPage() {
 
         {/* Tabla de usuarios */}
         <div className="glass-effect rounded-lg p-6 border border-white/20">
-          <h2 className="text-xl font-bold mb-4 text-white">Gebruikerslijst</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className="text-xl font-bold text-white">Gebruikerslijst</h2>
+            <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showInactive}
+                onChange={(e) => setShowInactive(e.target.checked)}
+                className="w-4 h-4 rounded border-white/30"
+              />
+              Toon ook inactieve gebruikers
+            </label>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
