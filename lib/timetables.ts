@@ -263,6 +263,23 @@ export async function countFilledTimetableSlots(timetable: Timetable): Promise<n
   return Object.values(timetable.slots || {}).filter((v) => v && String(v).trim()).length;
 }
 
+/** Wis alle docentennamen (slots) voor een schooljaar; rooster-rijen blijven bestaan. */
+export async function clearAllTimetableSlots(year: string): Promise<number> {
+  const client = requireSupabase();
+  const timetables = await loadTimetables(year);
+  if (timetables.length === 0) return 0;
+
+  const updatedAt = new Date().toISOString();
+  for (const timetable of timetables) {
+    const { error } = await client
+      .from('timetables')
+      .update({ slots: {}, updated_at: updatedAt })
+      .eq('id', timetable.id);
+    if (error) throw wrapTimetablesError(error);
+  }
+  return timetables.length;
+}
+
 export async function getTimetableYears(): Promise<string[]> {
   const client = requireSupabase();
   try {

@@ -9,6 +9,7 @@ import {
   saveTimetable,
   getTimetableYears,
   seedTimetablesForKlassen,
+  clearAllTimetableSlots,
   getSchoolYear,
   timetableId,
   DAY_NAMES,
@@ -17,6 +18,7 @@ import {
 } from '@/lib/timetables';
 import type { Timetable, TimetableSlots } from '@/types';
 import { sortKlassen } from '@/lib/utils';
+import { isAdmin } from '@/lib/auth';
 
 export default function TimetablesPage() {
   const [years, setYears] = useState<string[]>([]);
@@ -31,6 +33,12 @@ export default function TimetablesPage() {
   const [showAddKlas, setShowAddKlas] = useState(false);
   const [seedMsg, setSeedMsg] = useState('');
   const [seeding, setSeeding] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setUserIsAdmin(isAdmin());
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -114,6 +122,7 @@ export default function TimetablesPage() {
   );
 
   const handleSeedKlassen = async () => {
+    if (!userIsAdmin) return;
     if (!selectedYear || klassenFromStudents.length === 0) return;
     setSeeding(true);
     setSeedMsg('');
@@ -130,6 +139,29 @@ export default function TimetablesPage() {
       alert('Fout: ' + (e instanceof Error ? e.message : 'Onbekend'));
     } finally {
       setSeeding(false);
+    }
+  };
+
+  const handleClearAllTeachers = async () => {
+    if (!userIsAdmin) return;
+    if (!selectedYear) return;
+    const ok = window.confirm(
+      `Alle docentennamen voor ${selectedYear} wissen?\n\nDe klassen en rooster-structuur blijven behouden. Je kunt daarna opnieuw handmatig invullen.`
+    );
+    if (!ok) return;
+    setClearing(true);
+    setSeedMsg('');
+    try {
+      const count = await clearAllTimetableSlots(selectedYear);
+      const loaded = await loadTimetables(selectedYear);
+      setTimetables(loaded);
+      setSeedMsg(
+        `${count} roosters geleegd. Vul nu de docentnamen handmatig in en klik op Opslaan.`
+      );
+    } catch (e) {
+      alert('Fout: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -271,14 +303,26 @@ export default function TimetablesPage() {
           )}
 
           <div className="flex flex-wrap gap-4 items-center mb-4">
-            <button
-              type="button"
-              onClick={handleSeedKlassen}
-              disabled={seeding || !selectedYear || klassenFromStudents.length === 0}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 text-sm font-medium"
-            >
-              {seeding ? 'Bezig…' : 'Roosters voor alle klassen aanmaken'}
-            </button>
+            {userIsAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSeedKlassen}
+                  disabled={seeding || !selectedYear || klassenFromStudents.length === 0}
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 text-sm font-medium"
+                >
+                  {seeding ? 'Bezig…' : 'Roosters voor alle klassen aanmaken'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearAllTeachers}
+                  disabled={clearing || !selectedYear || filledSlotsTotal === 0}
+                  className="px-4 py-2 bg-red-600/90 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 text-sm font-medium"
+                >
+                  {clearing ? 'Bezig…' : 'Alle docentennamen wissen'}
+                </button>
+              </>
+            )}
             <span className="text-white/60 text-sm">
               {klassenFromStudents.length} klassen · {filledSlotsTotal} docent-slots ingevuld
             </span>
