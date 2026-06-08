@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { isAuthenticated, getCurrentUser, hasPermission } from '@/lib/auth';
+import { isAuthenticated, getCurrentUser, hasPermission, refreshCurrentUserFromDb } from '@/lib/auth';
 import type { UserPermissions } from '@/lib/users';
 
 // Mapeo de rutas a permisos requeridos
@@ -22,6 +22,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const verifyAccess = async () => {
     // No proteger la ruta de login, create-users o reset-password
     if (pathname === '/login' || pathname === '/create-users' || pathname === '/reset-password') {
       setIsChecking(false);
@@ -33,6 +36,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       router.push('/login');
       return;
     }
+
+    await refreshCurrentUserFromDb();
+    if (cancelled) return;
 
     // Verificar permisos para rutas específicas
     const user = getCurrentUser();
@@ -69,6 +75,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
 
     setIsChecking(false);
+    };
+
+    verifyAccess();
+    return () => {
+      cancelled = true;
+    };
   }, [router, pathname]);
 
   // Mostrar nada mientras se verifica (o un loader si prefieres)

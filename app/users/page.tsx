@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { getAllUsers, createUser, updateUser, deleteUser, type User } from '@/lib/users';
-import { isAdmin, getCurrentUser } from '@/lib/auth';
+import { isAdmin, getCurrentUser, refreshCurrentUserFromDb } from '@/lib/auth';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -85,6 +85,10 @@ export default function UsersPage() {
         delete updateData.password;
       }
       await updateUser(userId, updateData);
+      const current = getCurrentUser();
+      if (current?.id === userId) {
+        await refreshCurrentUserFromDb();
+      }
       setSuccess('Gebruiker succesvol bijgewerkt.');
       setEditingId(null);
       setEditingUser({});

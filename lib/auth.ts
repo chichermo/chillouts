@@ -79,6 +79,30 @@ export function getUsername(): string | null {
   return localStorage.getItem('username');
 }
 
+/** Haal actuele rechten uit Supabase (na wijziging door admin). */
+export async function refreshCurrentUserFromDb(): Promise<User | null> {
+  if (typeof window === 'undefined') return getCurrentUser();
+
+  const current = getCurrentUser();
+  if (!current || current.id === 'admin_temp' || current.username === 'Admin') {
+    return current;
+  }
+
+  try {
+    const fresh = await getUserByUsername(current.username);
+    if (!fresh || !fresh.active) {
+      logout();
+      return null;
+    }
+    localStorage.setItem('currentUser', JSON.stringify(fresh));
+    localStorage.setItem('username', fresh.username);
+    return fresh;
+  } catch (error) {
+    console.error('Kon gebruikersrechten niet verversen:', error);
+    return current;
+  }
+}
+
 // Re-exportar hasPermission para mantener consistencia en las importaciones
 export function hasPermission(user: User | null, permission: keyof UserPermissions): boolean {
   return checkPermission(user, permission);
