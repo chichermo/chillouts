@@ -295,9 +295,29 @@ export async function deleteStudent(studentId: string): Promise<void> {
 }
 
 export async function saveDailyRecord(record: DailyRecord): Promise<void> {
-  const data = await loadData();
-  data.dailyRecords[record.date] = sanitizeDailyRecord(record);
-  await saveData(data);
+  if (!isSupabaseEnabled) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
+  }
+
+  const sanitized = sanitizeDailyRecord(record);
+  const { data, error } = await supabase!
+    .from('daily_records')
+    .upsert(
+      {
+        date: sanitized.date,
+        day_name: sanitized.dayName,
+        entries: sanitized.entries,
+      },
+      { onConflict: 'date' }
+    )
+    .select('date');
+
+  if (error) throw error;
+  if (!data?.length) {
+    throw new Error('Opslaan mislukt: dagrecord niet bevestigd door Supabase.');
+  }
 }
 
 /** Repareer opgeslagen entries voor één student (canonieke arrays, dubbele lesuur-keys) */
@@ -471,8 +491,26 @@ export async function repairAllChilloutEntries(): Promise<{
 }
 
 export async function getDailyRecord(date: string): Promise<DailyRecord | null> {
-  const data = await loadData();
-  return data.dailyRecords[date] || null;
+  if (!isSupabaseEnabled) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
+  }
+
+  const { data, error } = await supabase!
+    .from('daily_records')
+    .select('date, day_name, entries')
+    .eq('date', date)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  return sanitizeDailyRecord({
+    date: data.date,
+    dayName: data.day_name,
+    entries: data.entries ?? {},
+  });
 }
 
 // Funciones de auditoría

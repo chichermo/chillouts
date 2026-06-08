@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
-import { loadData, saveDailyRecord, getDailyRecord } from '@/lib/storage';
+import { loadData, saveDailyRecord } from '@/lib/storage';
 import {
   formatDate,
   formatDateDisplay,
   calculateDailyTotals,
   normalizeChillOutType,
+  parseRecordDate,
   sanitizeStudentEntries,
   sortKlassen,
 } from '@/lib/utils';
@@ -40,20 +41,51 @@ export default function DailyPage() {
   const [orderedKlassen, setOrderedKlassen] = useState<string[]>([]);
   const [klassen, setKlassen] = useState<string[]>([]);
   const [timetableMap, setTimetableMap] = useState<Record<string, Timetable>>({});
+  const [saveError, setSaveError] = useState('');
+  const pendingRecordRef = useRef<DailyRecord | null>(null);
+  const saveInFlightRef = useRef(false);
+
+  const flushSaveQueue = useCallback(async () => {
+    if (saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
+
+    while (pendingRecordRef.current) {
+      const toSave = pendingRecordRef.current;
+      pendingRecordRef.current = null;
+      try {
+        await saveDailyRecord(toSave);
+        setSaveError('');
+      } catch (err) {
+        console.error('Error saving record:', err);
+        pendingRecordRef.current = toSave;
+        setSaveError(
+          'Opslaan mislukt. Controleer je verbinding en probeer opnieuw (wijziging opnieuw aanbrengen).'
+        );
+        break;
+      }
+    }
+
+    saveInFlightRef.current = false;
+  }, []);
+
+  const queueSave = useCallback(
+    (nextRecord: DailyRecord) => {
+      pendingRecordRef.current = nextRecord;
+      void flushSaveQueue();
+    },
+    [flushSaveQueue]
+  );
 
   useEffect(() => {
     const loadDataAsync = async () => {
       const data = await loadData();
       setStudents(data.students.filter(s => s.status === 'Actief'));
-      
-      const existingRecord = await getDailyRecord(dateStr);
+
+      const existingRecord = data.dailyRecords[dateStr];
       if (existingRecord) {
-        // Migreer oude gegevens naar nieuw formaat indien nodig
-        const migratedRecord = migrateRecord(existingRecord);
-        setRecord(migratedRecord);
+        setRecord(migrateRecord(existingRecord));
       } else {
-        // Maak nieuw record aan
-        const dateObj = new Date(dateStr);
+        const dateObj = new Date(`${dateStr}T12:00:00`);
         const newRecord: DailyRecord = {
           date: dateStr,
           dayName: formatDateDisplay(dateObj).split(' ')[1],
@@ -133,7 +165,7 @@ export default function DailyPage() {
     // Herbouw de array: eerst die van het type, dan de anderen
     updatedRecord.entries[studentId][hour] = [...typeEntries, ...otherEntries];
     setRecord(updatedRecord);
-    saveDailyRecord(updatedRecord).catch(err => console.error('Error saving record:', err));
+    queueSave(updatedRecord);
   };
 
   const getChillOutCount = (studentId: string, hour: number, type: ChillOutType): number => {
@@ -233,7 +265,7 @@ export default function DailyPage() {
     }
   };
 
-  const dateObj = new Date(dateStr);
+  const dateObj = parseRecordDate(dateStr) ?? new Date(`${dateStr}T12:00:00`);
   const displayDate = formatDateDisplay(dateObj);
   const todayLocal = new Date().toLocaleDateString('sv-SE');
   const isPastDate = dateStr < todayLocal;
@@ -292,6 +324,12 @@ export default function DailyPage() {
           {isReadOnlyPast && (
             <div className="mt-4 rounded-lg border border-amber-300/40 bg-amber-400/15 px-4 py-3 text-amber-100 text-sm">
               Deze datum is alleen-lezen voor niet-admin gebruikers. Alleen admins kunnen vorige dagen bewerken.
+            </div>
+          )}
+
+          {saveError && (
+            <div className="mt-4 rounded-lg border border-red-400/40 bg-red-500/15 px-4 py-3 text-red-100 text-sm">
+              {saveError}
             </div>
           )}
           

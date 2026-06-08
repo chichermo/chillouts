@@ -152,26 +152,24 @@ export function countChillOutsInRecord(record: DailyRecord): ChillOutCounts {
   return counts;
 }
 
-/** Voeg slots samen van hour én "hour" zonder dubbele entries (fix dubbele DB-keys) */
+/**
+ * Lees lesuur-slot; voorkom dubbele telling door zowel `2` als `"2"` keys.
+ * Geen dedupe op inhoud — meerdere identieke CO's (zelfde type) zijn geldig.
+ */
 function pickRawHourSlot(
   studentEntries: Record<string | number, unknown>,
   hour: number
 ): ChillOutEntry[] {
-  const merged: ChillOutEntry[] = [];
-  const seen = new Set<string>();
+  const numeric = studentEntries[hour];
+  const stringKey = studentEntries[String(hour)];
 
-  for (const key of [hour, String(hour)] as const) {
-    const raw = studentEntries[key];
-    if (raw === undefined || raw === null) continue;
-    for (const entry of normalizeSlotToArray(raw)) {
-      const dedupeKey = JSON.stringify(entry);
-      if (seen.has(dedupeKey)) continue;
-      seen.add(dedupeKey);
-      merged.push(entry);
-      if (merged.length >= MAX_CHILLOUTS_PER_HOUR) return merged;
-    }
+  if (numeric !== undefined && numeric !== null) {
+    return normalizeSlotToArray(numeric).slice(0, MAX_CHILLOUTS_PER_HOUR);
   }
-  return merged;
+  if (stringKey !== undefined && stringKey !== null) {
+    return normalizeSlotToArray(stringKey).slice(0, MAX_CHILLOUTS_PER_HOUR);
+  }
+  return [];
 }
 
 /** Canoniek lesuur-slot (max 3 per uur, samengevoegde keys) */
@@ -330,7 +328,12 @@ export function calculateDailyTotals(record: DailyRecord, students: Student[]): 
     vl[hour] = 0;
   }
 
+  const activeIds = students?.length
+    ? new Set(students.filter((s) => s.status === 'Actief').map((s) => s.id))
+    : null;
+
   Object.keys(record.entries).forEach((studentId) => {
+    if (activeIds && !activeIds.has(studentId)) return;
     const studentEntries = record.entries[studentId] as Record<string | number, unknown>;
     forEachHourInStudentEntries(studentEntries, (hour, slot) => {
       forEachChillOutAtHour(slot, (type) => {
