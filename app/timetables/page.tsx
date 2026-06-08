@@ -20,6 +20,58 @@ import type { Timetable, TimetableSlots } from '@/types';
 import { sortKlassen } from '@/lib/utils';
 import { isAdmin } from '@/lib/auth';
 
+function focusTimetableCell(klas: string, dayIndex: number, hour: number): boolean {
+  const inputs = document.querySelectorAll<HTMLInputElement>('input[data-timetable-cell]');
+  for (const input of inputs) {
+    if (
+      input.dataset.timetableKlas === klas &&
+      Number(input.dataset.timetableDay) === dayIndex &&
+      Number(input.dataset.timetableHour) === hour
+    ) {
+      input.focus();
+      input.select();
+      return true;
+    }
+  }
+  return false;
+}
+
+function handleTimetableSlotKeyDown(
+  e: React.KeyboardEvent<HTMLInputElement>,
+  klas: string,
+  dayIndex: number,
+  hour: number
+) {
+  if (e.key !== 'Tab') return;
+
+  const hourIndex = HOURS.indexOf(hour);
+  if (hourIndex < 0) return;
+
+  let nextDay = dayIndex;
+  let nextHour = hour;
+
+  if (e.shiftKey) {
+    if (hourIndex > 0) {
+      nextHour = HOURS[hourIndex - 1];
+    } else if (dayIndex > 0) {
+      nextDay = dayIndex - 1;
+      nextHour = HOURS[HOURS.length - 1];
+    } else {
+      return;
+    }
+  } else if (hourIndex < HOURS.length - 1) {
+    nextHour = HOURS[hourIndex + 1];
+  } else if (dayIndex < DAY_NAMES.length - 1) {
+    nextDay = dayIndex + 1;
+    nextHour = HOURS[0];
+  } else {
+    return;
+  }
+
+  e.preventDefault();
+  focusTimetableCell(klas, nextDay, nextHour);
+}
+
 export default function TimetablesPage() {
   const [years, setYears] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>('');
@@ -474,6 +526,13 @@ export default function TimetablesPage() {
                                   onChange={(e) =>
                                     setSlot(klas, di, hour, e.target.value)
                                   }
+                                  onKeyDown={(e) =>
+                                    handleTimetableSlotKeyDown(e, klas, di, hour)
+                                  }
+                                  data-timetable-cell=""
+                                  data-timetable-klas={klas}
+                                  data-timetable-day={di}
+                                  data-timetable-hour={hour}
                                   placeholder="Docent"
                                   className="w-full px-2 py-1.5 rounded bg-white/5 text-white border border-white/10 text-xs placeholder-white/40 focus:border-blue-500 focus:outline-none"
                                 />
