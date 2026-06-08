@@ -8,6 +8,8 @@ import {
   loadTimetables,
   saveTimetable,
   getTimetableYears,
+  seedTimetablesForKlassen,
+  getSchoolYear,
   timetableId,
   DAY_NAMES,
   HOURS,
@@ -27,6 +29,8 @@ export default function TimetablesPage() {
   const [showAddYear, setShowAddYear] = useState(false);
   const [newKlasInput, setNewKlasInput] = useState('');
   const [showAddKlas, setShowAddKlas] = useState(false);
+  const [seedMsg, setSeedMsg] = useState('');
+  const [seeding, setSeeding] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -36,14 +40,9 @@ export default function TimetablesPage() {
 
       try {
         const y = await getTimetableYears();
-        setYears(y);
-        if (y.length > 0) {
-          setSelectedYear((prev) => prev || y[0]);
-        } else {
-          const current = `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`;
-          setYears([current]);
-          setSelectedYear(current);
-        }
+        const schoolYear = getSchoolYear(new Date());
+        setYears(y.length > 0 ? y : [schoolYear]);
+        setSelectedYear((prev) => prev || y[0] || schoolYear);
       } catch (err) {
         console.error(err);
         alert(
@@ -107,6 +106,31 @@ export default function TimetablesPage() {
       else next.push(updated);
       return next;
     });
+  };
+
+  const filledSlotsTotal = timetables.reduce(
+    (sum, t) => sum + Object.values(t.slots || {}).filter((v) => v && String(v).trim()).length,
+    0
+  );
+
+  const handleSeedKlassen = async () => {
+    if (!selectedYear || klassenFromStudents.length === 0) return;
+    setSeeding(true);
+    setSeedMsg('');
+    try {
+      const result = await seedTimetablesForKlassen(selectedYear, klassenFromStudents);
+      const loaded = await loadTimetables(selectedYear);
+      setTimetables(loaded);
+      setSeedMsg(
+        `${result.created} roosters aangemaakt, ${result.skipped} bestonden al. Vul nu docentnamen in per lesuur.`
+      );
+      const y = await getTimetableYears();
+      setYears(y);
+    } catch (e) {
+      alert('Fout: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    } finally {
+      setSeeding(false);
+    }
   };
 
   const handleSave = async () => {
@@ -231,6 +255,34 @@ export default function TimetablesPage() {
             Koppel docenten aan klassen per dag en lesuur. Zo kun je zien bij
             welke docent problemen voorkomen.
           </p>
+
+          {filledSlotsTotal === 0 && (
+            <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-500/15 px-4 py-3 text-sm text-amber-50">
+              <strong>Geen docenten ingevuld.</strong> In Rapporten verschijnt dan
+              &quot;(Onbekend)&quot; bij alle chill-outs. Klik op &quot;Roosters voor alle
+              klassen aanmaken&quot; en vul daarna de docentnamen in (Ma–Vr, lesuur 1–7).
+            </div>
+          )}
+
+          {seedMsg && (
+            <div className="mb-4 rounded-lg border border-emerald-400/40 bg-emerald-500/15 px-4 py-3 text-sm text-emerald-50">
+              {seedMsg}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-4 items-center mb-4">
+            <button
+              type="button"
+              onClick={handleSeedKlassen}
+              disabled={seeding || !selectedYear || klassenFromStudents.length === 0}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 text-sm font-medium"
+            >
+              {seeding ? 'Bezig…' : 'Roosters voor alle klassen aanmaken'}
+            </button>
+            <span className="text-white/60 text-sm">
+              {klassenFromStudents.length} klassen · {filledSlotsTotal} docent-slots ingevuld
+            </span>
+          </div>
 
           <div className="flex flex-wrap gap-4 items-center">
             <label className="text-white font-medium">Schooljaar:</label>

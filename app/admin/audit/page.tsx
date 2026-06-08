@@ -279,9 +279,17 @@ export default function AuditStudentPage() {
       <Navigation />
       <div className="max-w-5xl mx-auto px-4 py-8 text-white">
         <h1 className="text-2xl font-bold mb-2">Audit &amp; reparatie chill-outs</h1>
-        <p className="text-white/60 text-sm mb-6">
+        <p className="text-white/60 text-sm mb-4">
           Controleer tellingen per dag, open Dagelijks om te corrigeren, of repareer het
           opslagformaat in Supabase (zonder andere studenten te wijzigen).
+        </p>
+        <p className="text-sm text-blue-100/90 mb-6 p-3 rounded-lg border border-blue-400/30 bg-blue-500/10">
+          <strong>Gegevens in Supabase:</strong> dagrecords worden niet verwijderd bij een bug in de
+          app — ze blijven in de tabel <code className="text-blue-200">daily_records</code>. Bij elke
+          wijziging in Dagelijks wordt een kopie bewaard in{' '}
+          <code className="text-blue-200">daily_record_history</code> (na SQL-setup). Een oude bug kon
+          meerdere identieke CO&apos;s in één array-item laten samenvallen; dat is niet hetzelfde als
+          verwijderen uit de database.
         </p>
 
         <div className="flex flex-wrap gap-3 mb-4">

@@ -374,6 +374,44 @@ export async function deleteStudent(studentId: string): Promise<void> {
   data.students = data.students.filter((s) => s.id !== studentId);
 }
 
+async function archiveDailyRecordBeforeSave(date: string): Promise<void> {
+  if (!supabase) return;
+
+  const { data: existing, error: readError } = await supabase
+    .from('daily_records')
+    .select('date, day_name, entries')
+    .eq('date', date)
+    .maybeSingle();
+
+  if (readError || !existing) return;
+
+  const historyId = `hist_${date}_${Date.now()}`;
+  const { error: histError } = await supabase.from('daily_record_history').insert({
+    id: historyId,
+    date: existing.date,
+    day_name: existing.day_name,
+    entries: existing.entries ?? {},
+    saved_at: new Date().toISOString(),
+    source: 'before_update',
+  });
+
+  if (histError) {
+    const msg = String(histError.message || '').toLowerCase();
+    if (
+      histError.code === 'PGRST205' ||
+      histError.code === '42P01' ||
+      msg.includes('does not exist') ||
+      msg.includes('daily_record_history')
+    ) {
+      console.warn(
+        '[backup] Tabel daily_record_history ontbreekt — voer supabase/daily_record_history.sql uit in Supabase.'
+      );
+      return;
+    }
+    console.warn('[backup] Kon dagrecord niet archiveren:', histError.message);
+  }
+}
+
 export async function saveDailyRecord(record: DailyRecord): Promise<void> {
   if (!isSupabaseEnabled) {
     throw new Error(
@@ -382,6 +420,8 @@ export async function saveDailyRecord(record: DailyRecord): Promise<void> {
   }
 
   const sanitized = sanitizeDailyRecord(record);
+  await archiveDailyRecordBeforeSave(sanitized.date);
+
   const { data, error } = await supabase!
     .from('daily_records')
     .upsert(

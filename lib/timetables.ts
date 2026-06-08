@@ -231,6 +231,38 @@ export async function deleteTimetable(id: string): Promise<void> {
 }
 
 /** Haal schooljaren op die roosters hebben in Supabase */
+/** Maak lege rooster-rijen aan voor alle klassen (slots invullen in UI) */
+export async function seedTimetablesForKlassen(
+  year: string,
+  klassen: string[]
+): Promise<{ created: number; skipped: number }> {
+  const existing = await loadTimetables(year);
+  const existingKlassen = new Set(existing.map((t) => t.klas));
+  let created = 0;
+  let skipped = 0;
+
+  for (const klas of klassen) {
+    if (!klas.trim()) continue;
+    if (existingKlassen.has(klas)) {
+      skipped++;
+      continue;
+    }
+    await saveTimetable({
+      id: timetableId(year, klas),
+      year,
+      klas,
+      slots: {},
+    });
+    created++;
+  }
+
+  return { created, skipped };
+}
+
+export async function countFilledTimetableSlots(timetable: Timetable): Promise<number> {
+  return Object.values(timetable.slots || {}).filter((v) => v && String(v).trim()).length;
+}
+
 export async function getTimetableYears(): Promise<string[]> {
   const client = requireSupabase();
   try {
