@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student, DailyRecord, ChillOutType } from '@/types';
-import { loadData, saveDailyRecord } from '@/lib/storage';
+import { loadDailyPageData, saveDailyRecord } from '@/lib/storage';
 import {
   formatDate,
   formatDateDisplay,
@@ -78,10 +78,9 @@ export default function DailyPage() {
 
   useEffect(() => {
     const loadDataAsync = async () => {
-      const data = await loadData();
-      setStudents(data.students.filter(s => s.status === 'Actief'));
+      const { students: allStudents, record: existingRecord } = await loadDailyPageData(dateStr);
+      setStudents(allStudents.filter((s) => s.status === 'Actief'));
 
-      const existingRecord = data.dailyRecords[dateStr];
       if (existingRecord) {
         setRecord(migrateRecord(existingRecord));
       } else {

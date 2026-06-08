@@ -3,8 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { formatDate, formatDateDisplay, getDayName } from '@/lib/utils';
-import { loadData } from '@/lib/storage';
+import { formatDate, formatDateDisplay, getDayName, parseRecordDate } from '@/lib/utils';
+import { loadDailyRecordDates } from '@/lib/storage';
+
+function dateFromIso(dateStr: string): Date {
+  return parseRecordDate(dateStr) ?? new Date(`${dateStr}T12:00:00`);
+}
 
 export default function DailyListPage() {
   const [dates, setDates] = useState<string[]>([]);
@@ -14,8 +18,7 @@ export default function DailyListPage() {
 
   useEffect(() => {
     const loadDataAsync = async () => {
-      const data = await loadData();
-      const allDates = Object.keys(data.dailyRecords).sort().reverse();
+      const allDates = await loadDailyRecordDates();
       setDates(allDates);
       
       if (allDates.length > 0 && !selectedDate) {
@@ -151,7 +154,7 @@ export default function DailyListPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
                 {weekDates.map(date => {
-                  const dateObj = new Date(date);
+                  const dateObj = dateFromIso(date);
                   const isToday = date === formatDate(new Date());
                   const hasData = dates.includes(date);
                   return (
@@ -225,10 +228,11 @@ export default function DailyListPage() {
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {futureWeeks.map(date => {
-                  const dateObj = new Date(date);
+                  const dateObj = dateFromIso(date);
                   const isToday = date === formatDate(new Date());
                   const hasData = dates.includes(date);
-                  const isPast = dateObj < new Date() && !isToday;
+                  const todayLocal = new Date().toLocaleDateString('sv-SE');
+                  const isPast = date < todayLocal && !isToday;
                   return (
                     <Link
                       key={date}
@@ -304,7 +308,7 @@ export default function DailyListPage() {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {dates.map(date => {
-                    const dateObj = new Date(date);
+                    const dateObj = dateFromIso(date);
                     const isToday = date === formatDate(new Date());
                     return (
                       <Link

@@ -31,6 +31,7 @@ export type ChilloutMigrationSummary = {
 /** Normaliseer alle daily_records naar canonieke opslag (1 chill-out = 1 array-item) */
 export function migrateCanonicalChilloutStorage(data: AppData): {
   changed: boolean;
+  changedDates: string[];
   summary: ChilloutMigrationSummary;
 } {
   let recordsUpdated = 0;
@@ -39,6 +40,7 @@ export function migrateCanonicalChilloutStorage(data: AppData): {
   let chilloutsAfter = 0;
   let legacyInflatedBefore = 0;
   const studentsAffected = new Set<string>();
+  const changedDates: string[] = [];
 
   for (const record of Object.values(data.dailyRecords)) {
     recordsChecked++;
@@ -68,11 +70,13 @@ export function migrateCanonicalChilloutStorage(data: AppData): {
       }
       data.dailyRecords[record.date] = sanitized;
       recordsUpdated++;
+      changedDates.push(record.date);
     }
   }
 
   return {
     changed: recordsUpdated > 0,
+    changedDates,
     summary: {
       version: 3,
       completedAt: new Date().toISOString(),
@@ -86,6 +90,35 @@ export function migrateCanonicalChilloutStorage(data: AppData): {
   };
 }
 
+async function loadStudentsFromSupabase(): Promise<Student[]> {
+  const { data: students, error } = await supabase!
+    .from('students')
+    .select('*')
+    .order('klas', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return students || [];
+}
+
+async function loadDailyRecordsFromSupabase(): Promise<{ [date: string]: DailyRecord }> {
+  const { data: dailyRecordsData, error } = await supabase!
+    .from('daily_records')
+    .select('date, day_name, entries');
+
+  if (error) throw error;
+
+  const dailyRecords: { [date: string]: DailyRecord } = {};
+  dailyRecordsData?.forEach((record: { date: string; day_name: string; entries: DailyRecord['entries'] }) => {
+    dailyRecords[record.date] = {
+      date: record.date,
+      dayName: record.day_name,
+      entries: record.entries || {},
+    };
+  });
+  return dailyRecords;
+}
+
 // Gegevenslaag: alleen Supabase (geen localStorage voor app-data)
 async function loadFromSupabase(): Promise<AppData | null> {
   if (!isSupabaseEnabled) {
@@ -95,55 +128,90 @@ async function loadFromSupabase(): Promise<AppData | null> {
 
   try {
     console.log('Cargando datos de Supabase...');
-    
-    // Cargar estudiantes
-    const { data: students, error: studentsError } = await supabase!
-      .from('students')
-      .select('*')
-      .order('klas', { ascending: true })
-      .order('name', { ascending: true });
+    const [students, dailyRecords] = await Promise.all([
+      loadStudentsFromSupabase(),
+      loadDailyRecordsFromSupabase(),
+    ]);
 
-    if (studentsError) {
-      console.error('Error cargando estudiantes:', studentsError);
-      throw studentsError;
-    }
+    console.log(
+      `Datos cargados: ${students.length} estudiantes, ${Object.keys(dailyRecords).length} días`
+    );
 
-    console.log(`Estudiantes cargados de Supabase: ${students?.length || 0}`);
-
-    // Cargar registros diarios
-    const { data: dailyRecordsData, error: recordsError } = await supabase!
-      .from('daily_records')
-      .select('*');
-
-    if (recordsError) {
-      console.error('Error cargando registros:', recordsError);
-      throw recordsError;
-    }
-
-    console.log(`Registros cargados de Supabase: ${dailyRecordsData?.length || 0}`);
-
-    // Convertir registros diarios al formato esperado
-    const dailyRecords: { [date: string]: DailyRecord } = {};
-    dailyRecordsData?.forEach((record: any) => {
-      dailyRecords[record.date] = {
-        date: record.date,
-        dayName: record.day_name,
-        entries: record.entries || {},
-      };
-    });
-
-    const result = {
-      students: students || [],
+    return {
+      students,
       dailyRecords,
-      weeklyTotals: {}, // Se calcula dinámicamente
+      weeklyTotals: {},
     };
-
-    console.log('Datos cargados exitosamente de Supabase');
-    return result;
   } catch (error) {
     console.error('Error loading from Supabase:', error);
     return null;
   }
+}
+
+async function shouldRunChilloutMigration(): Promise<boolean> {
+  try {
+    const prior = await getAppSetting<ChilloutMigrationSummary>(CHILLOUT_MIGRATION_KEY);
+    return !(prior?.version === 3 && prior.recordsUpdated === 0);
+  } catch {
+    return true;
+  }
+}
+
+export async function saveDailyRecords(records: DailyRecord[]): Promise<void> {
+  if (!isSupabaseEnabled) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
+  }
+  if (records.length === 0) return;
+
+  const rows = records.map((record) => {
+    const sanitized = sanitizeDailyRecord(record);
+    return {
+      date: sanitized.date,
+      day_name: sanitized.dayName,
+      entries: sanitized.entries,
+    };
+  });
+
+  const { error } = await supabase!.from('daily_records').upsert(rows, { onConflict: 'date' });
+  if (error) throw error;
+}
+
+/** Alleen studenten + één dag — sneller voor Dagelijks-registratie */
+export async function loadDailyPageData(date: string): Promise<{
+  students: Student[];
+  record: DailyRecord | null;
+}> {
+  if (!isSupabaseEnabled) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
+  }
+
+  const [students, record] = await Promise.all([
+    loadStudentsFromSupabase(),
+    getDailyRecord(date),
+  ]);
+
+  return { students, record };
+}
+
+/** Alleen datums met registratie — sneller voor dagoverzicht */
+export async function loadDailyRecordDates(): Promise<string[]> {
+  if (!isSupabaseEnabled) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
+  }
+
+  const { data, error } = await supabase!
+    .from('daily_records')
+    .select('date')
+    .order('date', { ascending: false });
+
+  if (error) throw error;
+  return (data || []).map((row) => row.date as string);
 }
 
 async function saveToSupabase(data: AppData): Promise<boolean> {
@@ -194,24 +262,36 @@ export async function loadData(): Promise<AppData> {
     throw new Error('Kon gegevens niet laden van Supabase. Controleer je verbinding en tabellen.');
   }
 
-  const { changed, summary } = migrateCanonicalChilloutStorage(supabaseData);
+  let summary: ChilloutMigrationSummary | null = null;
 
-  if (changed) {
-    console.log(
-      `[chillout-migratie] ${summary.recordsUpdated} dagen bijgewerkt in Supabase: ` +
-        `${summary.chilloutsBefore} → ${summary.chilloutsAfter} chill-outs ` +
-        `(oude Rapporten-telling: ${summary.legacyInflatedBefore})`
-    );
-    const saved = await saveToSupabase(supabaseData);
-    if (!saved) {
-      throw new Error('Migratie mislukt: kon genormaliseerde chill-outs niet opslaan in Supabase.');
+  if (await shouldRunChilloutMigration()) {
+    const { changed, changedDates, summary: migrationSummary } =
+      migrateCanonicalChilloutStorage(supabaseData);
+    summary = migrationSummary;
+
+    if (changed) {
+      console.log(
+        `[chillout-migratie] ${summary.recordsUpdated} dagen bijgewerkt in Supabase: ` +
+          `${summary.chilloutsBefore} → ${summary.chilloutsAfter} chill-outs ` +
+          `(oude Rapporten-telling: ${summary.legacyInflatedBefore})`
+      );
+      const records = changedDates.map((d) => supabaseData.dailyRecords[d]);
+      await saveDailyRecords(records);
+    }
+  } else {
+    try {
+      summary = await getAppSetting<ChilloutMigrationSummary>(CHILLOUT_MIGRATION_KEY);
+    } catch {
+      summary = null;
     }
   }
 
-  try {
-    await setAppSetting(CHILLOUT_MIGRATION_KEY, summary);
-  } catch {
-    /* niet blokkeren */
+  if (summary) {
+    try {
+      await setAppSetting(CHILLOUT_MIGRATION_KEY, summary);
+    } catch {
+      /* niet blokkeren */
+    }
   }
 
   return supabaseData;
@@ -332,6 +412,7 @@ export async function repairStudentChilloutEntries(studentId: string): Promise<{
   const after = emptyChillOutCounts();
   let datesUpdated = 0;
   let datesChecked = 0;
+  const changedRecords: DailyRecord[] = [];
 
   for (const record of Object.values(data.dailyRecords)) {
     const raw = record.entries[studentId] as Record<string | number, unknown> | undefined;
@@ -356,11 +437,12 @@ export async function repairStudentChilloutEntries(studentId: string): Promise<{
     if (rawJson !== sanitizedJson) {
       record.entries[studentId] = sanitized;
       datesUpdated++;
+      changedRecords.push(record);
     }
   }
 
-  if (datesUpdated > 0) {
-    await saveData(data);
+  if (changedRecords.length > 0) {
+    await saveDailyRecords(changedRecords);
   }
 
   return { datesUpdated, datesChecked, before, after };
@@ -384,6 +466,7 @@ export async function correctStudentOverregisteredChillouts(
   const after = emptyChillOutCounts();
   let datesUpdated = 0;
   let datesChecked = 0;
+  const changedRecords: DailyRecord[] = [];
   const caps = {
     vrRemaining: options.maxVr ?? 1,
     vlRemaining: options.maxVl ?? 1,
@@ -421,11 +504,12 @@ export async function correctStudentOverregisteredChillouts(
         record.entries[studentId] = pruned;
       }
       datesUpdated++;
+      changedRecords.push(record);
     }
   }
 
-  if (datesUpdated > 0) {
-    await saveData(data);
+  if (changedRecords.length > 0) {
+    await saveDailyRecords(changedRecords);
   }
 
   return { datesUpdated, datesChecked, before, after };
@@ -445,6 +529,7 @@ export async function repairAllChilloutEntries(): Promise<{
   let datesUpdated = 0;
   let datesChecked = 0;
   const studentsTouched = new Set<string>();
+  const changedRecords: DailyRecord[] = [];
 
   for (const record of Object.values(data.dailyRecords)) {
     datesChecked++;
@@ -474,11 +559,14 @@ export async function repairAllChilloutEntries(): Promise<{
       }
     }
 
-    if (recordChanged) datesUpdated++;
+    if (recordChanged) {
+      datesUpdated++;
+      changedRecords.push(record);
+    }
   }
 
-  if (datesUpdated > 0) {
-    await saveData(data);
+  if (changedRecords.length > 0) {
+    await saveDailyRecords(changedRecords);
   }
 
   return {

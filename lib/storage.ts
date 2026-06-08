@@ -1,7 +1,10 @@
 // Re-exportar funciones de storage-db.ts (alleen Supabase)
 export {
   loadData,
+  loadDailyPageData,
+  loadDailyRecordDates,
   saveData,
+  saveDailyRecords,
   addStudent,
   updateStudent,
   deleteStudent,
