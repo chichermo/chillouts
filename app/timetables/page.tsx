@@ -87,6 +87,16 @@ export default function TimetablesPage() {
   const getSlot = (t: Timetable | undefined, dayIndex: number, hour: number): string =>
     t?.slots[slotKey(dayIndex, hour)] ?? '';
 
+  /** Trim pas bij opslaan — niet tijdens typen (anders werkt spatie niet, bv. "Lisa F"). */
+  const normalizeSlotsForSave = (slots: TimetableSlots): TimetableSlots => {
+    const normalized: TimetableSlots = {};
+    for (const [key, value] of Object.entries(slots || {})) {
+      const trimmed = String(value).trim();
+      if (trimmed) normalized[key] = trimmed;
+    }
+    return normalized;
+  };
+
   const setSlot = (
     klas: string,
     dayIndex: number,
@@ -96,10 +106,10 @@ export default function TimetablesPage() {
     const existing = getTimetableForKlas(klas);
     const slots: TimetableSlots = { ...(existing?.slots || {}) };
     const key = slotKey(dayIndex, hour);
-    if (value.trim()) {
-      slots[key] = value.trim();
-    } else {
+    if (value === '') {
       delete slots[key];
+    } else {
+      slots[key] = value;
     }
     const updated: Timetable = {
       id: existing?.id || timetableId(selectedYear, klas),
@@ -169,8 +179,11 @@ export default function TimetablesPage() {
     setSaving(true);
     try {
       for (const t of timetables) {
-        await saveTimetable(t);
+        const normalized = normalizeSlotsForSave(t.slots || {});
+        await saveTimetable({ ...t, slots: normalized });
       }
+      const loaded = await loadTimetables(selectedYear);
+      setTimetables(loaded);
       const y = await getTimetableYears();
       setYears(y);
       alert('Roosters opgeslagen.');
