@@ -305,6 +305,7 @@ export default function UsersPage() {
                               weekoverzicht: 'Weekoverzicht',
                               statistieken: 'Statistieken',
                               rapporten: 'Rapporten',
+                              rapporten_docenten: 'Rapporten/docent',
                               students: 'Studenten',
                               audit: 'Audit',
                             }).map(([key, label]) => (
@@ -355,7 +356,7 @@ export default function UsersPage() {
                             {Object.entries(user.permissions || {}).map(([key, value]) => 
                               value && (
                                 <span key={key} className="px-1.5 py-0.5 bg-brand-green/20 text-brand-green text-[10px] rounded">
-                                  {key === 'dagelijks' ? 'Dag' : key === 'weekoverzicht' ? 'Week' : key === 'statistieken' ? 'Stat' : key === 'rapporten' ? 'Rap' : key === 'students' ? 'Stu' : 'Aud'}
+                                  {key === 'dagelijks' ? 'Dag' : key === 'weekoverzicht' ? 'Week' : key === 'statistieken' ? 'Stat' : key === 'rapporten' ? 'Rap' : key === 'rapporten_docenten' ? 'RapDoc' : key === 'students' ? 'Stu' : 'Aud'}
                                 </span>
                               )
                             )}

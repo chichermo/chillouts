@@ -38,6 +38,7 @@ export async function login(username: string, password: string): Promise<boolean
           weekoverzicht: true,
           statistieken: true,
           rapporten: true,
+          rapporten_docenten: true,
           students: true,
           audit: true,
         },

@@ -28,6 +28,7 @@ import {
   resolveTimetableForKlas,
 } from '@/lib/timetables';
 import type { Timetable } from '@/types';
+import { getCurrentUser, hasPermission } from '@/lib/auth';
 
 const WEEKDAY_LABELS: Record<string, string> = {
   Ma: 'Maandag',
@@ -95,6 +96,7 @@ export default function ReportsPage() {
   const [timetableMapByYear, setTimetableMapByYear] = useState<Record<string, Record<string, Timetable>>>({});
   const [rosterStatus, setRosterStatus] = useState<{ year: string; klasCount: number }[]>([]);
   const loadGenRef = useRef(0);
+  const [canSeeTeacherStats, setCanSeeTeacherStats] = useState(false);
 
   const COLORS = {
     vr: '#3b82f6', // blue
@@ -105,6 +107,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setMounted(true);
+    setCanSeeTeacherStats(hasPermission(getCurrentUser(), 'rapporten_docenten'));
   }, []);
 
   useEffect(() => {
@@ -556,7 +559,7 @@ export default function ReportsPage() {
       ['Per Klas'],
       ['Klas', 'Totaal', 'VR', 'VL', 'Chillouts', 'Percentage'],
       ...stats.byKlas.map(k => [k.klas, k.total, k.vr, k.vl, k.generic, `${k.percentage}%`]),
-      ...(stats.byTeacher.length > 0 ? [
+      ...(canSeeTeacherStats && stats.byTeacher.length > 0 ? [
         [''],
         ['Per Docent'],
         ['Docent', 'Totaal', 'VR', 'VL', 'Chillouts'],
@@ -791,7 +794,7 @@ export default function ReportsPage() {
       }
 
       // Tabel per Docent
-      if (stats.byTeacher.length > 0 && yPos < 250) {
+      if (canSeeTeacherStats && stats.byTeacher.length > 0 && yPos < 250) {
         doc.setFontSize(14);
         doc.text('Per Docent', 14, yPos);
         yPos += 10;
@@ -1474,8 +1477,8 @@ export default function ReportsPage() {
           </div>
         )}
 
-        {/* Chill-outs per Docent - toont bij welke docenten problemen voorkomen */}
-        {stats.byTeacher.length > 0 && (
+        {/* Chill-outs per Docent - alleen voor gebruikers met rapporten_docenten */}
+        {canSeeTeacherStats && stats.byTeacher.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20 mb-8">
             <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Docent</h2>
             <p className="text-white/70 text-sm mb-4">

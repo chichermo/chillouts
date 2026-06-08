@@ -10,6 +10,7 @@ export interface User {
     weekoverzicht?: boolean;
     statistieken?: boolean;
     rapporten?: boolean;
+    rapporten_docenten?: boolean;
     students?: boolean;
     audit?: boolean;
   };
@@ -29,6 +30,7 @@ export interface UserPermissions {
   weekoverzicht: boolean;
   statistieken: boolean;
   rapporten: boolean;
+  rapporten_docenten: boolean;
   students: boolean;
   audit: boolean;
 }
@@ -39,6 +41,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     weekoverzicht: true,
     statistieken: true,
     rapporten: true,
+    rapporten_docenten: true,
     students: true,
     audit: true,
   },
@@ -46,7 +49,8 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     dagelijks: true,
     weekoverzicht: true,
     statistieken: true,
-    rapporten: false,
+    rapporten: true,
+    rapporten_docenten: false,
     students: true,
     audit: false,
   },
@@ -54,7 +58,8 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     dagelijks: true,
     weekoverzicht: true,
     statistieken: true,
-    rapporten: false,
+    rapporten: true,
+    rapporten_docenten: false,
     students: false,
     audit: false,
   },
@@ -62,7 +67,8 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     dagelijks: false,
     weekoverzicht: true,
     statistieken: true,
-    rapporten: false,
+    rapporten: true,
+    rapporten_docenten: false,
     students: false,
     audit: false,
   },
