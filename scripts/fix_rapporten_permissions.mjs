@@ -1,6 +1,6 @@
 /**
  * Rapporten: iedereen actief mag de pagina zien.
- * Rapporten per docent: alleen opgegeven gebruikers (+ Admin in de app).
+ * Rapporten per docent + Backup: alleen Admin (app) + annelore.delbecque.
  *
  *   node scripts/fix_rapporten_permissions.mjs
  *   node scripts/fix_rapporten_permissions.mjs --dry-run
@@ -11,7 +11,7 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const dryRun = process.argv.includes('--dry-run');
 
-const TEACHER_STATS_USERS = new Set(['annelore.delbecque']);
+const PRIVILEGED_USERS = new Set(['annelore.delbecque']);
 
 if (!url || !key) {
   console.error('Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY');
@@ -30,19 +30,22 @@ for (const user of users || []) {
   if (!user.active) continue;
 
   const wantRapporten = true;
-  const wantTeacherStats = TEACHER_STATS_USERS.has(user.username);
+  const wantTeacherStats = PRIVILEGED_USERS.has(user.username);
+  const wantBackup = PRIVILEGED_USERS.has(user.username);
   const permissions = {
     ...(user.permissions || {}),
     rapporten: wantRapporten,
     rapporten_docenten: wantTeacherStats,
+    backup: wantBackup,
   };
 
   const changed =
     user.permissions?.rapporten !== wantRapporten ||
-    user.permissions?.rapporten_docenten !== wantTeacherStats;
+    user.permissions?.rapporten_docenten !== wantTeacherStats ||
+    user.permissions?.backup !== wantBackup;
 
   if (!changed) {
-    console.log('OK', user.username, wantTeacherStats ? '+docenten' : '');
+    console.log('OK', user.username, wantBackup ? '+docenten+backup' : '');
     continue;
   }
 
@@ -50,7 +53,8 @@ for (const user of users || []) {
     'UPDATE',
     user.username,
     'rapporten=true',
-    wantTeacherStats ? 'rapporten_docenten=true' : 'rapporten_docenten=false'
+    `rapporten_docenten=${wantTeacherStats}`,
+    `backup=${wantBackup}`
   );
 
   if (!dryRun) {

@@ -332,6 +332,36 @@ export default function Home() {
               </Link>
             )}
 
+            {/* Backup - Solo Admin / Annelore (permiso backup) */}
+            {user && hasPermission(user, 'backup') && (
+              <Link
+                href="/backup"
+                className="group relative overflow-hidden"
+              >
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/10 via-white/5 to-transparent opacity-70 blur-2xl group-hover:opacity-100 group-hover:blur-3xl transition-all duration-300"></div>
+                <div className="relative glass-effect rounded-3xl p-8 border border-white/15 hover:border-white/35 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(0,0,0,0.35)] h-full">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 ring-1 ring-white/20 flex items-center justify-center shadow-[0_10px_24px_rgba(0,0,0,0.28)] group-hover:scale-105 transition-transform">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                      </svg>
+                    </div>
+                    <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                      <svg className="w-5 h-5 text-white group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h2 className="text-2xl font-black text-white mb-3 group-hover:text-white/90 transition-colors">
+                    Backup
+                  </h2>
+                  <p className="text-white/90 text-sm leading-relaxed">
+                    Alleen-lezen archief van vorige schooljaren (september–juni).
+                  </p>
+                </div>
+              </Link>
+            )}
+
             {/* Roosters - Solo para admins */}
             {user && isAdmin() && (
               <Link

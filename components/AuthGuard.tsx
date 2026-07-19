@@ -11,6 +11,7 @@ const ROUTE_PERMISSIONS: { [path: string]: keyof UserPermissions } = {
   '/weekly': 'weekoverzicht',
   '/stats': 'statistieken',
   '/import': 'rapporten',
+  '/backup': 'backup',
   '/students': 'students',
   '/audit': 'audit',
   '/users': 'students', // Solo admins pueden acceder

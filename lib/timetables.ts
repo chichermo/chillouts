@@ -77,6 +77,39 @@ export function getSchoolYear(date: Date): string {
   return `${y - 1}-${y}`;
 }
 
+/** Schooljaar loopt van 1 sept t/m 30 juni (voor filters/backup). */
+export function getSchoolYearDateRange(year: string): { from: string; to: string } | null {
+  const match = /^(\d{4})-(\d{4})$/.exec(year.trim());
+  if (!match) return null;
+  const start = parseInt(match[1], 10);
+  const end = parseInt(match[2], 10);
+  if (end !== start + 1) return null;
+  return {
+    from: `${start}-09-01`,
+    to: `${end}-06-30`,
+  };
+}
+
+/** Afgesloten schooljaar: einddatum 30 juni is gepasseerd. */
+export function isSchoolYearCompleted(year: string, now: Date = new Date()): boolean {
+  const range = getSchoolYearDateRange(year);
+  if (!range) return false;
+  const end = new Date(`${range.to}T23:59:59`);
+  return now.getTime() > end.getTime();
+}
+
+/** Unieke schooljaren uit datums, nieuwste eerst. */
+export function listSchoolYearsFromDates(dates: string[]): string[] {
+  const years = new Set<string>();
+  for (const date of dates) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
+    const parsed = new Date(`${date}T12:00:00`);
+    if (Number.isNaN(parsed.getTime())) continue;
+    years.add(getSchoolYear(parsed));
+  }
+  return Array.from(years).sort().reverse();
+}
+
 export function slotKey(dayIndex: number, hour: number): string {
   return `${dayIndex}_${hour}`;
 }

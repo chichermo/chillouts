@@ -11,6 +11,7 @@ export interface User {
     statistieken?: boolean;
     rapporten?: boolean;
     rapporten_docenten?: boolean;
+    backup?: boolean;
     students?: boolean;
     audit?: boolean;
   };
@@ -31,6 +32,7 @@ export interface UserPermissions {
   statistieken: boolean;
   rapporten: boolean;
   rapporten_docenten: boolean;
+  backup: boolean;
   students: boolean;
   audit: boolean;
 }
@@ -42,6 +44,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     statistieken: true,
     rapporten: true,
     rapporten_docenten: true,
+    backup: true,
     students: true,
     audit: true,
   },
@@ -51,6 +54,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     statistieken: true,
     rapporten: true,
     rapporten_docenten: false,
+    backup: false,
     students: true,
     audit: false,
   },
@@ -60,6 +64,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     statistieken: true,
     rapporten: true,
     rapporten_docenten: false,
+    backup: false,
     students: false,
     audit: false,
   },
@@ -69,6 +74,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     statistieken: true,
     rapporten: true,
     rapporten_docenten: false,
+    backup: false,
     students: false,
     audit: false,
   },
