@@ -301,6 +301,9 @@ export default function UsersPage() {
                         <div className="space-y-2 min-w-[280px]">
                           <div className="flex flex-wrap gap-2">
                             {Object.entries({
+                              portal_chillouts: 'Portal Chill-outs',
+                              portal_detentions: 'Portal Detentions',
+                              portal_o2: 'Portal O2',
                               dagelijks: 'Dagelijks',
                               weekoverzicht: 'Weekoverzicht',
                               statistieken: 'Statistieken',
@@ -357,7 +360,27 @@ export default function UsersPage() {
                             {Object.entries(user.permissions || {}).map(([key, value]) => 
                               value && (
                                 <span key={key} className="px-1.5 py-0.5 bg-brand-green/20 text-brand-green text-[10px] rounded">
-                                  {key === 'dagelijks' ? 'Dag' : key === 'weekoverzicht' ? 'Week' : key === 'statistieken' ? 'Stat' : key === 'rapporten' ? 'Rap' : key === 'rapporten_docenten' ? 'RapDoc' : key === 'backup' ? 'Bak' : key === 'students' ? 'Stu' : 'Aud'}
+                                  {key === 'portal_chillouts'
+                                    ? 'P-CO'
+                                    : key === 'portal_detentions'
+                                      ? 'P-Det'
+                                      : key === 'portal_o2'
+                                        ? 'P-O2'
+                                        : key === 'dagelijks'
+                                          ? 'Dag'
+                                          : key === 'weekoverzicht'
+                                            ? 'Week'
+                                            : key === 'statistieken'
+                                              ? 'Stat'
+                                              : key === 'rapporten'
+                                                ? 'Rap'
+                                                : key === 'rapporten_docenten'
+                                                  ? 'RapDoc'
+                                                  : key === 'backup'
+                                                    ? 'Bak'
+                                                    : key === 'students'
+                                                      ? 'Stu'
+                                                      : 'Aud'}
                                 </span>
                               )
                             )}

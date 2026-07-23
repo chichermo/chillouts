@@ -12,6 +12,9 @@ export interface User {
     rapporten?: boolean;
     rapporten_docenten?: boolean;
     backup?: boolean;
+    portal_chillouts?: boolean;
+    portal_detentions?: boolean;
+    portal_o2?: boolean;
     students?: boolean;
     audit?: boolean;
   };
@@ -33,6 +36,9 @@ export interface UserPermissions {
   rapporten: boolean;
   rapporten_docenten: boolean;
   backup: boolean;
+  portal_chillouts: boolean;
+  portal_detentions: boolean;
+  portal_o2: boolean;
   students: boolean;
   audit: boolean;
 }
@@ -45,6 +51,9 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     rapporten: true,
     rapporten_docenten: true,
     backup: true,
+    portal_chillouts: true,
+    portal_detentions: true,
+    portal_o2: true,
     students: true,
     audit: true,
   },
@@ -55,6 +64,9 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     rapporten: true,
     rapporten_docenten: false,
     backup: false,
+    portal_chillouts: true,
+    portal_detentions: false,
+    portal_o2: false,
     students: true,
     audit: false,
   },
@@ -65,6 +77,9 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     rapporten: true,
     rapporten_docenten: false,
     backup: false,
+    portal_chillouts: true,
+    portal_detentions: false,
+    portal_o2: false,
     students: false,
     audit: false,
   },
@@ -75,6 +90,9 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     rapporten: true,
     rapporten_docenten: false,
     backup: false,
+    portal_chillouts: true,
+    portal_detentions: false,
+    portal_o2: false,
     students: false,
     audit: false,
   },

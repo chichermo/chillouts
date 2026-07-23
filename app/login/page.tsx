@@ -1,141 +1,155 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import Logo from '@/components/Logo';
-import { login, isAuthenticated } from '@/lib/auth';
-import { AUTH_USERNAME, AUTH_PASSWORD } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated, login } from '@/lib/auth';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    // Si ya está autenticado, redirigir a la página principal
-    if (isAuthenticated()) {
-      router.push('/');
-    }
+    if (isAuthenticated()) router.replace('/portals');
   }, [router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
-    // Simular un pequeño delay para mejor UX
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const success = await login(username, password);
-    if (success) {
-      // Redirigir a la página principal
-      router.push('/');
-    } else {
+    try {
+      const success = await login(username.trim(), password);
+      if (success) {
+        router.replace('/portals');
+        return;
+      }
       setError('Gebruikersnaam of wachtwoord is onjuist');
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#2a2a3a]">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-brand-pink/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-brand-green/20 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-orange/20 rounded-full blur-3xl"></div>
+    <div className="min-h-screen relative overflow-hidden bg-[#1a1a28] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 -left-16 h-80 w-80 rounded-full bg-[#ACE1AF]/25 blur-3xl" />
+        <div className="absolute top-1/3 -right-20 h-96 w-96 rounded-full bg-[#C2E0FC]/20 blur-3xl" />
+        <div className="absolute -bottom-28 left-1/3 h-80 w-80 rounded-full bg-[#E897A3]/20 blur-3xl" />
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.45) 1px, transparent 0)',
+            backgroundSize: '28px 28px',
+          }}
+        />
       </div>
 
-      <div className="relative z-10 w-full max-w-md px-4">
-        {/* Logo y nombre de la app */}
-        <div className="text-center mb-8">
-          <div className="inline-block mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-white/5 rounded-2xl blur-xl opacity-50"></div>
-              <div className="relative py-8">
-                <Logo variant="full" showElements={true} />
-              </div>
-            </div>
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-4 py-10 md:px-8 lg:flex-row lg:items-center lg:gap-16">
+        <section className="mb-10 max-w-xl lg:mb-0 lg:flex-1">
+          <p className="mb-4 text-sm font-semibold tracking-[0.2em] text-white/55 uppercase">
+            Element · Sterk in verbinding
+          </p>
+          <div className="mb-6 inline-flex rounded-2xl border border-white/15 bg-white/5 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-md">
+            <Image
+              src="/logo.jpg"
+              alt="Element"
+              width={280}
+              height={120}
+              priority
+              className="h-auto w-[220px] object-contain md:w-[280px]"
+            />
           </div>
-        </div>
-
-        {/* Formulario de login */}
-        <div className="glass-effect rounded-3xl p-8 border border-white/20 shadow-2xl">
-          <h1 className="text-2xl font-black text-white mb-6 text-center">
-            Inloggen
+          <h1 className="text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
+            Welkom bij het
+            <span className="block bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#E897A3] bg-clip-text text-transparent">
+              Element portaal
+            </span>
           </h1>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-white/70">
+            Eén login voor Chill-outs, Detentions en O2. Je ziet alleen de apps waarvoor je
+            toegang hebt.
+          </p>
+        </section>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Campo Usuario */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-white/90 mb-2">
-                Gebruikersnaam
-              </label>
-              <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
-                placeholder="Voer uw gebruikersnaam in"
-                required
-                autoComplete="username"
-              />
-            </div>
+        <section className="w-full max-w-md lg:flex-none">
+          <div className="rounded-3xl border border-white/15 bg-[#222233]/80 p-7 shadow-[0_30px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl md:p-8">
+            <h2 className="mb-1 text-2xl font-bold text-white">Inloggen</h2>
+            <p className="mb-6 text-sm text-white/60">Gebruik je Element-account</p>
 
-            {/* Campo Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-white/90 mb-2">
-                Wachtwoord
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
-                placeholder="Voer uw wachtwoord in"
-                required
-                autoComplete="current-password"
-              />
-            </div>
-
-            {/* Foutmelding */}
-            {error && (
-              <div className="p-3 rounded-xl bg-brand-pink/20 border border-brand-pink/30 text-white text-sm text-center">
-                {error}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="username" className="mb-2 block text-sm font-medium text-white/80">
+                  Gebruikersnaam
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  required
+                  className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3.5 text-white placeholder-white/35 outline-none transition focus:border-[#ACE1AF]/60 focus:ring-2 focus:ring-[#ACE1AF]/25"
+                  placeholder="voornaam.achternaam"
+                />
               </div>
-            )}
 
-            {/* Botón de submit */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl bg-white/20 hover:bg-white/30 border border-white/30 text-white font-semibold transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
-            >
-              {isLoading ? 'Inloggen...' : 'Inloggen'}
-            </button>
+              <div>
+                <label htmlFor="password" className="mb-2 block text-sm font-medium text-white/80">
+                  Wachtwoord
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3.5 pr-12 text-white placeholder-white/35 outline-none transition focus:border-[#ACE1AF]/60 focus:ring-2 focus:ring-[#ACE1AF]/25"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs text-white/55 hover:text-white"
+                  >
+                    {showPassword ? 'Verberg' : 'Toon'}
+                  </button>
+                </div>
+              </div>
 
-            {/* Link para reset de contraseña */}
-            <div className="text-center mt-4">
-              <Link
-                href="/reset-password"
-                className="text-sm text-white/70 hover:text-white transition-colors underline"
+              {error && (
+                <div className="rounded-2xl border border-[#E897A3]/40 bg-[#E897A3]/15 px-4 py-3 text-center text-sm text-white">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full rounded-2xl bg-gradient-to-r from-[#ACE1AF] to-[#7ec98a] px-4 py-3.5 font-bold text-[#1a1a28] shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Wachtwoord vergeten?
-              </Link>
-            </div>
-          </form>
-        </div>
+                {isLoading ? 'Bezig…' : 'Naar portalen'}
+              </button>
 
-        {/* Footer */}
-        <p className="text-center text-white/60 text-sm mt-6">
-          Element - STERK IN VERBINDING
-        </p>
+              <div className="text-center">
+                <Link
+                  href="/reset-password"
+                  className="text-sm text-white/55 underline-offset-2 hover:text-white hover:underline"
+                >
+                  Wachtwoord vergeten?
+                </Link>
+              </div>
+            </form>
+          </div>
+        </section>
       </div>
     </div>
   );
 }
-

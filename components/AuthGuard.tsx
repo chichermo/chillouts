@@ -5,7 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { isAuthenticated, getCurrentUser, hasPermission, refreshCurrentUserFromDb } from '@/lib/auth';
 import type { UserPermissions } from '@/lib/users';
 
-// Mapeo de rutas a permisos requeridos
+const PUBLIC_PATHS = new Set(['/login', '/create-users', '/reset-password']);
+
 const ROUTE_PERMISSIONS: { [path: string]: keyof UserPermissions } = {
   '/daily': 'dagelijks',
   '/weekly': 'weekoverzicht',
@@ -14,8 +15,16 @@ const ROUTE_PERMISSIONS: { [path: string]: keyof UserPermissions } = {
   '/backup': 'backup',
   '/students': 'students',
   '/audit': 'audit',
-  '/users': 'students', // Solo admins pueden acceder
+  '/users': 'students',
 };
+
+/** Rutas de Chill-outs (requieren portal_chillouts). */
+function isChilloutsAppPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (pathname === '/portals' || pathname === '/o2' || pathname === '/login') return false;
+  if (pathname.startsWith('/api/')) return false;
+  return true;
+}
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -26,56 +35,63 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     const verifyAccess = async () => {
-    // No proteger la ruta de login, create-users o reset-password
-    if (pathname === '/login' || pathname === '/create-users' || pathname === '/reset-password') {
-      setIsChecking(false);
-      return;
-    }
-
-    // Verificar autenticación
-    if (!isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
-
-    await refreshCurrentUserFromDb();
-    if (cancelled) return;
-
-    // Verificar permisos para rutas específicas
-    const user = getCurrentUser();
-    
-    // Verificar rutas dinámicas primero
-    if (pathname?.startsWith('/daily/')) {
-      // Ruta dinámica /daily/[date] requiere permiso dagelijks
-      if (!user || !hasPermission(user, 'dagelijks')) {
-        router.push('/');
+      if (PUBLIC_PATHS.has(pathname || '')) {
+        setIsChecking(false);
         return;
       }
-    } else {
-      // Verificar rutas que requieren ser admin
-      if (
+
+      if (!isAuthenticated()) {
+        router.push('/login');
+        return;
+      }
+
+      await refreshCurrentUserFromDb();
+      if (cancelled) return;
+
+      const user = getCurrentUser();
+
+      if (pathname === '/portals' || pathname === '/o2') {
+        if (pathname === '/o2' && (!user || !hasPermission(user, 'portal_o2'))) {
+          router.push('/portals');
+          return;
+        }
+        setIsChecking(false);
+        return;
+      }
+
+      if (isChilloutsAppPath(pathname)) {
+        if (!user || !hasPermission(user, 'portal_chillouts')) {
+          router.push('/portals');
+          return;
+        }
+      }
+
+      if (pathname?.startsWith('/daily/')) {
+        if (!user || !hasPermission(user, 'dagelijks')) {
+          router.push('/portals');
+          return;
+        }
+      } else if (
         pathname === '/users' ||
         pathname === '/nablijven' ||
         pathname === '/timetables' ||
         pathname?.startsWith('/admin/')
       ) {
         if (!user || user.role !== 'admin') {
-          router.push('/');
+          router.push('/portals');
           return;
         }
       } else {
-        // Verificar rutas estáticas con permisos
         const requiredPermission = ROUTE_PERMISSIONS[pathname || ''];
         if (requiredPermission) {
           if (!user || !hasPermission(user, requiredPermission)) {
-            router.push('/');
+            router.push('/portals');
             return;
           }
         }
       }
-    }
 
-    setIsChecking(false);
+      setIsChecking(false);
     };
 
     verifyAccess();
@@ -84,10 +100,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     };
   }, [router, pathname]);
 
-  // Mostrar nada mientras se verifica (o un loader si prefieres)
-  if (isChecking && pathname !== '/login' && pathname !== '/create-users' && pathname !== '/reset-password') {
+  if (isChecking && !PUBLIC_PATHS.has(pathname || '')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#2a2a3a]">
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1a28]">
         <div className="text-white">Laden...</div>
       </div>
     );
@@ -95,4 +110,3 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
-
