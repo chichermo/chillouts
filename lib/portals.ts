@@ -23,7 +23,7 @@ export const PORTALS: PortalDef[] = [
     permission: 'portal_chillouts',
     title: 'Chill-outs',
     subtitle: 'Dagelijkse chill-outs, roosters, rapporten en statistieken.',
-    href: '/',
+    href: '/dashboard',
     accent: '#ACE1AF',
   },
   {

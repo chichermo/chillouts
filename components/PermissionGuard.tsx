@@ -24,7 +24,7 @@ export default function PermissionGuard({
     }
 
     if (!hasPermission(user, permission)) {
-      router.push('/');
+      router.push('/portals');
       return;
     }
 

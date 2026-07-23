@@ -18,10 +18,17 @@ const ROUTE_PERMISSIONS: { [path: string]: keyof UserPermissions } = {
   '/users': 'students',
 };
 
-/** Rutas de Chill-outs (requieren portal_chillouts). */
+/** Rutas internas de Chill-outs (requieren portal_chillouts). */
 function isChilloutsAppPath(pathname: string | null): boolean {
   if (!pathname) return false;
-  if (pathname === '/portals' || pathname === '/o2' || pathname === '/login') return false;
+  if (
+    pathname === '/' ||
+    pathname === '/portals' ||
+    pathname === '/o2' ||
+    pathname === '/login'
+  ) {
+    return false;
+  }
   if (pathname.startsWith('/api/')) return false;
   return true;
 }
@@ -37,6 +44,20 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const verifyAccess = async () => {
       if (PUBLIC_PATHS.has(pathname || '')) {
         setIsChecking(false);
+        return;
+      }
+
+      // Raíz: gate a login o portales (sin dashboard)
+      if (pathname === '/') {
+        if (isAuthenticated()) router.replace('/portals');
+        else router.replace('/login');
+        return;
+      }
+
+      // Nablijven ya no vive en el menú Chill-outs → solo vía portal Detentions
+      if (pathname === '/nablijven') {
+        if (isAuthenticated()) router.replace('/portals');
+        else router.replace('/login');
         return;
       }
 
@@ -73,7 +94,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         }
       } else if (
         pathname === '/users' ||
-        pathname === '/nablijven' ||
         pathname === '/timetables' ||
         pathname?.startsWith('/admin/')
       ) {
@@ -100,7 +120,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     };
   }, [router, pathname]);
 
-  if (isChecking && !PUBLIC_PATHS.has(pathname || '')) {
+  if (
+    isChecking &&
+    !PUBLIC_PATHS.has(pathname || '') &&
+    pathname !== '/' &&
+    pathname !== '/nablijven'
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#1a1a28]">
         <div className="text-white">Laden...</div>

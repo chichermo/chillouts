@@ -43,7 +43,7 @@ export default function PortalsPage() {
         setError('Geen toegang tot Chill-outs.');
         return;
       }
-      router.push('/');
+      router.push('/dashboard');
       return;
     }
 

@@ -39,7 +39,7 @@ export default function Navigation() {
         )
       },
       { 
-        href: '/', 
+        href: '/dashboard', 
         label: 'Dashboard',
         permission: null as keyof UserPermissions | null,
         icon: (
@@ -133,16 +133,6 @@ export default function Navigation() {
         )
       });
       allLinks.push({
-        href: '/nablijven',
-        label: 'Nablijven',
-        permission: null,
-        icon: (
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )
-      });
-      allLinks.push({
         href: '/timetables',
         label: 'Roosters',
         permission: null,
@@ -181,7 +171,7 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide ml-3">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
+              const isActive = pathname === link.href || (link.href !== '/' && link.href !== '/portals' && pathname?.startsWith(link.href));
               return (
                 <Link
                   key={link.href}
@@ -256,7 +246,7 @@ export default function Navigation() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-white/10 py-4 bg-[#141427]/95 backdrop-blur-xl">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || (link.href !== '/' && pathname?.startsWith(link.href));
+              const isActive = pathname === link.href || (link.href !== '/' && link.href !== '/portals' && pathname?.startsWith(link.href));
               return (
                 <Link
                   key={link.href}

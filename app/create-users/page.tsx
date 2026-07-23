@@ -87,7 +87,7 @@ export default function CreateUsersPage() {
 
   useEffect(() => {
     if (!isAdmin()) {
-      router.push('/');
+      router.push('/portals');
     }
   }, [router]);
 
