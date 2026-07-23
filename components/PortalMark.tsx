@@ -10,27 +10,46 @@ type PortalMarkProps = {
 /** Eigen merkteken per portaal (SVG). */
 export default function PortalMark({ id, className = 'h-16 w-16' }: PortalMarkProps) {
   if (id === 'chillouts') {
+    // Eigen merk: afgeronde "kamer" + persoon op zitzak (chill-out), geen druppelvorm.
     return (
       <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden>
         <defs>
-          <linearGradient id="coGrad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+          <linearGradient id="coGrad" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
             <stop stopColor="#ACE1AF" />
             <stop offset="1" stopColor="#5fad6a" />
           </linearGradient>
         </defs>
-        <circle cx="32" cy="32" r="28" fill="url(#coGrad)" opacity="0.2" />
-        <circle cx="32" cy="32" r="22" stroke="url(#coGrad)" strokeWidth="2.5" />
+        {/* Kamer / badge — vierkant, niet rond zoals O2 */}
+        <rect x="8" y="8" width="48" height="48" rx="16" fill="url(#coGrad)" opacity="0.18" />
+        <rect x="12" y="12" width="40" height="40" rx="13" stroke="url(#coGrad)" strokeWidth="2.5" />
+        {/* Zitzak */}
+        <ellipse cx="30" cy="44" rx="16" ry="9" fill="url(#coGrad)" />
         <path
-          d="M32 16c0 8-6 12-6 20a6 6 0 0012 0c0-8-6-12-6-20z"
+          d="M16 42c2-9 10-15 20-14 7 .7 12 5 14 11"
           fill="url(#coGrad)"
         />
-        <circle cx="32" cy="38" r="4" fill="#1a1a28" opacity="0.35" />
         <path
-          d="M20 44c4 4 8 6 12 6s8-2 12-6"
-          stroke="#ACE1AF"
-          strokeWidth="2"
+          d="M20 41c3-5 8-8 14-8"
+          stroke="#1a1a28"
+          strokeWidth="1.6"
           strokeLinecap="round"
-          opacity="0.7"
+          opacity="0.22"
+        />
+        {/* Ontspannen figuur */}
+        <circle cx="41" cy="23" r="6.25" fill="url(#coGrad)" />
+        <path
+          d="M34 31c3-4 7-5 11-3"
+          stroke="url(#coGrad)"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        {/* Gesloten ogen */}
+        <path
+          d="M38 22.2c1.1-.9 2.2-.9 3.3 0M42.2 22.2c1.1-.9 2.2-.9 3.3 0"
+          stroke="#1a1a28"
+          strokeWidth="1.35"
+          strokeLinecap="round"
+          opacity="0.4"
         />
       </svg>
     );
