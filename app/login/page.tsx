@@ -72,7 +72,7 @@ export default function LoginPage() {
             </span>
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-white/70">
-            Eén login voor Chill-outs, Detentions en O2. Je ziet alleen de apps waarvoor je
+            Eén login voor Chill-outs, Nablijven en O2. Je ziet alleen de apps waarvoor je
             toegang hebt.
           </p>
         </section>

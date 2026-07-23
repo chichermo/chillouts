@@ -302,7 +302,7 @@ export default function UsersPage() {
                           <div className="flex flex-wrap gap-2">
                             {Object.entries({
                               portal_chillouts: 'Portal Chill-outs',
-                              portal_detentions: 'Portal Detentions',
+                              portal_detentions: 'Portal Nablijven',
                               portal_o2: 'Portal O2',
                               dagelijks: 'Dagelijks',
                               weekoverzicht: 'Weekoverzicht',
@@ -362,8 +362,8 @@ export default function UsersPage() {
                                 <span key={key} className="px-1.5 py-0.5 bg-brand-green/20 text-brand-green text-[10px] rounded">
                                   {key === 'portal_chillouts'
                                     ? 'P-CO'
-                                    : key === 'portal_detentions'
-                                      ? 'P-Det'
+                                      : key === 'portal_detentions'
+                                        ? 'P-Nab'
                                       : key === 'portal_o2'
                                         ? 'P-O2'
                                         : key === 'dagelijks'

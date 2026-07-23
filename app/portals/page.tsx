@@ -11,6 +11,7 @@ import {
   refreshCurrentUserFromDb,
 } from '@/lib/auth';
 import { getVisiblePortals, type PortalDef } from '@/lib/portals';
+import PortalMark from '@/components/PortalMark';
 import type { User } from '@/lib/users';
 
 export default function PortalsPage() {
@@ -18,6 +19,7 @@ export default function PortalsPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -43,6 +45,7 @@ export default function PortalsPage() {
         setError('Geen toegang tot Chill-outs.');
         return;
       }
+      setOpening(portal.id);
       router.push('/dashboard');
       return;
     }
@@ -62,11 +65,11 @@ export default function PortalsPage() {
         });
         const data = await res.json();
         if (!res.ok || !data?.url) {
-          throw new Error(data?.error || 'SSO mislukt');
+          throw new Error(data?.error || 'Aanmelden mislukt');
         }
         window.location.href = data.url;
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Kon Detentions niet openen');
+        setError(e instanceof Error ? e.message : 'Kon Nablijven niet openen');
         setOpening(null);
       }
       return;
@@ -86,122 +89,173 @@ export default function PortalsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1a1a28] text-white">
-        Laden…
+      <div className="flex min-h-screen items-center justify-center bg-[#14141f] text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-pulse rounded-full bg-[#ACE1AF]/40" />
+          <p className="text-sm text-white/60">Portalen laden…</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#1a1a28] text-white">
+    <div className="min-h-screen relative overflow-hidden bg-[#14141f] text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-20 left-10 h-72 w-72 rounded-full bg-[#ACE1AF]/20 blur-3xl" />
-        <div className="absolute bottom-10 right-0 h-96 w-96 rounded-full bg-[#C2E0FC]/15 blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#E897A3]/10 blur-3xl" />
+        <div className="absolute -top-32 -left-20 h-[28rem] w-[28rem] rounded-full bg-[#ACE1AF]/20 blur-[100px]" />
+        <div className="absolute top-1/4 -right-24 h-[32rem] w-[32rem] rounded-full bg-[#C2E0FC]/18 blur-[110px]" />
+        <div className="absolute -bottom-40 left-1/3 h-[26rem] w-[26rem] rounded-full bg-[#FFDFB9]/12 blur-[90px]" />
+        <div
+          className="absolute inset-0 opacity-[0.045]"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0)',
+            backgroundSize: '32px 32px',
+          }}
+        />
       </div>
 
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6 md:px-8">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-2">
-            <Image src="/logo.jpg" alt="Element" width={120} height={40} className="h-8 w-auto" />
+        <div className="flex items-center gap-4">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-2.5 shadow-lg backdrop-blur-md">
+            <Image src="/logo.jpg" alt="Element" width={130} height={44} className="h-9 w-auto" />
           </div>
           <div>
-            <p className="text-xs tracking-[0.18em] text-white/45 uppercase">Element portaal</p>
-            <p className="text-sm text-white/80">
-              Hallo, <span className="font-semibold text-white">{user?.username || 'gebruiker'}</span>
+            <p className="text-[11px] font-semibold tracking-[0.22em] text-white/40 uppercase">
+              Element portaal
+            </p>
+            <p className="text-sm text-white/75">
+              Welkom,{' '}
+              <span className="font-semibold text-white">{user?.username || 'gebruiker'}</span>
             </p>
           </div>
         </div>
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
+          className="rounded-2xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm text-white/70 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
         >
           Uitloggen
         </button>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-16 md:px-8">
-        <div className="mb-10 max-w-2xl">
-          <h1 className="text-3xl font-black tracking-tight md:text-4xl">Kies je app</h1>
-          <p className="mt-3 text-white/65">
-            Je sessie blijft actief — geen tweede login nodig. Alleen de portalen waarvoor je
-            rechten hebt, worden getoond.
+      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-20 pt-4 md:px-8">
+        <div className="mb-12 max-w-2xl">
+          <h1 className="text-4xl font-black tracking-tight md:text-5xl">
+            Kies je{' '}
+            <span className="bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
+              portaal
+            </span>
+          </h1>
+          <p className="mt-4 text-base leading-relaxed text-white/60">
+            Eén sessie voor Chill-outs, Nablijven en O2. Tik op een portaal om verder te gaan —
+            zonder opnieuw in te loggen.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-2xl border border-[#E897A3]/40 bg-[#E897A3]/15 px-4 py-3 text-sm">
+          <div className="mb-8 rounded-2xl border border-[#E897A3]/35 bg-[#E897A3]/12 px-4 py-3 text-sm text-white">
             {error}
           </div>
         )}
 
         {portals.length === 0 ? (
-          <div className="rounded-3xl border border-white/15 bg-white/5 p-8 text-white/75">
-            Er zijn nog geen portalen aan jouw account gekoppeld. Vraag een admin om toegang in
-            Gebruikers.
+          <div className="rounded-3xl border border-white/12 bg-white/[0.04] p-10 text-white/70">
+            Er zijn nog geen portalen aan jouw account gekoppeld. Vraag een beheerder om toegang
+            via Gebruikers.
           </div>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {portals.map((portal, index) => (
-              <button
-                key={portal.id}
-                type="button"
-                onClick={() => openPortal(portal)}
-                disabled={opening === portal.id}
-                className="group relative overflow-hidden rounded-3xl border border-white/12 bg-[#222233]/75 p-6 text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:shadow-[0_28px_60px_rgba(0,0,0,0.45)] disabled:opacity-70"
-                style={{ animationDelay: `${index * 80}ms` }}
-              >
-                <div
-                  className="absolute inset-x-0 top-0 h-1 opacity-90 transition group-hover:h-1.5"
-                  style={{ background: portal.accent }}
-                />
-                <div
-                  className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10"
-                  style={{ background: `${portal.accent}22` }}
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {portals.map((portal, index) => {
+              const isHovered = hovered === portal.id;
+              const isOpening = opening === portal.id;
+              return (
+                <button
+                  key={portal.id}
+                  type="button"
+                  onClick={() => openPortal(portal)}
+                  onMouseEnter={() => setHovered(portal.id)}
+                  onMouseLeave={() => setHovered(null)}
+                  onFocus={() => setHovered(portal.id)}
+                  onBlur={() => setHovered(null)}
+                  disabled={isOpening}
+                  className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#1c1c2a]/80 p-7 text-left shadow-[0_24px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-500 ease-out hover:-translate-y-2 hover:border-white/25 hover:shadow-[0_36px_80px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-70 animate-[portalIn_0.55s_ease-out_both]"
+                  style={{
+                    animationDelay: `${index * 0.1}s`,
+                  }}
                 >
-                  {portal.id === 'chillouts' && (
-                    <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  )}
-                  {portal.id === 'detentions' && (
-                    <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  )}
-                  {portal.id === 'o2' && (
-                    <svg className="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  )}
-                </div>
-                <h2 className="text-2xl font-bold text-white">{portal.title}</h2>
-                <p className="mt-2 text-sm leading-relaxed text-white/65">{portal.subtitle}</p>
-                <div className="mt-6 flex items-center justify-between text-sm font-semibold">
-                  <span style={{ color: portal.accent }}>
-                    {opening === portal.id
-                      ? 'Openen…'
-                      : portal.comingSoon
-                        ? 'Voorbereiden'
-                        : 'Openen'}
-                  </span>
-                  <span className="text-white/40 transition group-hover:translate-x-1 group-hover:text-white/80">
-                    →
-                  </span>
-                </div>
-              </button>
-            ))}
+                  <div
+                    className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ background: portal.accent }}
+                  />
+                  <div
+                    className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 transition-transform duration-500 group-hover:scale-x-100"
+                    style={{ background: portal.accent }}
+                  />
+
+                  <div className="relative flex items-start justify-between gap-3">
+                    <div
+                      className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl border border-white/10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[-3deg]"
+                      style={{
+                        background: `linear-gradient(145deg, ${portal.accent}33, transparent)`,
+                        boxShadow: isHovered ? `0 12px 40px ${portal.accent}44` : undefined,
+                      }}
+                    >
+                      <PortalMark id={portal.id} className="h-14 w-14" />
+                    </div>
+                    {portal.comingSoon && (
+                      <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white/55 uppercase">
+                        Binnenkort
+                      </span>
+                    )}
+                  </div>
+
+                  <h2 className="relative mt-6 text-2xl font-black tracking-tight text-white md:text-[1.75rem]">
+                    {portal.title}
+                  </h2>
+                  <p className="relative mt-2 min-h-[3rem] text-sm leading-relaxed text-white/60">
+                    {portal.subtitle}
+                  </p>
+
+                  <div className="relative mt-8 flex items-center justify-between">
+                    <span
+                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all duration-300 group-hover:gap-3"
+                      style={{
+                        background: `${portal.accent}22`,
+                        color: portal.accent,
+                      }}
+                    >
+                      {isOpening
+                        ? 'Openen…'
+                        : portal.comingSoon
+                          ? 'Bekijken'
+                          : 'Open portaal'}
+                      <span
+                        className="inline-block transition-transform duration-300 group-hover:translate-x-1"
+                        aria-hidden
+                      >
+                        →
+                      </span>
+                    </span>
+                    <span
+                      className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.04] transition-all duration-500 group-hover:scale-110 group-hover:border-white/25"
+                      style={{
+                        boxShadow: isHovered ? `inset 0 0 20px ${portal.accent}55` : undefined,
+                      }}
+                    />
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
 
         {hasPermission(user, 'students') && user?.role === 'admin' && (
-          <div className="mt-10">
+          <div className="mt-12">
             <Link
               href="/users"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm text-white/65 transition hover:bg-white/10 hover:text-white"
             >
-              Portaalrechten beheren (Gebruikers)
+              Portaalrechten beheren
             </Link>
           </div>
         )}
