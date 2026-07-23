@@ -114,41 +114,42 @@ export default function PortalsPage() {
         />
       </div>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6 md:px-8">
-        <div className="flex items-center gap-4">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-2.5 shadow-lg backdrop-blur-md">
-            <Image src="/logo.jpg" alt="Element" width={130} height={44} className="h-9 w-auto" />
-          </div>
-          <div>
-            <p className="text-[11px] font-semibold tracking-[0.22em] text-white/40 uppercase">
-              Element portaal
-            </p>
-            <p className="text-sm text-white/75">
-              Welkom,{' '}
-              <span className="font-semibold text-white">{user?.username || 'gebruiker'}</span>
-            </p>
-          </div>
-        </div>
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-end px-4 pt-6 md:px-8">
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded-2xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm text-white/70 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
+          className="rounded-xl border border-white/12 bg-white/[0.04] px-3.5 py-2 text-sm text-white/70 transition hover:border-white/25 hover:bg-white/10 hover:text-white"
         >
           Uitloggen
         </button>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-20 pt-4 md:px-8">
-        <div className="mb-12 max-w-2xl">
-          <h1 className="text-4xl font-black tracking-tight md:text-5xl">
+      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-20 pt-2 md:px-8">
+        <div className="mb-10 flex flex-col items-center text-center">
+          <div className="mb-5 rounded-3xl border border-white/12 bg-white/[0.07] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-md md:p-6">
+            <Image
+              src="/logo.jpg"
+              alt="Element"
+              width={320}
+              height={140}
+              priority
+              className="h-auto w-[200px] object-contain md:w-[280px]"
+            />
+          </div>
+          <p className="text-[11px] font-semibold tracking-[0.28em] text-white/40 uppercase">
+            Element · Sterk in verbinding
+          </p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
             Kies je{' '}
             <span className="bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
               portaal
             </span>
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-white/60">
-            Eén sessie voor Chill-outs, Nablijven en O2. Tik op een portaal om verder te gaan —
-            zonder opnieuw in te loggen.
+          <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/55">
+            Welkom,{' '}
+            <span className="font-semibold text-white/85">{user?.username || 'gebruiker'}</span>
+            {' — '}
+            één sessie voor Chill-outs, Nablijven en O2.
           </p>
         </div>
 
