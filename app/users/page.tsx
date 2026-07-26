@@ -1,471 +1,472 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Navigation from '@/components/Navigation';
-import { getAllUsers, createUser, updateUser, deleteUser, type User } from '@/lib/users';
+import {
+  ROLE_PERMISSIONS,
+  getAllUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  type User,
+  type UserPermissions,
+} from '@/lib/users';
 import { isAdmin, getCurrentUser, refreshCurrentUserFromDb } from '@/lib/auth';
+
+const PERMISSION_LABELS: { key: keyof UserPermissions; label: string; group: string }[] = [
+  { key: 'portal_chillouts', label: 'Portal Chill-outs', group: 'Portalen' },
+  { key: 'portal_detentions', label: 'Portal Nablijven', group: 'Portalen' },
+  { key: 'portal_o2', label: 'Portal O2', group: 'Portalen' },
+  { key: 'dagelijks', label: 'Dagelijks', group: 'Chill-outs' },
+  { key: 'weekoverzicht', label: 'Weekoverzicht', group: 'Chill-outs' },
+  { key: 'statistieken', label: 'Statistieken', group: 'Chill-outs' },
+  { key: 'rapporten', label: 'Rapporten', group: 'Chill-outs' },
+  { key: 'rapporten_docenten', label: 'Rapporten per docent', group: 'Chill-outs' },
+  { key: 'students', label: 'Studenten beheren', group: 'Chill-outs' },
+  { key: 'backup', label: 'Backup / archief', group: 'Beheer' },
+  { key: 'audit', label: 'Audit log', group: 'Beheer' },
+];
+
+const ROLE_LABELS: Record<User['role'], string> = {
+  admin: 'Admin',
+  full_access: 'Volledige toegang',
+  dagelijks_access: 'Dagelijks + rapporten',
+  reports_access: 'Rapporten',
+};
+
+type FormState = {
+  username: string;
+  password: string;
+  role: User['role'];
+  active: boolean;
+  permissions: UserPermissions;
+};
+
+function emptyForm(role: User['role'] = 'reports_access'): FormState {
+  return {
+    username: '',
+    password: '',
+    role,
+    active: true,
+    permissions: { ...ROLE_PERMISSIONS[role] },
+  };
+}
+
+function PermissionsEditor({
+  permissions,
+  onChange,
+}: {
+  permissions: UserPermissions;
+  onChange: (next: UserPermissions) => void;
+}) {
+  const groups = useMemo(() => {
+    const map = new Map<string, typeof PERMISSION_LABELS>();
+    for (const item of PERMISSION_LABELS) {
+      const list = map.get(item.group) || [];
+      list.push(item);
+      map.set(item.group, list);
+    }
+    return Array.from(map.entries());
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      {groups.map(([group, items]) => (
+        <div key={group}>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-white/40">
+            {group}
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {items.map(({ key, label }) => (
+              <label
+                key={key}
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/85 hover:bg-white/[0.06]"
+              >
+                <input
+                  type="checkbox"
+                  checked={!!permissions[key]}
+                  onChange={(e) => onChange({ ...permissions, [key]: e.target.checked })}
+                  className="h-4 w-4 rounded border-white/30 text-[#ACE1AF]"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [newUser, setNewUser] = useState({
-    username: '',
-    password: '',
-    role: 'reports_access' as User['role'],
-  });
-  const [editingUser, setEditingUser] = useState<Partial<User> & { password?: string }>({});
-  const [showPassword, setShowPassword] = useState<{ [key: string]: boolean }>({});
+  const [showInactive, setShowInactive] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [showInactive, setShowInactive] = useState(false);
+  const [panel, setPanel] = useState<'closed' | 'create' | 'edit'>('closed');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm());
+  const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    checkAccess();
-    loadUsers();
-  }, [showInactive]);
-
-  const checkAccess = () => {
     if (!isAdmin()) {
-      window.location.href = '/';
+      window.location.href = '/portals';
       return;
     }
-  };
+    loadUsers();
+  }, [showInactive]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
       setError('');
-      const allUsers = await getAllUsers({ includeInactive: showInactive });
-      setUsers(allUsers);
-    } catch (error: any) {
-      setError(`Fout bij laden gebruikers: ${error.message}`);
+      setUsers(await getAllUsers({ includeInactive: showInactive }));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Laden mislukt');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAdd = async () => {
-    if (!newUser.username || !newUser.password) {
-      setError('Vul gebruikersnaam en wachtwoord in.');
-      return;
-    }
-
-    try {
-      setError('');
-      await createUser(newUser.username, newUser.password, newUser.role);
-      setSuccess(`Gebruiker ${newUser.username} succesvol aangemaakt.`);
-      setNewUser({ username: '', password: '', role: 'reports_access' });
-      setShowAddForm(false);
-      await loadUsers();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(`Fout bij aanmaken: ${error.message}`);
-      setSuccess('');
-    }
+  const flash = (msg: string) => {
+    setSuccess(msg);
+    setTimeout(() => setSuccess(''), 3500);
   };
 
-  const handleEdit = (user: User) => {
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm('reports_access'));
+    setPanel('create');
+    setError('');
+  };
+
+  const openEdit = (user: User) => {
     setEditingId(user.id);
-    setEditingUser({
+    setForm({
       username: user.username,
-      role: user.role,
-      permissions: { ...user.permissions },
-      active: user.active,
       password: '',
+      role: user.role,
+      active: user.active,
+      permissions: {
+        ...ROLE_PERMISSIONS[user.role],
+        ...user.permissions,
+      } as UserPermissions,
     });
+    setPanel('edit');
+    setError('');
   };
 
-  const handleUpdate = async (userId: string) => {
+  const closePanel = () => {
+    setPanel('closed');
+    setEditingId(null);
+    setForm(emptyForm());
+  };
+
+  const applyRoleTemplate = (role: User['role']) => {
+    setForm((prev) => ({
+      ...prev,
+      role,
+      permissions: { ...ROLE_PERMISSIONS[role] },
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!form.username.trim()) {
+      setError('Gebruikersnaam is verplicht.');
+      return;
+    }
+    if (panel === 'create' && form.password.trim().length < 6) {
+      setError('Wachtwoord moet minstens 6 tekens hebben.');
+      return;
+    }
+
     try {
+      setSaving(true);
       setError('');
-      const updateData: Partial<User> & { password?: string } = { ...editingUser };
-      if (!updateData.password || updateData.password.trim() === '') {
-        delete updateData.password;
+      if (panel === 'create') {
+        await createUser(form.username.trim(), form.password, form.role, form.permissions);
+        flash(`Gebruiker ${form.username} aangemaakt.`);
+      } else if (editingId) {
+        const updates: Partial<User> & { password?: string } = {
+          username: form.username.trim(),
+          role: form.role,
+          active: form.active,
+          permissions: form.permissions,
+        };
+        if (form.password.trim()) updates.password = form.password.trim();
+        await updateUser(editingId, updates);
+        const current = getCurrentUser();
+        if (current?.id === editingId) await refreshCurrentUserFromDb();
+        flash('Gebruiker bijgewerkt.');
       }
-      await updateUser(userId, updateData);
-      const current = getCurrentUser();
-      if (current?.id === userId) {
-        await refreshCurrentUserFromDb();
-      }
-      setSuccess('Gebruiker succesvol bijgewerkt.');
-      setEditingId(null);
-      setEditingUser({});
+      closePanel();
       await loadUsers();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(`Fout bij bijwerken: ${error.message}`);
-      setSuccess('');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Opslaan mislukt');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDelete = async (userId: string) => {
+  const handleDelete = async (user: User) => {
     const current = getCurrentUser();
-    if (current?.id === userId) {
-      setError('Je kunt je eigen account niet verwijderen terwijl je bent ingelogd.');
+    if (current?.id === user.id) {
+      setError('Je kunt je eigen account niet verwijderen.');
       return;
     }
-
-    if (!confirm('Weet je zeker dat je deze gebruiker wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
-      return;
-    }
-
+    if (!confirm(`Gebruiker “${user.username}” definitief verwijderen?`)) return;
     try {
       setError('');
-      await deleteUser(userId);
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-      setSuccess('Gebruiker succesvol verwijderd.');
+      await deleteUser(user.id);
+      flash('Gebruiker verwijderd.');
+      if (editingId === user.id) closePanel();
       await loadUsers();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(`Fout bij verwijderen: ${error.message}`);
-      setSuccess('');
-      await loadUsers();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Verwijderen mislukt');
     }
   };
 
-  const handleResetPassword = async (userId: string) => {
-    const newPassword = prompt('Voer een nieuw wachtwoord in:');
-    if (!newPassword) return;
-
-    try {
-      setError('');
-      await updateUser(userId, { password: newPassword });
-      setSuccess('Wachtwoord succesvol gereset.');
-      await loadUsers();
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(`Fout bij resetten wachtwoord: ${error.message}`);
-      setSuccess('');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen relative overflow-hidden">
-        <Navigation />
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-xl text-white">Laden...</div>
-        </div>
-      </div>
-    );
-  }
-
-  const roleLabels: Record<User['role'], string> = {
-    admin: 'Admin',
-    full_access: 'Volledige Toegang',
-    dagelijks_access: 'Dagelijks + Rapporten',
-    reports_access: 'Rapporten',
-  };
+  const filtered = users.filter((u) =>
+    u.username.toLowerCase().includes(query.trim().toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+    <div className="relative min-h-screen overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute right-10 top-20 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute bottom-20 left-10 h-72 w-72 rounded-full bg-[#ACE1AF]/10 blur-3xl" />
       </div>
       <Navigation />
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6 flex justify-between items-center">
+
+      <div className="container relative z-10 mx-auto px-4 py-8">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2 text-white">Gebruikersbeheer</h1>
-            <p className="text-sm text-white/90">
-              Beheer gebruikers, rollen en wachtwoorden (alleen voor admins)
+            <h1 className="text-2xl font-bold text-white md:text-3xl">Gebruikersbeheer</h1>
+            <p className="mt-1 text-sm text-white/60">
+              Rollen, rechten, wachtwoorden en portaaltoegang beheren
             </p>
           </div>
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="px-6 py-3 bg-brand-green text-white rounded-lg hover:bg-emerald-600 font-semibold transition-colors flex items-center gap-2"
+            type="button"
+            onClick={openCreate}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ACE1AF] px-4 py-2.5 text-sm font-semibold text-[#141427] transition hover:bg-[#9dd6a1]"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Nieuwe Gebruiker
+            Nieuwe gebruiker
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 text-red-200 rounded-lg">
+          <div className="mb-4 rounded-xl border border-red-400/40 bg-red-500/15 px-4 py-3 text-sm text-red-100">
             {error}
           </div>
         )}
-
         {success && (
-          <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 text-green-200 rounded-lg">
+          <div className="mb-4 rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-4 py-3 text-sm text-emerald-100">
             {success}
           </div>
         )}
 
-        {/* Formulario para agregar usuario */}
-        {showAddForm && (
-          <div className="glass-effect rounded-lg p-6 border border-white/20 mb-6">
-            <h2 className="text-xl font-bold mb-4 text-white">Nieuwe Gebruiker Toevoegen</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Zoek gebruiker…"
+            className="min-w-[200px] flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#ACE1AF]/50"
+          />
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
+            <input
+              type="checkbox"
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+              className="h-4 w-4 rounded"
+            />
+            Toon inactief
+          </label>
+        </div>
+
+        <div className="glass-effect overflow-hidden rounded-2xl border border-white/12">
+          {loading ? (
+            <div className="p-8 text-white/70">Laden…</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-8 text-white/60">Geen gebruikers gevonden.</div>
+          ) : (
+            <div className="divide-y divide-white/8">
+              {filtered.map((user) => {
+                const activePerms = Object.entries(user.permissions || {}).filter(([, v]) => v);
+                return (
+                  <div
+                    key={user.id}
+                    className="flex flex-col gap-3 px-4 py-3 transition hover:bg-white/[0.03] sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-white">{user.username}</span>
+                        <span className="rounded-md bg-white/10 px-2 py-0.5 text-[11px] text-white/75">
+                          {ROLE_LABELS[user.role]}
+                        </span>
+                        <span
+                          className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${
+                            user.active
+                              ? 'bg-emerald-500/20 text-emerald-200'
+                              : 'bg-red-500/20 text-red-200'
+                          }`}
+                        >
+                          {user.active ? 'Actief' : 'Inactief'}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-white/40">
+                        Laatste login:{' '}
+                        {user.last_login
+                          ? new Date(user.last_login).toLocaleString('nl-NL')
+                          : 'nog niet'}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {activePerms.slice(0, 8).map(([key]) => (
+                          <span
+                            key={key}
+                            className="rounded bg-[#ACE1AF]/15 px-1.5 py-0.5 text-[10px] text-[#ACE1AF]"
+                          >
+                            {PERMISSION_LABELS.find((p) => p.key === key)?.label || key}
+                          </span>
+                        ))}
+                        {activePerms.length > 8 && (
+                          <span className="text-[10px] text-white/40">+{activePerms.length - 8}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(user)}
+                        className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/85 hover:bg-white/10"
+                      >
+                        Bewerken
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(user)}
+                        className="rounded-lg border border-red-400/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-200 hover:bg-red-500/20"
+                      >
+                        Verwijderen
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {panel !== 'closed' && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-white/15 bg-[#1a1a28] p-5 shadow-2xl sm:p-6">
+            <div className="mb-5 flex items-start justify-between gap-3">
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Gebruikersnaam</label>
+                <h2 className="text-lg font-bold text-white">
+                  {panel === 'create' ? 'Nieuwe gebruiker' : 'Gebruiker bewerken'}
+                </h2>
+                <p className="text-sm text-white/50">
+                  Pas rol, rechten, wachtwoord en portaaltoegang aan
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closePanel}
+                className="rounded-lg p-2 text-white/50 hover:bg-white/10 hover:text-white"
+                aria-label="Sluiten"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm text-white/70">Gebruikersnaam</label>
                 <input
-                  type="text"
-                  value={newUser.username}
-                  onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                  placeholder="naam.achternaam"
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-white outline-none focus:border-[#ACE1AF]/50"
+                  placeholder="voornaam.achternaam"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Wachtwoord</label>
+                <label className="mb-1.5 block text-sm text-white/70">
+                  {panel === 'create' ? 'Wachtwoord' : 'Nieuw wachtwoord (optioneel)'}
+                </label>
                 <input
                   type="password"
-                  value={newUser.password}
-                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                  placeholder="Minimaal 8 karakters"
-                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-white outline-none focus:border-[#ACE1AF]/50"
+                  placeholder={panel === 'create' ? 'Minimaal 6 tekens' : 'Leeg laten = ongewijzigd'}
                 />
               </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-sm text-white/70">Rol (sjabloon)</label>
+                  <select
+                    value={form.role}
+                    onChange={(e) => applyRoleTemplate(e.target.value as User['role'])}
+                    className="w-full rounded-xl border border-white/15 bg-[#2a2a3a] px-3 py-2.5 text-white outline-none"
+                  >
+                    {(Object.keys(ROLE_LABELS) as User['role'][]).map((role) => (
+                      <option key={role} value={role}>
+                        {ROLE_LABELS[role]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm text-white/70">Status</label>
+                  <select
+                    value={form.active ? 'true' : 'false'}
+                    onChange={(e) => setForm({ ...form, active: e.target.value === 'true' })}
+                    className="w-full rounded-xl border border-white/15 bg-[#2a2a3a] px-3 py-2.5 text-white outline-none"
+                  >
+                    <option value="true">Actief</option>
+                    <option value="false">Inactief</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">Rol</label>
-                <select
-                  value={newUser.role}
-                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value as User['role'] })}
-                  className="w-full px-4 py-2 bg-[#2a2a3a] border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="reports_access" className="bg-[#2a2a3a] text-white">Rapporten</option>
-                  <option value="dagelijks_access" className="bg-[#2a2a3a] text-white">Dagelijks + Rapporten</option>
-                  <option value="full_access" className="bg-[#2a2a3a] text-white">Volledige Toegang</option>
-                  <option value="admin" className="bg-[#2a2a3a] text-white">Admin</option>
-                </select>
+                <p className="mb-2 text-sm font-medium text-white/80">Rechten & toegang</p>
+                <PermissionsEditor
+                  permissions={form.permissions}
+                  onChange={(permissions) => setForm({ ...form, permissions })}
+                />
               </div>
             </div>
-            <div className="mt-4 flex gap-2">
+
+            <div className="mt-6 flex flex-wrap gap-2">
               <button
-                onClick={handleAdd}
-                className="px-6 py-2 bg-brand-green text-white rounded-lg hover:bg-emerald-600 font-semibold transition-colors"
+                type="button"
+                disabled={saving}
+                onClick={handleSave}
+                className="rounded-xl bg-[#ACE1AF] px-4 py-2.5 text-sm font-semibold text-[#141427] hover:bg-[#9dd6a1] disabled:opacity-60"
               >
-                Toevoegen
+                {saving ? 'Opslaan…' : panel === 'create' ? 'Aanmaken' : 'Wijzigingen opslaan'}
               </button>
               <button
-                onClick={() => {
-                  setShowAddForm(false);
-                  setNewUser({ username: '', password: '', role: 'reports_access' });
-                }}
-                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold transition-colors"
+                type="button"
+                onClick={closePanel}
+                className="rounded-xl border border-white/15 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5"
               >
                 Annuleren
               </button>
             </div>
           </div>
-        )}
-
-        {/* Tabla de usuarios */}
-        <div className="glass-effect rounded-lg p-6 border border-white/20">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="text-xl font-bold text-white">Gebruikerslijst</h2>
-            <label className="flex items-center gap-2 text-sm text-white/80 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showInactive}
-                onChange={(e) => setShowInactive(e.target.checked)}
-                className="w-4 h-4 rounded border-white/30"
-              />
-              Toon ook inactieve gebruikers
-            </label>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/20 bg-white/10">
-                  <th className="px-4 py-3 text-left font-semibold text-white">Gebruikersnaam</th>
-                  <th className="px-4 py-3 text-left font-semibold text-white">Rol</th>
-                  <th className="px-4 py-3 text-left font-semibold text-white">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold text-white">Laatste Login</th>
-                  <th className="px-4 py-3 text-center font-semibold text-white">Acties</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-b border-white/10 hover:bg-white/10 transition-colors">
-                    <td className="px-4 py-3 font-medium text-white">
-                      {editingId === user.id ? (
-                        <input
-                          type="text"
-                          value={editingUser.username || ''}
-                          onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value })}
-                          className="w-full px-2 py-1 text-sm bg-white/10 border border-white/20 rounded text-white focus:outline-none"
-                        />
-                      ) : (
-                        user.username
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-white">
-                      {editingId === user.id ? (
-                        <div className="space-y-2 min-w-[280px]">
-                          <div className="flex flex-wrap gap-2">
-                            {Object.entries({
-                              portal_chillouts: 'Portal Chill-outs',
-                              portal_detentions: 'Portal Nablijven',
-                              portal_o2: 'Portal O2',
-                              dagelijks: 'Dagelijks',
-                              weekoverzicht: 'Weekoverzicht',
-                              statistieken: 'Statistieken',
-                              rapporten: 'Rapporten',
-                              rapporten_docenten: 'Rapporten/docent',
-                              backup: 'Backup',
-                              students: 'Studenten',
-                              audit: 'Audit',
-                            }).map(([key, label]) => (
-                              <label key={key} className="flex items-center gap-1.5 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={editingUser.permissions?.[key as keyof typeof editingUser.permissions] || false}
-                                  onChange={(e) => {
-                                    const currentPermissions = editingUser.permissions || { ...user.permissions };
-                                    setEditingUser({
-                                      ...editingUser,
-                                      permissions: {
-                                        ...currentPermissions,
-                                        [key]: e.target.checked,
-                                      },
-                                    });
-                                  }}
-                                  className="w-4 h-4 rounded border-white/30 bg-white/10 text-brand-green focus:ring-2 focus:ring-brand-green focus:ring-offset-0 cursor-pointer"
-                                />
-                                <span className="text-xs text-white/90">{label}</span>
-                              </label>
-                            ))}
-                          </div>
-                          <select
-                            value={editingUser.role || user.role}
-                            onChange={(e) => {
-                              const role = e.target.value as User['role'];
-                              const { ROLE_PERMISSIONS } = require('@/lib/users');
-                              setEditingUser({
-                                ...editingUser,
-                                role,
-                                permissions: ROLE_PERMISSIONS[role] || editingUser.permissions,
-                              });
-                            }}
-                            className="w-full px-2 py-1 text-sm bg-[#2a2a3a] border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-brand-green"
-                          >
-                            <option value="reports_access" className="bg-[#2a2a3a] text-white">Rapporten</option>
-                            <option value="dagelijks_access" className="bg-[#2a2a3a] text-white">Dagelijks + Rapporten</option>
-                            <option value="full_access" className="bg-[#2a2a3a] text-white">Volledige Toegang</option>
-                            <option value="admin" className="bg-[#2a2a3a] text-white">Admin</option>
-                          </select>
-                          <p className="text-xs text-white/60">Selecteer sjabloon of pas individueel aan</p>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          <span className="px-2 py-1 bg-white/20 rounded text-xs">{roleLabels[user.role]}</span>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {Object.entries(user.permissions || {}).map(([key, value]) => 
-                              value && (
-                                <span key={key} className="px-1.5 py-0.5 bg-brand-green/20 text-brand-green text-[10px] rounded">
-                                  {key === 'portal_chillouts'
-                                    ? 'P-CO'
-                                      : key === 'portal_detentions'
-                                        ? 'P-Nab'
-                                      : key === 'portal_o2'
-                                        ? 'P-O2'
-                                        : key === 'dagelijks'
-                                          ? 'Dag'
-                                          : key === 'weekoverzicht'
-                                            ? 'Week'
-                                            : key === 'statistieken'
-                                              ? 'Stat'
-                                              : key === 'rapporten'
-                                                ? 'Rap'
-                                                : key === 'rapporten_docenten'
-                                                  ? 'RapDoc'
-                                                  : key === 'backup'
-                                                    ? 'Bak'
-                                                    : key === 'students'
-                                                      ? 'Stu'
-                                                      : 'Aud'}
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingId === user.id ? (
-                        <select
-                          value={editingUser.active !== undefined ? editingUser.active.toString() : ''}
-                          onChange={(e) => setEditingUser({ ...editingUser, active: e.target.value === 'true' })}
-                          className="px-2 py-1 text-sm bg-[#2a2a3a] border border-white/20 rounded text-white focus:outline-none focus:ring-2 focus:ring-brand-green"
-                        >
-                          <option value="true" className="bg-[#2a2a3a] text-white">Actief</option>
-                          <option value="false" className="bg-[#2a2a3a] text-white">Inactief</option>
-                        </select>
-                      ) : (
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          user.active
-                            ? 'bg-green-500/30 text-green-200'
-                            : 'bg-red-500/30 text-red-200'
-                        }`}>
-                          {user.active ? 'Actief' : 'Inactief'}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-white/70 text-xs">
-                      {user.last_login
-                        ? new Date(user.last_login).toLocaleString('nl-NL')
-                        : 'Nog niet ingelogd'}
-                    </td>
-                    <td className="px-4 py-3">
-                      {editingId === user.id ? (
-                        <div className="flex gap-2 justify-center">
-                          <button
-                            onClick={() => handleUpdate(user.id)}
-                            className="px-3 py-1 text-sm bg-brand-green text-white rounded hover:bg-emerald-600 transition-colors"
-                          >
-                            Opslaan
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingId(null);
-                              setEditingUser({});
-                            }}
-                            className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-                          >
-                            Annuleren
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2 justify-center">
-                          <button
-                            onClick={() => handleEdit(user)}
-                            className="px-2 py-1 text-xs bg-brand-blue text-white rounded hover:bg-blue-600 transition-colors"
-                            title="Bewerken"
-                          >
-                            ✎
-                          </button>
-                          <button
-                            onClick={() => handleResetPassword(user.id)}
-                            className="px-2 py-1 text-xs bg-brand-orange text-white rounded hover:bg-orange-600 transition-colors"
-                            title="Reset Wachtwoord"
-                          >
-                            🔑
-                          </button>
-                          <button
-                            onClick={() => handleDelete(user.id)}
-                            className="px-2 py-1 text-xs bg-brand-pink-500 text-white rounded hover:bg-brand-pink-600 transition-colors"
-                            title="Verwijderen"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
-

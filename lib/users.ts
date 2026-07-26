@@ -142,12 +142,16 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 export async function createUser(
   username: string,
   password: string,
-  role: User['role']
+  role: User['role'],
+  permissionsOverride?: Partial<UserPermissions>
 ): Promise<User> {
   const client = requireSupabase();
   const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   const passwordHash = await hashPassword(password);
-  const permissions = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.reports_access;
+  const permissions = {
+    ...(ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.reports_access),
+    ...(permissionsOverride || {}),
+  };
 
   const { data, error } = await client
     .from('users')
