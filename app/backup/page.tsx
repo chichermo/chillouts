@@ -28,6 +28,7 @@ import {
   listYearsReadyToArchive,
   type SchoolYearArchive,
 } from '@/lib/year-archive';
+import ArchiveBrowse from '@/components/backup/ArchiveBrowse';
 import type { DailyRecord, Student, Timetable } from '@/types';
 
 type CountRow = { total: number; vr: number; vl: number; generic: number };
@@ -403,8 +404,9 @@ export default function BackupPage() {
         )}
 
         <div className="mb-6 rounded-lg border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-50">
-          <strong>Alleen lezen.</strong> Gearchiveerde gegevens kun je hier raadplegen, niet
-          wijzigen.
+          <strong>Alleen lezen / onwijzigbaar.</strong> Dit archief bevat de volledige
+          studentenlijst én alle daily records van het schooljaar. Gegevens kunnen worden
+          geraadpleegd en doorzocht, maar nooit bewerkt of verwijderd.
           {range && (
             <>
               {' '}
@@ -439,157 +441,172 @@ export default function BackupPage() {
         ) : !archive ? (
           <div className="text-white/70">Archief laden…</div>
         ) : (
-          <>
-            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-              <div className="glass-effect rounded-lg border-t-3 border-white/50 p-4 shadow-md">
-                <p className="text-xs font-medium text-white/85">Totaal Chill-outs</p>
-                <p className="text-2xl font-bold text-white">{stats.totalChillOuts}</p>
-              </div>
-              <div className="glass-effect rounded-lg border-t-3 p-4 shadow-md" style={{ borderTopColor: `${COLORS.vr}80` }}>
-                <p className="text-xs font-medium text-white/85">Totaal VR</p>
-                <p className="text-2xl font-bold text-blue-200">{stats.totalVR}</p>
-              </div>
-              <div className="glass-effect rounded-lg border-t-3 p-4 shadow-md" style={{ borderTopColor: `${COLORS.vl}80` }}>
-                <p className="text-xs font-medium text-white/85">Totaal VL</p>
-                <p className="text-2xl font-bold text-emerald-200">{stats.totalVL}</p>
-              </div>
-              <div className="glass-effect rounded-lg border-t-3 border-white/40 p-4 shadow-md">
-                <p className="text-xs font-medium text-white/85">Dagen met data</p>
-                <p className="text-2xl font-bold text-white">{stats.daysWithData}</p>
-              </div>
-            </div>
+          <ArchiveBrowse
+            archive={archive}
+            statsPanel={
+              <>
+                <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+                  <div className="glass-effect rounded-lg border-t-3 border-white/50 p-4 shadow-md">
+                    <p className="text-xs font-medium text-white/85">Totaal Chill-outs</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalChillOuts}</p>
+                  </div>
+                  <div
+                    className="glass-effect rounded-lg border-t-3 p-4 shadow-md"
+                    style={{ borderTopColor: `${COLORS.vr}80` }}
+                  >
+                    <p className="text-xs font-medium text-white/85">Totaal VR</p>
+                    <p className="text-2xl font-bold text-blue-200">{stats.totalVR}</p>
+                  </div>
+                  <div
+                    className="glass-effect rounded-lg border-t-3 p-4 shadow-md"
+                    style={{ borderTopColor: `${COLORS.vl}80` }}
+                  >
+                    <p className="text-xs font-medium text-white/85">Totaal VL</p>
+                    <p className="text-2xl font-bold text-emerald-200">{stats.totalVL}</p>
+                  </div>
+                  <div className="glass-effect rounded-lg border-t-3 border-white/40 p-4 shadow-md">
+                    <p className="text-xs font-medium text-white/85">Dagen met data</p>
+                    <p className="text-2xl font-bold text-white">{stats.daysWithData}</p>
+                  </div>
+                </div>
 
-            <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div className="glass-effect rounded-lg border border-white/20 p-4 shadow-md">
-                <h2 className="mb-3 text-lg font-bold text-white">Chill-outs per Lesuur</h2>
-                <ChilloutStackedBarChart
-                  data={[1, 2, 3, 4, 5, 6, 7].map((hour) => {
-                    const h = stats.byHour[hour] || emptyCount();
-                    return { label: `L${hour}`, vr: h.vr, vl: h.vl, generic: h.generic };
-                  })}
-                  layout="vertical"
-                  height={300}
-                  ariaLabel="Backup chill-outs per lesuur"
-                />
-              </div>
-              <div className="glass-effect rounded-lg border border-white/20 p-4 shadow-md">
-                <h2 className="mb-3 text-lg font-bold text-white">Chill-outs per Klas</h2>
-                <ChilloutStackedBarChart
-                  data={klassenSorted.map((k) => ({
-                    label: k.klas,
-                    vr: k.vr,
-                    vl: k.vl,
-                    generic: k.generic,
-                  }))}
-                  layout="horizontal"
-                  height={Math.max(280, klassenSorted.length * 36)}
-                  ariaLabel="Backup chill-outs per klas"
-                />
-              </div>
-            </div>
+                <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div className="glass-effect rounded-lg border border-white/20 p-4 shadow-md">
+                    <h2 className="mb-3 text-lg font-bold text-white">Chill-outs per Lesuur</h2>
+                    <ChilloutStackedBarChart
+                      data={[1, 2, 3, 4, 5, 6, 7].map((hour) => {
+                        const h = stats.byHour[hour] || emptyCount();
+                        return { label: `L${hour}`, vr: h.vr, vl: h.vl, generic: h.generic };
+                      })}
+                      layout="vertical"
+                      height={300}
+                      ariaLabel="Backup chill-outs per lesuur"
+                    />
+                  </div>
+                  <div className="glass-effect rounded-lg border border-white/20 p-4 shadow-md">
+                    <h2 className="mb-3 text-lg font-bold text-white">Chill-outs per Klas</h2>
+                    <ChilloutStackedBarChart
+                      data={klassenSorted.map((k) => ({
+                        label: k.klas,
+                        vr: k.vr,
+                        vl: k.vl,
+                        generic: k.generic,
+                      }))}
+                      layout="horizontal"
+                      height={Math.max(280, klassenSorted.length * 36)}
+                      ariaLabel="Backup chill-outs per klas"
+                    />
+                  </div>
+                </div>
 
-            {teachersSorted.length > 0 && (
-              <div className="glass-effect mb-4 rounded-lg border border-white/20 p-4 shadow-md">
-                <h2 className="mb-1 text-lg font-bold text-white">Chill-outs per Docent</h2>
-                <StickyTableWrap>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/20 bg-white/10">
-                        <th className="px-3 py-2 text-left font-semibold text-white">#</th>
-                        <th className="px-3 py-2 text-left font-semibold text-white">Docent</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">Totaal</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">VR</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">VL</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teachersSorted.map((t, index) => (
-                        <tr key={t.teacher} className="border-b border-white/10 hover:bg-white/10">
-                          <td className="px-3 py-2 text-xs text-white/50">{index + 1}</td>
-                          <td className="px-3 py-2 font-medium text-white">{t.teacher}</td>
-                          <td className="px-3 py-2 text-center font-semibold text-white">{t.total}</td>
-                          <td className="px-3 py-2 text-center text-blue-200">{t.vr}</td>
-                          <td className="px-3 py-2 text-center text-emerald-200">{t.vl}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </StickyTableWrap>
-              </div>
-            )}
+                {teachersSorted.length > 0 && (
+                  <div className="glass-effect mb-4 rounded-lg border border-white/20 p-4 shadow-md">
+                    <h2 className="mb-1 text-lg font-bold text-white">Chill-outs per Docent</h2>
+                    <StickyTableWrap>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/20 bg-white/10">
+                            <th className="px-3 py-2 text-left font-semibold text-white">#</th>
+                            <th className="px-3 py-2 text-left font-semibold text-white">Docent</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">Totaal</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">VR</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">VL</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {teachersSorted.map((t, index) => (
+                            <tr key={t.teacher} className="border-b border-white/10 hover:bg-white/10">
+                              <td className="px-3 py-2 text-xs text-white/50">{index + 1}</td>
+                              <td className="px-3 py-2 font-medium text-white">{t.teacher}</td>
+                              <td className="px-3 py-2 text-center font-semibold text-white">
+                                {t.total}
+                              </td>
+                              <td className="px-3 py-2 text-center text-blue-200">{t.vr}</td>
+                              <td className="px-3 py-2 text-center text-emerald-200">{t.vl}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </StickyTableWrap>
+                  </div>
+                )}
 
-            {studentsSorted.length > 0 && (
-              <div className="glass-effect mb-4 rounded-lg border border-white/20 p-4 shadow-md">
-                <h2 className="mb-1 text-lg font-bold text-white">Chill-outs per Student</h2>
-                <StickyTableWrap>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/20 bg-white/10">
-                        <th className="px-3 py-2 text-left font-semibold text-white">#</th>
-                        <th className="px-3 py-2 text-left font-semibold text-white">Naam</th>
-                        <th className="px-3 py-2 text-left font-semibold text-white">Klas</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">Totaal</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">VR</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">VL</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {studentsSorted.map((student, index) => (
-                        <tr key={student.id} className="border-b border-white/10 hover:bg-white/10">
-                          <td className="px-3 py-2 text-xs text-white/50">{index + 1}</td>
-                          <td className="px-3 py-2 font-medium text-white">{student.name}</td>
-                          <td className="px-3 py-2">
-                            <span className="rounded bg-white/20 px-2 py-0.5 text-xs text-white">
-                              {student.klas}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 text-center font-semibold text-white">
-                            {student.total}
-                          </td>
-                          <td className="px-3 py-2 text-center text-blue-200">{student.vr}</td>
-                          <td className="px-3 py-2 text-center text-emerald-200">{student.vl}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </StickyTableWrap>
-              </div>
-            )}
+                {studentsSorted.length > 0 && (
+                  <div className="glass-effect mb-4 rounded-lg border border-white/20 p-4 shadow-md">
+                    <h2 className="mb-1 text-lg font-bold text-white">Chill-outs per Student</h2>
+                    <StickyTableWrap>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/20 bg-white/10">
+                            <th className="px-3 py-2 text-left font-semibold text-white">#</th>
+                            <th className="px-3 py-2 text-left font-semibold text-white">Naam</th>
+                            <th className="px-3 py-2 text-left font-semibold text-white">Klas</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">Totaal</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">VR</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">VL</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {studentsSorted.map((student, index) => (
+                            <tr key={student.id} className="border-b border-white/10 hover:bg-white/10">
+                              <td className="px-3 py-2 text-xs text-white/50">{index + 1}</td>
+                              <td className="px-3 py-2 font-medium text-white">{student.name}</td>
+                              <td className="px-3 py-2">
+                                <span className="rounded bg-white/20 px-2 py-0.5 text-xs text-white">
+                                  {student.klas}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-center font-semibold text-white">
+                                {student.total}
+                              </td>
+                              <td className="px-3 py-2 text-center text-blue-200">{student.vr}</td>
+                              <td className="px-3 py-2 text-center text-emerald-200">
+                                {student.vl}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </StickyTableWrap>
+                  </div>
+                )}
 
-            {stats.byDay.length > 0 && (
-              <div className="glass-effect rounded-lg border border-white/20 p-4 shadow-md">
-                <h2 className="mb-1 text-lg font-bold text-white">Chill-outs per Dag</h2>
-                <StickyTableWrap>
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-white/20 bg-white/10">
-                        <th className="px-3 py-2 text-left font-semibold text-white">#</th>
-                        <th className="px-3 py-2 text-left font-semibold text-white">Datum</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">Totaal</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">VR</th>
-                        <th className="px-3 py-2 text-center font-semibold text-white">VL</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stats.byDay.map((day, index) => (
-                        <tr key={day.date} className="border-b border-white/10 hover:bg-white/10">
-                          <td className="px-3 py-2 text-xs text-white/50">{index + 1}</td>
-                          <td className="px-3 py-2 text-white">
-                            {formatDateDisplay(new Date(`${day.date}T12:00:00`))}
-                          </td>
-                          <td className="px-3 py-2 text-center font-semibold text-white">
-                            {day.total}
-                          </td>
-                          <td className="px-3 py-2 text-center text-blue-200">{day.vr}</td>
-                          <td className="px-3 py-2 text-center text-emerald-200">{day.vl}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </StickyTableWrap>
-              </div>
-            )}
-          </>
+                {stats.byDay.length > 0 && (
+                  <div className="glass-effect rounded-lg border border-white/20 p-4 shadow-md">
+                    <h2 className="mb-1 text-lg font-bold text-white">Chill-outs per Dag</h2>
+                    <StickyTableWrap>
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/20 bg-white/10">
+                            <th className="px-3 py-2 text-left font-semibold text-white">#</th>
+                            <th className="px-3 py-2 text-left font-semibold text-white">Datum</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">Totaal</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">VR</th>
+                            <th className="px-3 py-2 text-center font-semibold text-white">VL</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {stats.byDay.map((day, index) => (
+                            <tr key={day.date} className="border-b border-white/10 hover:bg-white/10">
+                              <td className="px-3 py-2 text-xs text-white/50">{index + 1}</td>
+                              <td className="px-3 py-2 text-white">
+                                {formatDateDisplay(new Date(`${day.date}T12:00:00`))}
+                              </td>
+                              <td className="px-3 py-2 text-center font-semibold text-white">
+                                {day.total}
+                              </td>
+                              <td className="px-3 py-2 text-center text-blue-200">{day.vr}</td>
+                              <td className="px-3 py-2 text-center text-emerald-200">{day.vl}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </StickyTableWrap>
+                  </div>
+                )}
+              </>
+            }
+          />
         )}
       </div>
     </div>

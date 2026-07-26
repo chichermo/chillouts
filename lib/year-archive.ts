@@ -1,5 +1,5 @@
 import { supabase, isSupabaseEnabled } from './supabase';
-import { countChillOutsInRecord } from './utils';
+import { countChillOutsInRecord, countChillOutsInStudentEntries, getHourSlot } from './utils';
 import { getAppSetting, setAppSetting } from './app-settings';
 import {
   getSchoolYear,
@@ -83,34 +83,110 @@ async function loadAllStudents(): Promise<Student[]> {
   return (data || []) as Student[];
 }
 
-async function saveArchiveToTable(archive: SchoolYearArchive): Promise<boolean> {
+async function saveArchiveToTable(
+  archive: SchoolYearArchive,
+  force = false
+): Promise<boolean> {
   const client = requireSupabase();
-  const { error } = await client.from('school_year_archives').upsert(
-    {
-      year: archive.year,
-      from_date: archive.from_date,
-      to_date: archive.to_date,
-      archived_at: archive.archived_at,
-      archived_by: archive.archived_by || null,
-      students_count: archive.students_count,
-      records_count: archive.records_count,
-      chillouts_total: archive.chillouts_total,
-      students: archive.students,
-      daily_records: archive.daily_records,
-      timetables: archive.timetables,
-      meta: archive.meta || {},
-    },
-    { onConflict: 'year' }
-  );
+  if (!force) {
+    const { data: existing, error: findErr } = await client
+      .from('school_year_archives')
+      .select('year')
+      .eq('year', archive.year)
+      .maybeSingle();
+    if (findErr && !isMissingTableError(findErr)) throw findErr;
+    if (existing) {
+      throw new Error(
+        `Archief ${archive.year} is onwijzigbaar en bestaat al. Overschrijven is niet toegestaan.`
+      );
+    }
+  }
+
+  const row = {
+    year: archive.year,
+    from_date: archive.from_date,
+    to_date: archive.to_date,
+    archived_at: archive.archived_at,
+    archived_by: archive.archived_by || null,
+    students_count: archive.students_count,
+    records_count: archive.records_count,
+    chillouts_total: archive.chillouts_total,
+    students: archive.students,
+    daily_records: archive.daily_records,
+    timetables: archive.timetables,
+    meta: { ...(archive.meta || {}), immutable: true, readonly: true },
+  };
+
+  const { error } = force
+    ? await client.from('school_year_archives').upsert(row, { onConflict: 'year' })
+    : await client.from('school_year_archives').insert(row);
+
   if (error) {
     if (isMissingTableError(error)) return false;
     throw error;
   }
+
+  // Optionele genormaliseerde tabellen (voor snelle consultatie)
+  await syncNormalizedArchiveTables(archive).catch(() => undefined);
   return true;
 }
 
-async function saveArchiveToSettings(archive: SchoolYearArchive): Promise<void> {
-  await setAppSetting(settingsKey(archive.year), archive);
+async function saveArchiveToSettings(
+  archive: SchoolYearArchive,
+  force = false
+): Promise<void> {
+  const key = settingsKey(archive.year);
+  if (!force) {
+    const existing = await getAppSetting<SchoolYearArchive>(key);
+    if (existing) {
+      throw new Error(
+        `Archief ${archive.year} is onwijzigbaar en bestaat al. Overschrijven is niet toegestaan.`
+      );
+    }
+  }
+  await setAppSetting(key, {
+    ...archive,
+    meta: { ...(archive.meta || {}), immutable: true, readonly: true },
+  });
+  await syncNormalizedArchiveTables(archive).catch(() => undefined);
+}
+
+/** Schrijf rijen naar archived_students / archived_daily_records als die tabellen bestaan. */
+async function syncNormalizedArchiveTables(archive: SchoolYearArchive): Promise<void> {
+  const client = requireSupabase();
+
+  const studentRows = archive.students.map((s) => ({
+    year: archive.year,
+    student_id: s.id,
+    name: s.name,
+    klas: s.klas,
+    status: s.status,
+  }));
+
+  if (studentRows.length) {
+    const { error } = await client.from('archived_students').upsert(studentRows, {
+      onConflict: 'year,student_id',
+    });
+    if (error && !isMissingTableError(error)) throw error;
+  }
+
+  const recordRows = Object.values(archive.daily_records).map((r) => ({
+    year: archive.year,
+    date: r.date,
+    day_name: r.dayName,
+    entries: r.entries,
+  }));
+
+  if (recordRows.length) {
+    const chunk = 40;
+    for (let i = 0; i < recordRows.length; i += chunk) {
+      const slice = recordRows.slice(i, i + chunk);
+      const { error } = await client.from('archived_daily_records').upsert(slice, {
+        onConflict: 'year,date',
+      });
+      if (error && !isMissingTableError(error)) throw error;
+    }
+  }
 }
 
 async function listArchivesFromTable(): Promise<SchoolYearArchive[] | null> {
@@ -252,15 +328,22 @@ export async function archiveAndPurgeSchoolYear(
     },
   };
 
-  const savedToTable = await saveArchiveToTable(archive);
+  const savedToTable = await saveArchiveToTable(archive, !!options?.force);
   if (!savedToTable) {
-    await saveArchiveToSettings(archive);
+    await saveArchiveToSettings(archive, !!options?.force);
   }
 
-  // Verify archive readable before purge
+  // Verify archive readable before purge — must include students + daily_records
   const verified = await getSchoolYearArchive(year);
-  if (!verified || verified.records_count !== archive.records_count) {
-    throw new Error('Archief kon niet worden geverifieerd. Er is niets verwijderd.');
+  if (
+    !verified ||
+    verified.records_count !== archive.records_count ||
+    !verified.students?.length ||
+    Object.keys(verified.daily_records || {}).length !== archive.records_count
+  ) {
+    throw new Error(
+      'Archief kon niet worden geverifieerd (studenten + daily records vereist). Er is niets verwijderd.'
+    );
   }
 
   const client = requireSupabase();
@@ -325,3 +408,208 @@ export async function listYearsReadyToArchive(): Promise<string[]> {
   }
   return ready;
 }
+
+/** Alleen-lezen helpers voor consultatie van gearchiveerde studenten/dagen. */
+
+export type ArchivedStudentRow = Student & {
+  chilloutsTotal: number;
+  daysWithChillouts: number;
+};
+
+export type ArchivedDayRow = {
+  date: string;
+  dayName: string;
+  total: number;
+  vr: number;
+  vl: number;
+  generic: number;
+  studentsPresent: number;
+};
+
+export function queryArchivedStudents(
+  archive: SchoolYearArchive,
+  options?: { query?: string; klas?: string }
+): ArchivedStudentRow[] {
+  const q = (options?.query || '').trim().toLowerCase();
+  const klasFilter = (options?.klas || '').trim().toLowerCase();
+  const rows: ArchivedStudentRow[] = [];
+
+  for (const student of archive.students || []) {
+    if (q && !student.name.toLowerCase().includes(q) && !student.klas.toLowerCase().includes(q)) {
+      continue;
+    }
+    if (klasFilter && student.klas.toLowerCase() !== klasFilter) continue;
+
+    let chilloutsTotal = 0;
+    let daysWithChillouts = 0;
+    for (const record of Object.values(archive.daily_records || {})) {
+      const entries = record.entries?.[student.id];
+      if (!entries) continue;
+      const c = countChillOutsInRecord({
+        date: record.date,
+        dayName: record.dayName,
+        entries: { [student.id]: entries },
+      }).total;
+      if (c > 0) {
+        chilloutsTotal += c;
+        daysWithChillouts += 1;
+      }
+    }
+
+    rows.push({ ...student, chilloutsTotal, daysWithChillouts });
+  }
+
+  return rows.sort(
+    (a, b) =>
+      b.chilloutsTotal - a.chilloutsTotal ||
+      a.name.localeCompare(b.name, 'nl') ||
+      a.klas.localeCompare(b.klas, 'nl')
+  );
+}
+
+export function queryArchivedDays(
+  archive: SchoolYearArchive,
+  options?: { from?: string; to?: string; query?: string }
+): ArchivedDayRow[] {
+  const from = options?.from || archive.from_date;
+  const to = options?.to || archive.to_date;
+  const q = (options?.query || '').trim().toLowerCase();
+  const rows: ArchivedDayRow[] = [];
+
+  for (const record of Object.values(archive.daily_records || {})) {
+    if (record.date < from || record.date > to) continue;
+    if (q && !record.date.includes(q) && !(record.dayName || '').toLowerCase().includes(q)) {
+      continue;
+    }
+    const counts = countChillOutsInRecord(record);
+    const studentsPresent = Object.keys(record.entries || {}).filter((id) => {
+      const c = countChillOutsInRecord({
+        date: record.date,
+        dayName: record.dayName,
+        entries: { [id]: record.entries[id] },
+      }).total;
+      return c > 0;
+    }).length;
+
+    rows.push({
+      date: record.date,
+      dayName: record.dayName,
+      total: counts.total,
+      vr: counts.vr,
+      vl: counts.vl,
+      generic: counts.generic,
+      studentsPresent,
+    });
+  }
+
+  return rows.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export function getArchivedStudentTimeline(
+  archive: SchoolYearArchive,
+  studentId: string
+): Array<{ date: string; dayName: string; total: number; vr: number; vl: number; generic: number; hours: number[] }> {
+  const out: Array<{
+    date: string;
+    dayName: string;
+    total: number;
+    vr: number;
+    vl: number;
+    generic: number;
+    hours: number[];
+  }> = [];
+
+  for (const record of Object.values(archive.daily_records || {})) {
+    const entries = record.entries?.[studentId];
+    if (!entries) continue;
+    const counts = countChillOutsInRecord({
+      date: record.date,
+      dayName: record.dayName,
+      entries: { [studentId]: entries },
+    });
+    if (counts.total === 0) continue;
+    const hours: number[] = [];
+    for (let h = 1; h <= 7; h++) {
+      const slot = (entries as Record<string | number, unknown>)[h] ?? (entries as Record<string | number, unknown>)[String(h)];
+      if (slot == null) continue;
+      if (Array.isArray(slot) && slot.length > 0) hours.push(h);
+      else if (!Array.isArray(slot) && slot) hours.push(h);
+    }
+    out.push({
+      date: record.date,
+      dayName: record.dayName,
+      total: counts.total,
+      vr: counts.vr,
+      vl: counts.vl,
+      generic: counts.generic,
+      hours,
+    });
+  }
+
+  return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function getArchivedDayDetail(
+  archive: SchoolYearArchive,
+  date: string
+): {
+  record: DailyRecord | null;
+  rows: Array<{
+    studentId: string;
+    name: string;
+    klas: string;
+    total: number;
+    vr: number;
+    vl: number;
+    generic: number;
+    byHour: Record<number, number>;
+  }>;
+} {
+  const record = archive.daily_records?.[date] || null;
+  if (!record) return { record: null, rows: [] };
+  const byId = new Map((archive.students || []).map((s) => [s.id, s]));
+  const rows: Array<{
+    studentId: string;
+    name: string;
+    klas: string;
+    total: number;
+    vr: number;
+    vl: number;
+    generic: number;
+    byHour: Record<number, number>;
+  }> = [];
+
+  for (const [studentId, entries] of Object.entries(record.entries || {})) {
+    const studentEntries = entries as Record<string | number, unknown>;
+    const counts = countChillOutsInStudentEntries(studentEntries);
+    if (counts.total === 0) continue;
+    const student = byId.get(studentId);
+    const byHour: Record<number, number> = {};
+    for (let h = 1; h <= 7; h++) {
+      const slot = getHourSlot(studentEntries, h);
+      const hourCount = countChillOutsInStudentEntries({ [h]: slot }).total;
+      if (hourCount > 0) byHour[h] = hourCount;
+    }
+    rows.push({
+      studentId,
+      name: student?.name || studentId,
+      klas: student?.klas || '(Onbekend)',
+      total: counts.total,
+      vr: counts.vr,
+      vl: counts.vl,
+      generic: counts.generic,
+      byHour,
+    });
+  }
+
+  rows.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name, 'nl'));
+  return { record, rows };
+}
+
+/** Hard blok: archieven mogen nooit via de app worden gewijzigd/verwijderd. */
+export function assertArchiveImmutable(): never {
+  throw new Error(
+    'Gearchiveerde gegevens zijn alleen-lezen en kunnen niet worden gewijzigd of verwijderd.'
+  );
+}
+
