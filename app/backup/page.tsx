@@ -143,7 +143,7 @@ function buildStatsForYear(
 
           const teacher =
             timetable && recordDate
-              ? getTeacherForSlot(timetable, recordDate, hour) || '(Onbekend)'
+              ? getTeacherForSlot(timetable.slots, recordDate, hour) || '(Onbekend)'
               : '(Onbekend)';
           if (teacher === '(Onbekend)') teachersWithoutRoster += 1;
           if (!byTeacher[teacher]) byTeacher[teacher] = emptyCount();
