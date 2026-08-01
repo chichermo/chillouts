@@ -21,6 +21,28 @@ import type { Timetable, TimetableSlots } from '@/types';
 import { sortKlassen } from '@/lib/utils';
 import { isAdmin } from '@/lib/auth';
 
+const SELECTED_YEAR_KEY = 'chillouts_selected_timetable_year';
+
+function sortYearsDesc(years: string[]): string[] {
+  return [...new Set(years.filter(Boolean))].sort((a, b) => b.localeCompare(a, 'nl'));
+}
+
+function readStoredYear(): string | null {
+  try {
+    return localStorage.getItem(SELECTED_YEAR_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeSelectedYear(year: string) {
+  try {
+    if (year) localStorage.setItem(SELECTED_YEAR_KEY, year);
+  } catch {
+    /* ignore */
+  }
+}
+
 function focusTimetableCell(klas: string, dayIndex: number, hour: number): boolean {
   const inputs = document.querySelectorAll<HTMLInputElement>('input[data-timetable-cell]');
   for (const input of inputs) {
@@ -102,10 +124,24 @@ export default function TimetablesPage() {
       setKlassenFromStudents(klassen);
 
       try {
-        const y = await getTimetableYears();
+        const fromDb = await getTimetableYears();
         const schoolYear = getSchoolYear(new Date());
-        setYears(y.length > 0 ? y : [schoolYear]);
-        setSelectedYear((prev) => prev || y[0] || schoolYear);
+        const stored = readStoredYear();
+        // Nieuwste jaar eerst; bewaar handmatig toegevoegde jaren (bv. 2026-2027)
+        // ook als er nog geen rooster-rijen in de DB staan.
+        const merged = sortYearsDesc([
+          ...fromDb,
+          schoolYear,
+          ...(stored ? [stored] : []),
+        ]);
+        setYears(merged.length > 0 ? merged : [schoolYear]);
+
+        const preferred =
+          (stored && merged.includes(stored) && stored) ||
+          merged[0] ||
+          schoolYear;
+        setSelectedYear(preferred);
+        storeSelectedYear(preferred);
       } catch (err) {
         console.error(err);
         alert(
@@ -261,8 +297,9 @@ export default function TimetablesPage() {
       alert('Dit jaar bestaat al.');
       return;
     }
-    setYears((prev) => [...prev, y].sort().reverse());
+    setYears((prev) => sortYearsDesc([...prev, y]));
     setSelectedYear(y);
+    storeSelectedYear(y);
     setNewYearInput('');
     setShowAddYear(false);
   };
@@ -425,7 +462,11 @@ export default function TimetablesPage() {
             <label className="text-white font-medium">Schooljaar:</label>
             <select
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
+              onChange={(e) => {
+                const y = e.target.value;
+                setSelectedYear(y);
+                storeSelectedYear(y);
+              }}
               className="px-3 py-2 rounded bg-white/10 text-white border border-white/20"
             >
               {years.map((y) => (
