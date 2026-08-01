@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student } from '@/types';
-import { loadData, addStudent, updateStudent, deleteStudent, saveData, renameKlas, deleteKlas } from '@/lib/storage';
+import { loadData, addStudent, addStudentsBulk, updateStudent, deleteStudent, saveData, renameKlas, deleteKlas } from '@/lib/storage';
 import { sortKlassen } from '@/lib/utils';
+import StudentBulkImport, { type BulkPreviewRow } from '@/components/StudentBulkImport';
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -17,6 +18,7 @@ export default function StudentsPage() {
   const [newKlasName, setNewKlasName] = useState('');
   const [editingKlas, setEditingKlas] = useState<string | null>(null);
   const [newKlasNameForEdit, setNewKlasNameForEdit] = useState('');
+  const [showBulk, setShowBulk] = useState(false);
 
   useEffect(() => {
     const loadStudents = async () => {
@@ -108,6 +110,19 @@ export default function StudentsPage() {
     setTimeout(() => setShowSuccess(false), 3000);
   };
 
+  const handleBulkConfirm = async (rows: BulkPreviewRow[]) => {
+    const { saved, students: created } = await addStudentsBulk(rows);
+    const data = await loadData();
+    setStudents(data.students);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+    if (!saved) throw new Error('Geen leerlingen opgeslagen');
+    // Keep list in sync even if load raced
+    if (created.length && data.students.length === 0) {
+      setStudents([...students, ...created]);
+    }
+  };
+
   const handleUpdate = async (id: string, updates: Partial<Student>) => {
     await updateStudent(id, updates);
     setStudents(students.map(s => s.id === id ? { ...s, ...updates } : s));
@@ -187,14 +202,30 @@ export default function StudentsPage() {
       </div>
       <Navigation />
       <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-            Beheer van Studenten
-          </h1>
-          <p className="text-sm text-white/90">
-            Wijzig studenten hier. De dagelijkse bladen worden automatisch bijgewerkt.
-          </p>
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
+              Beheer van Studenten
+            </h1>
+            <p className="text-sm text-white/90">
+              Wijzig studenten hier. De dagelijkse bladen worden automatisch bijgewerkt.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowBulk((v) => !v)}
+            className="px-4 py-2 text-sm bg-white/15 text-white rounded-lg hover:bg-white/25 border border-white/20 font-medium"
+          >
+            {showBulk ? 'Verberg bulk import' : 'Bulk / Excel import'}
+          </button>
         </div>
+
+        {showBulk && (
+          <StudentBulkImport
+            defaultKlas={filterKlas}
+            onConfirm={handleBulkConfirm}
+          />
+        )}
 
         {/* Sección de gestión de clases */}
         <div className="glass-effect p-4 rounded-lg shadow-md mb-6 border border-white/20">

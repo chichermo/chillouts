@@ -332,6 +332,43 @@ export async function addStudent(student: Omit<Student, 'id'>): Promise<Student>
   return newStudent;
 }
 
+/** Bulk upsert leerlingen (behoudt volgorde van de importlijst). */
+export async function addStudentsBulk(
+  rows: Array<Omit<Student, 'id'> | Student>
+): Promise<{ saved: number; students: Student[] }> {
+  if (!isSupabaseEnabled || !supabase) {
+    throw new Error(
+      'Supabase is niet geconfigureerd. Zet NEXT_PUBLIC_SUPABASE_URL en NEXT_PUBLIC_SUPABASE_ANON_KEY in.'
+    );
+  }
+
+  const stamp = Date.now();
+  const students: Student[] = rows
+    .map((row, index) => {
+      const status: Student['status'] = row.status === 'Inactief' ? 'Inactief' : 'Actief';
+      return {
+        id: 'id' in row && row.id ? row.id : `student_${stamp}_${index}`,
+        name: String(row.name || '').trim(),
+        klas: String(row.klas || '').trim(),
+        status,
+      };
+    })
+    .filter((s) => s.name && s.klas);
+
+  if (!students.length) {
+    throw new Error('Geen geldige leerlingen om op te slaan.');
+  }
+
+  const chunkSize = 100;
+  for (let i = 0; i < students.length; i += chunkSize) {
+    const chunk = students.slice(i, i + chunkSize);
+    const { error } = await supabase.from('students').upsert(chunk, { onConflict: 'id' });
+    if (error) throw error;
+  }
+
+  return { saved: students.length, students };
+}
+
 export async function updateStudent(studentId: string, updates: Partial<Student>): Promise<void> {
   const data = await loadData();
   const index = data.students.findIndex(s => s.id === studentId);

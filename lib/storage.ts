@@ -6,6 +6,7 @@ export {
   saveData,
   saveDailyRecords,
   addStudent,
+  addStudentsBulk,
   updateStudent,
   deleteStudent,
   saveDailyRecord,
