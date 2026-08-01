@@ -50,5 +50,9 @@ export const PORTALS: PortalDef[] = [
 ];
 
 export function getVisiblePortals(user: User | null): PortalDef[] {
-  return PORTALS.filter((portal) => hasPermission(user, portal.permission));
+  return PORTALS.filter((portal) => {
+    // Nablijven: alle ingelogde actieve gebruikers
+    if (portal.id === 'detentions') return !!user?.active;
+    return hasPermission(user, portal.permission);
+  });
 }
