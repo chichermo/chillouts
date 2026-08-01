@@ -52,3 +52,4 @@ imported_data.json
 
 # Logs
 *.log
+.env*
