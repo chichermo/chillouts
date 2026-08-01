@@ -17,6 +17,9 @@ export type PortalDef = {
 export const DETENTIONS_APP_URL =
   process.env.NEXT_PUBLIC_DETENTIONS_URL || 'https://detentions.vercel.app';
 
+export const O2_APP_URL =
+  process.env.NEXT_PUBLIC_O2_URL || 'https://o2-nu-three.vercel.app';
+
 export const PORTALS: PortalDef[] = [
   {
     id: 'chillouts',
@@ -39,9 +42,9 @@ export const PORTALS: PortalDef[] = [
     id: 'o2',
     permission: 'portal_o2',
     title: 'O2',
-    subtitle: 'Incidenten met impact — binnenkort beschikbaar.',
-    href: '/o2',
-    comingSoon: true,
+    subtitle: 'Incidenten met impact registreren en opvolgen.',
+    href: O2_APP_URL,
+    external: true,
     accent: '#C2E0FC',
   },
 ];

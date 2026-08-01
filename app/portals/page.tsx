@@ -35,10 +35,6 @@ export default function PortalsPage() {
 
   const openPortal = async (portal: PortalDef) => {
     setError('');
-    if (portal.comingSoon && portal.id === 'o2') {
-      router.push('/o2');
-      return;
-    }
 
     if (portal.id === 'chillouts') {
       if (!hasPermission(user, 'portal_chillouts')) {
