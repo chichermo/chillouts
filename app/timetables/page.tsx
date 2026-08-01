@@ -290,7 +290,6 @@ export default function TimetablesPage() {
 
   const handleDeleteKlas = async (klas: string) => {
     const hasStudents = klassenFromStudents.includes(klas);
-    const hasTimetable = !!getTimetableForKlas(klas);
     const msg = hasStudents
       ? `Klas "${klas}" uit de roosters verwijderen?\n\nHet rooster voor ${selectedYear} wordt gewist. Studenten in deze klas blijven bestaan (beheer via Studenten).`
       : `Klas "${klas}" uit de roosters verwijderen?`;
