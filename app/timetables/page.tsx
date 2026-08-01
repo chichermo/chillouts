@@ -10,6 +10,7 @@ import {
   getTimetableYears,
   seedTimetablesForKlassen,
   clearAllTimetableSlots,
+  deleteTimetableForKlas,
   getSchoolYear,
   timetableId,
   DAY_NAMES,
@@ -87,6 +88,8 @@ export default function TimetablesPage() {
   const [seeding, setSeeding] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const [hiddenKlassen, setHiddenKlassen] = useState<string[]>([]);
+  const [deletingKlas, setDeletingKlas] = useState<string | null>(null);
 
   useEffect(() => {
     setUserIsAdmin(isAdmin());
@@ -119,19 +122,23 @@ export default function TimetablesPage() {
   useEffect(() => {
     if (!selectedYear) {
       setTimetables([]);
+      setHiddenKlassen([]);
       setLoading(false);
       return;
     }
     setLoading(true);
+    setHiddenKlassen([]);
     loadTimetables(selectedYear).then((t) => {
       setTimetables(t);
       setLoading(false);
     });
   }, [selectedYear]);
 
-  const allKlassen = [
-    ...new Set([...klassenFromStudents, ...timetables.map((t) => t.klas)]),
-  ].sort();
+  const allKlassen = sortKlassen(
+    [...new Set([...klassenFromStudents, ...timetables.map((t) => t.klas)])].filter(
+      (k) => !hiddenKlassen.includes(k)
+    )
+  );
 
   const getTimetableForKlas = (klas: string): Timetable | undefined =>
     timetables.find((t) => t.klas === klas);
@@ -263,10 +270,11 @@ export default function TimetablesPage() {
   const handleAddKlas = () => {
     const k = newKlasInput.trim();
     if (!k) return;
-    if (allKlassen.includes(k)) {
+    if (allKlassen.includes(k) || timetables.some((t) => t.klas === k)) {
       alert('Deze klas bestaat al.');
       return;
     }
+    setHiddenKlassen((prev) => prev.filter((x) => x !== k));
     setTimetables((prev) => [
       ...prev,
       {
@@ -278,6 +286,27 @@ export default function TimetablesPage() {
     ]);
     setNewKlasInput('');
     setShowAddKlas(false);
+  };
+
+  const handleDeleteKlas = async (klas: string) => {
+    const hasStudents = klassenFromStudents.includes(klas);
+    const hasTimetable = !!getTimetableForKlas(klas);
+    const msg = hasStudents
+      ? `Klas "${klas}" uit de roosters verwijderen?\n\nHet rooster voor ${selectedYear} wordt gewist. Studenten in deze klas blijven bestaan (beheer via Studenten).`
+      : `Klas "${klas}" uit de roosters verwijderen?`;
+    if (!confirm(msg)) return;
+
+    setDeletingKlas(klas);
+    try {
+      await deleteTimetableForKlas(selectedYear, klas);
+      setTimetables((prev) => prev.filter((t) => t.klas !== klas));
+      setHiddenKlassen((prev) => (prev.includes(klas) ? prev : [...prev, klas]));
+      setSeedMsg(`Klas "${klas}" verwijderd uit roosters.`);
+    } catch (e) {
+      alert('Fout bij verwijderen: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    } finally {
+      setDeletingKlas(null);
+    }
   };
 
   if (!selectedYear && years.length === 0 && !showAddYear) {
@@ -492,7 +521,18 @@ export default function TimetablesPage() {
                     key={klas}
                     className="glass-effect rounded-lg p-6 border border-white/20 overflow-x-auto"
                   >
-                    <h2 className="text-xl font-bold text-white mb-4">{klas}</h2>
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <h2 className="text-xl font-bold text-white">{klas}</h2>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteKlas(klas)}
+                        disabled={deletingKlas === klas}
+                        className="px-3 py-1.5 text-sm rounded-lg bg-red-600/80 text-white hover:bg-red-600 disabled:opacity-50 border border-red-400/30"
+                        title="Klas uit roosters verwijderen"
+                      >
+                        {deletingKlas === klas ? 'Bezig…' : 'Klas wissen'}
+                      </button>
+                    </div>
                     <table className="w-full text-sm border-collapse">
                       <thead>
                         <tr>

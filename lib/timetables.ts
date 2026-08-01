@@ -263,6 +263,24 @@ export async function deleteTimetable(id: string): Promise<void> {
   }
 }
 
+/** Verwijder rooster voor een klas in een schooljaar (op id én year+klas). */
+export async function deleteTimetableForKlas(year: string, klas: string): Promise<void> {
+  const client = requireSupabase();
+  try {
+    const id = timetableId(year, klas);
+    const byId = await client.from('timetables').delete().eq('id', id);
+    if (byId.error) throw byId.error;
+    const byPair = await client
+      .from('timetables')
+      .delete()
+      .eq('year', year)
+      .eq('klas', klas);
+    if (byPair.error) throw byPair.error;
+  } catch (e) {
+    throw wrapTimetablesError(e);
+  }
+}
+
 /** Haal schooljaren op die roosters hebben in Supabase */
 /** Maak lege rooster-rijen aan voor alle klassen (slots invullen in UI) */
 export async function seedTimetablesForKlassen(
