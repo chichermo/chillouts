@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { O2_APP_URL } from '@/lib/portals';
 import { getCurrentUser, hasPermission, refreshCurrentUserFromDb } from '@/lib/auth';
 
-/** Redirect naar de externe O2-app (gedeelde Element-portalen). */
+/** Redirect naar de externe O2-app via portal SSO. */
 export default function O2PortalRedirectPage() {
   const router = useRouter();
+  const [message, setMessage] = useState('O2 openen…');
 
   useEffect(() => {
     const go = async () => {
@@ -17,14 +17,32 @@ export default function O2PortalRedirectPage() {
         router.replace('/portals');
         return;
       }
-      window.location.href = O2_APP_URL;
+      try {
+        const res = await fetch('/api/portal-sso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target: 'o2',
+            username: user.username,
+            role: user.role,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data?.url) {
+          throw new Error(data?.error || 'SSO mislukt');
+        }
+        window.location.href = data.url;
+      } catch {
+        setMessage('Kon O2 niet openen. Ga terug naar portalen.');
+        setTimeout(() => router.replace('/portals'), 1500);
+      }
     };
     go();
   }, [router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#14141f] text-white">
-      <p className="text-sm text-white/60">O2 openen…</p>
+      <p className="text-sm text-white/60">{message}</p>
     </div>
   );
 }

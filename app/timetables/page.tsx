@@ -20,6 +20,7 @@ import {
 import type { Timetable, TimetableSlots } from '@/types';
 import { sortKlassen } from '@/lib/utils';
 import { isAdmin } from '@/lib/auth';
+import RoosterBulkImport from '@/components/RoosterBulkImport';
 
 const SELECTED_YEAR_KEY = 'chillouts_selected_timetable_year';
 
@@ -112,6 +113,7 @@ export default function TimetablesPage() {
   const [userIsAdmin, setUserIsAdmin] = useState(false);
   const [hiddenKlassen, setHiddenKlassen] = useState<string[]>([]);
   const [deletingKlas, setDeletingKlas] = useState<string | null>(null);
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   useEffect(() => {
     setUserIsAdmin(isAdmin());
@@ -345,6 +347,28 @@ export default function TimetablesPage() {
     }
   };
 
+  const handleBulkImportConfirm = async (
+    rows: Array<{ klas: string; slots: TimetableSlots }>
+  ) => {
+    if (!selectedYear) throw new Error('Geen schooljaar geselecteerd.');
+
+    for (const row of rows) {
+      await saveTimetable({
+        id: timetableId(selectedYear, row.klas),
+        year: selectedYear,
+        klas: row.klas,
+        slots: row.slots,
+      });
+    }
+
+    setHiddenKlassen([]);
+    const loaded = await loadTimetables(selectedYear);
+    setTimetables(loaded);
+    setSeedMsg(
+      `${rows.length} roosters geïmporteerd voor ${selectedYear}. Controleer de docentnamen indien nodig.`
+    );
+  };
+
   if (!selectedYear && years.length === 0 && !showAddYear) {
     return (
       <div className="min-h-screen relative overflow-hidden">
@@ -518,6 +542,13 @@ export default function TimetablesPage() {
               >
                 + Klas toevoegen
               </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkImport((v) => !v)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500"
+              >
+                {showBulkImport ? 'Verberg PDF-import' : 'Bulk import PDF'}
+              </button>
               {showAddKlas && (
                 <div className="flex gap-2 items-center">
                   <input
@@ -552,6 +583,14 @@ export default function TimetablesPage() {
                 {saving ? 'Opslaan...' : 'Opslaan'}
               </button>
             </div>
+
+            {showBulkImport && (
+              <RoosterBulkImport
+                selectedYear={selectedYear}
+                onConfirm={handleBulkImportConfirm}
+                onClose={() => setShowBulkImport(false)}
+              />
+            )}
 
             <div className="space-y-8">
               {allKlassen.map((klas) => {

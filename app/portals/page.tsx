@@ -46,7 +46,7 @@ export default function PortalsPage() {
       return;
     }
 
-    if (portal.id === 'detentions') {
+    if (portal.id === 'detentions' || portal.id === 'o2') {
       if (!user) return;
       setOpening(portal.id);
       try {
@@ -54,7 +54,7 @@ export default function PortalsPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            target: 'detentions',
+            target: portal.id,
             username: user.username,
             role: user.role,
           }),
@@ -65,7 +65,13 @@ export default function PortalsPage() {
         }
         window.location.href = data.url;
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Kon Nablijven niet openen');
+        setError(
+          e instanceof Error
+            ? e.message
+            : portal.id === 'o2'
+              ? 'Kon O2 niet openen'
+              : 'Kon Nablijven niet openen'
+        );
         setOpening(null);
       }
       return;

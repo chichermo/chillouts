@@ -1,5 +1,5 @@
 /**
- * Lightweight portal SSO between Element apps (Chillouts ↔ Detentions).
+ * Lightweight portal SSO between Element apps (Chillouts ↔ Detentions / O2).
  * Override with PORTAL_SSO_SECRET on both Vercel projects.
  */
 import type { User } from './users';
