@@ -228,7 +228,7 @@ export default function PortalsPage() {
                       }}
                     >
                       {isOpening
-                        ? 'Openen…'
+                        ? 'Open portaal…'
                         : portal.comingSoon
                           ? 'Bekijken'
                           : 'Open portaal'}
