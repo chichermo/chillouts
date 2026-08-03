@@ -27,7 +27,7 @@ export const PORTALS: PortalDef[] = [
     title: 'Chill-outs',
     subtitle: 'Dagelijkse registratie, roosters, rapporten en statistieken.',
     href: '/dashboard',
-    accent: '#ACE1AF',
+    accent: '#E85A5A',
   },
   {
     id: 'detentions',

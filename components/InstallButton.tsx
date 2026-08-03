@@ -87,7 +87,7 @@ export default function InstallButton() {
   return (
     <button
       onClick={handleInstallClick}
-      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-[#ACE1AF] transition-colors hover:bg-[#ACE1AF]/12"
+      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-[#E85A5A] transition-colors hover:bg-[#E85A5A]/12"
       title={isIOS ? 'Installatie-instructies' : 'App installeren'}
     >
       <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

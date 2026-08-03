@@ -23,7 +23,7 @@ function DashCard({
     <Link href={href} className="group block">
       <div className="glass-effect h-full rounded-2xl border border-white/12 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:shadow-[0_10px_28px_rgba(0,0,0,0.3)]">
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ACE1AF]/15 ring-1 ring-[#ACE1AF]/25">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E85A5A]/15 ring-1 ring-[#E85A5A]/25">
             {icon}
           </div>
           <svg
@@ -42,7 +42,7 @@ function DashCard({
   );
 }
 
-const iconClass = 'h-5 w-5 text-[#ACE1AF]';
+const iconClass = 'h-5 w-5 text-[#E85A5A]';
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -93,14 +93,7 @@ export default function Home() {
       <div className="container relative z-10 mx-auto px-4 py-8">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <ChilloutsBrand size="md" />
-              <span
-                className="h-3 w-3 shrink-0 rounded-full bg-[#2563eb]"
-                aria-hidden="true"
-                title="Blauwe stip"
-              />
-            </div>
+            <ChilloutsBrand size="md" />
             <p className="mt-2 max-w-lg text-sm text-white/55">
               Beheer en volg chill-outs voor alle studenten
             </p>

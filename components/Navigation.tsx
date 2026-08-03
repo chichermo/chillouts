@@ -154,7 +154,7 @@ export default function Navigation() {
   const linkClass = (isActive: boolean) =>
     `inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium tracking-wide transition-colors ${
       isActive
-        ? 'bg-[#ACE1AF]/18 text-[#ACE1AF] ring-1 ring-[#ACE1AF]/35'
+        ? 'bg-[#E85A5A]/18 text-[#E85A5A] ring-1 ring-[#E85A5A]/35'
         : 'text-white/65 hover:bg-white/[0.06] hover:text-white'
     }`;
 
@@ -180,7 +180,7 @@ export default function Navigation() {
                   pathname?.startsWith(link.href));
               return (
                 <Link key={link.href} href={link.href} className={linkClass(!!isActive)}>
-                  <span className={isActive ? 'text-[#ACE1AF]' : 'text-white/45'}>{link.icon}</span>
+                  <span className={isActive ? 'text-[#E85A5A]' : 'text-white/45'}>{link.icon}</span>
                   <span>{link.label}</span>
                 </Link>
               );
@@ -245,7 +245,7 @@ export default function Navigation() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`mx-1 mb-0.5 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
                     isActive
-                      ? 'bg-[#ACE1AF]/15 text-[#ACE1AF]'
+                      ? 'bg-[#E85A5A]/15 text-[#E85A5A]'
                       : 'text-white/70 hover:bg-white/[0.05] hover:text-white'
                   }`}
                 >
@@ -263,7 +263,7 @@ export default function Navigation() {
               onClick={() => setMobileMenuOpen(false)}
               className={`mx-1 mb-0.5 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium ${
                 pathname === '/profile'
-                  ? 'bg-[#ACE1AF]/15 text-[#ACE1AF]'
+                  ? 'bg-[#E85A5A]/15 text-[#E85A5A]'
                   : 'text-white/70 hover:bg-white/[0.05]'
               }`}
             >

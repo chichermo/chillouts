@@ -37,7 +37,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#1a1a28] text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-24 -left-16 h-80 w-80 rounded-full bg-[#ACE1AF]/25 blur-3xl" />
+        <div className="absolute -top-24 -left-16 h-80 w-80 rounded-full bg-[#E85A5A]/25 blur-3xl" />
         <div className="absolute top-1/3 -right-20 h-96 w-96 rounded-full bg-[#C2E0FC]/20 blur-3xl" />
         <div className="absolute -bottom-28 left-1/3 h-80 w-80 rounded-full bg-[#E897A3]/20 blur-3xl" />
         <div
@@ -67,7 +67,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
             Welkom bij het
-            <span className="block bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#E897A3] bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-[#E85A5A] via-[#C2E0FC] to-[#E897A3] bg-clip-text text-transparent">
               Element portaal
             </span>
           </h1>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   autoComplete="username"
                   required
-                  className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3.5 text-white placeholder-white/35 outline-none transition focus:border-[#ACE1AF]/60 focus:ring-2 focus:ring-[#ACE1AF]/25"
+                  className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3.5 text-white placeholder-white/35 outline-none transition focus:border-[#E85A5A]/60 focus:ring-2 focus:ring-[#E85A5A]/25"
                   placeholder="voornaam.achternaam"
                 />
               </div>
@@ -111,7 +111,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     required
-                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3.5 pr-12 text-white placeholder-white/35 outline-none transition focus:border-[#ACE1AF]/60 focus:ring-2 focus:ring-[#ACE1AF]/25"
+                    className="w-full rounded-2xl border border-white/15 bg-white/5 px-4 py-3.5 pr-12 text-white placeholder-white/35 outline-none transition focus:border-[#E85A5A]/60 focus:ring-2 focus:ring-[#E85A5A]/25"
                     placeholder="••••••••"
                   />
                   <button
@@ -133,7 +133,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#ACE1AF] to-[#7ec98a] px-4 py-3.5 font-bold text-[#1a1a28] shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-2xl bg-gradient-to-r from-[#E85A5A] to-[#C94444] px-4 py-3.5 font-bold text-white shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isLoading ? 'Bezig…' : 'Naar portalen'}
               </button>
