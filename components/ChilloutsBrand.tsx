@@ -17,7 +17,7 @@ export default function ChilloutsBrand({
 
   return (
     <span className="inline-flex items-center gap-2.5">
-      <span className="flex shrink-0 items-center justify-center rounded-xl border border-[#E85A5A]/25 bg-[#E85A5A]/12 p-1">
+      <span className="flex shrink-0 items-center justify-center rounded-xl border border-[#ACE1AF]/25 bg-[#ACE1AF]/12 p-1">
         <PortalMark id="chillouts" className={markClass} />
       </span>
       {showLabel && (

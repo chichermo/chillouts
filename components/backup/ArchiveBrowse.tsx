@@ -73,7 +73,7 @@ export default function ArchiveBrowse({ archive, statsPanel }: Props) {
             }}
             className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
               tab === t.id
-                ? 'bg-[#E85A5A]/20 text-[#E85A5A]'
+                ? 'bg-[#ACE1AF]/20 text-[#ACE1AF]'
                 : 'text-white/60 hover:bg-white/5 hover:text-white'
             }`}
           >
@@ -97,7 +97,7 @@ export default function ArchiveBrowse({ archive, statsPanel }: Props) {
               value={studentQuery}
               onChange={(e) => setStudentQuery(e.target.value)}
               placeholder="Zoek op naam of klas…"
-              className="min-w-[200px] flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#E85A5A]/40"
+              className="min-w-[200px] flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#ACE1AF]/40"
             />
             <select
               value={klasFilter}
@@ -138,7 +138,7 @@ export default function ArchiveBrowse({ archive, statsPanel }: Props) {
                         <button
                           type="button"
                           onClick={() => setSelectedStudentId(s.id)}
-                          className="rounded-lg px-2 py-1 text-xs text-[#E85A5A] hover:bg-[#E85A5A]/15"
+                          className="rounded-lg px-2 py-1 text-xs text-[#ACE1AF] hover:bg-[#ACE1AF]/15"
                         >
                           Bekijken
                         </button>
@@ -158,7 +158,7 @@ export default function ArchiveBrowse({ archive, statsPanel }: Props) {
           </div>
 
           {selectedStudent && (
-            <div className="glass-effect rounded-xl border border-[#E85A5A]/25 p-4">
+            <div className="glass-effect rounded-xl border border-[#ACE1AF]/25 p-4">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-bold text-white">{selectedStudent.name}</h3>
@@ -223,7 +223,7 @@ export default function ArchiveBrowse({ archive, statsPanel }: Props) {
             value={dayQuery}
             onChange={(e) => setDayQuery(e.target.value)}
             placeholder="Zoek op datum (YYYY-MM-DD) of dag…"
-            className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#E85A5A]/40"
+            className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-[#ACE1AF]/40"
           />
 
           <div className="glass-effect overflow-hidden rounded-xl border border-white/12">
@@ -253,7 +253,7 @@ export default function ArchiveBrowse({ archive, statsPanel }: Props) {
                         <button
                           type="button"
                           onClick={() => setSelectedDate(d.date)}
-                          className="rounded-lg px-2 py-1 text-xs text-[#E85A5A] hover:bg-[#E85A5A]/15"
+                          className="rounded-lg px-2 py-1 text-xs text-[#ACE1AF] hover:bg-[#ACE1AF]/15"
                         >
                           Bekijken
                         </button>
@@ -273,7 +273,7 @@ export default function ArchiveBrowse({ archive, statsPanel }: Props) {
           </div>
 
           {dayDetail?.record && (
-            <div className="glass-effect rounded-xl border border-[#E85A5A]/25 p-4">
+            <div className="glass-effect rounded-xl border border-[#ACE1AF]/25 p-4">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-bold text-white">

@@ -370,8 +370,8 @@ export default function BackupPage() {
         </div>
 
         {admin && readyYears.length > 0 && (
-          <div className="mb-6 rounded-2xl border border-[#E85A5A]/35 bg-[#E85A5A]/10 px-4 py-4">
-            <h2 className="text-sm font-bold text-[#E85A5A]">Nieuw schooljaar voorbereiden</h2>
+          <div className="mb-6 rounded-2xl border border-[#ACE1AF]/35 bg-[#ACE1AF]/10 px-4 py-4">
+            <h2 className="text-sm font-bold text-[#ACE1AF]">Nieuw schooljaar voorbereiden</h2>
             <p className="mt-1 text-sm text-white/70">
               Deze schooljaren zijn afgelopen en kunnen naar Backup. Daarna is de actieve app
               leeg voor nieuwe data.
@@ -383,7 +383,7 @@ export default function BackupPage() {
                   type="button"
                   disabled={archiving}
                   onClick={() => handleArchive(year)}
-                  className="rounded-xl bg-[#E85A5A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#F07070] disabled:opacity-60"
+                  className="rounded-xl bg-[#ACE1AF] px-4 py-2 text-sm font-semibold text-[#141427] hover:bg-[#9dd6a1] disabled:opacity-60"
                 >
                   {archiving ? 'Archiveren…' : `Archiveer ${year}`}
                 </button>

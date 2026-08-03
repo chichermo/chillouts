@@ -15,8 +15,8 @@ export default function PortalMark({ id, className = 'h-16 w-16' }: PortalMarkPr
       <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden>
         <defs>
           <linearGradient id="coGrad" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#E85A5A" />
-            <stop offset="1" stopColor="#B83A3A" />
+            <stop stopColor="#ACE1AF" />
+            <stop offset="1" stopColor="#5fad6a" />
           </linearGradient>
         </defs>
         {/* Kamer / badge — vierkant, niet rond zoals O2 */}

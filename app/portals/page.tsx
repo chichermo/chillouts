@@ -93,7 +93,7 @@ export default function PortalsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#14141f] text-white">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 animate-pulse rounded-full bg-[#E85A5A]/40" />
+          <div className="h-10 w-10 animate-pulse rounded-full bg-[#ACE1AF]/40" />
           <p className="text-sm text-white/60">Portalen laden…</p>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function PortalsPage() {
   return (
     <div className="min-h-screen relative overflow-hidden bg-[#14141f] text-white">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -left-20 h-[28rem] w-[28rem] rounded-full bg-[#E85A5A]/20 blur-[100px]" />
+        <div className="absolute -top-32 -left-20 h-[28rem] w-[28rem] rounded-full bg-[#ACE1AF]/20 blur-[100px]" />
         <div className="absolute top-1/4 -right-24 h-[32rem] w-[32rem] rounded-full bg-[#C2E0FC]/18 blur-[110px]" />
         <div className="absolute -bottom-40 left-1/3 h-[26rem] w-[26rem] rounded-full bg-[#FFDFB9]/12 blur-[90px]" />
         <div
@@ -143,7 +143,7 @@ export default function PortalsPage() {
           </p>
           <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
             Kies je{' '}
-            <span className="bg-gradient-to-r from-[#E85A5A] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
               portaal
             </span>
           </h1>

@@ -23,7 +23,7 @@ function DashCard({
     <Link href={href} className="group block">
       <div className="glass-effect h-full rounded-2xl border border-white/12 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:shadow-[0_10px_28px_rgba(0,0,0,0.3)]">
         <div className="mb-3 flex items-center justify-between">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E85A5A]/15 ring-1 ring-[#E85A5A]/25">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ACE1AF]/15 ring-1 ring-[#ACE1AF]/25">
             {icon}
           </div>
           <svg
@@ -42,7 +42,7 @@ function DashCard({
   );
 }
 
-const iconClass = 'h-5 w-5 text-[#E85A5A]';
+const iconClass = 'h-5 w-5 text-[#ACE1AF]';
 
 export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date());

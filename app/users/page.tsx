@@ -86,7 +86,7 @@ function PermissionsEditor({
                   type="checkbox"
                   checked={!!permissions[key]}
                   onChange={(e) => onChange({ ...permissions, [key]: e.target.checked })}
-                  className="h-4 w-4 rounded border-white/30 text-[#E85A5A]"
+                  className="h-4 w-4 rounded border-white/30 text-[#ACE1AF]"
                 />
                 {label}
               </label>
@@ -236,7 +236,7 @@ export default function UsersPage() {
     <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute right-10 top-20 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-20 left-10 h-72 w-72 rounded-full bg-[#E85A5A]/10 blur-3xl" />
+        <div className="absolute bottom-20 left-10 h-72 w-72 rounded-full bg-[#ACE1AF]/10 blur-3xl" />
       </div>
       <Navigation />
 
@@ -251,7 +251,7 @@ export default function UsersPage() {
           <button
             type="button"
             onClick={openCreate}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E85A5A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#F07070]"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ACE1AF] px-4 py-2.5 text-sm font-semibold text-[#141427] transition hover:bg-[#9dd6a1]"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -277,7 +277,7 @@ export default function UsersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Zoek gebruiker…"
-            className="min-w-[200px] flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#E85A5A]/50"
+            className="min-w-[200px] flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/35 outline-none focus:border-[#ACE1AF]/50"
           />
           <label className="flex cursor-pointer items-center gap-2 text-sm text-white/70">
             <input
@@ -330,7 +330,7 @@ export default function UsersPage() {
                         {activePerms.slice(0, 8).map(([key]) => (
                           <span
                             key={key}
-                            className="rounded bg-[#E85A5A]/15 px-1.5 py-0.5 text-[10px] text-[#E85A5A]"
+                            className="rounded bg-[#ACE1AF]/15 px-1.5 py-0.5 text-[10px] text-[#ACE1AF]"
                           >
                             {PERMISSION_LABELS.find((p) => p.key === key)?.label || key}
                           </span>
@@ -392,7 +392,7 @@ export default function UsersPage() {
                 <input
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-white outline-none focus:border-[#E85A5A]/50"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-white outline-none focus:border-[#ACE1AF]/50"
                   placeholder="voornaam.achternaam"
                 />
               </div>
@@ -405,7 +405,7 @@ export default function UsersPage() {
                   type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-white outline-none focus:border-[#E85A5A]/50"
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-white outline-none focus:border-[#ACE1AF]/50"
                   placeholder={panel === 'create' ? 'Minimaal 6 tekens' : 'Leeg laten = ongewijzigd'}
                 />
               </div>
@@ -452,7 +452,7 @@ export default function UsersPage() {
                 type="button"
                 disabled={saving}
                 onClick={handleSave}
-                className="rounded-xl bg-[#E85A5A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#F07070] disabled:opacity-60"
+                className="rounded-xl bg-[#ACE1AF] px-4 py-2.5 text-sm font-semibold text-[#141427] hover:bg-[#9dd6a1] disabled:opacity-60"
               >
                 {saving ? 'Opslaan…' : panel === 'create' ? 'Aanmaken' : 'Wijzigingen opslaan'}
               </button>

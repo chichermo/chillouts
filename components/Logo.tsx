@@ -55,7 +55,7 @@ export default function Logo({ variant = 'full', showElements = false }: LogoPro
           <div className="w-8 h-16 bg-[#C2E0FC]/40 rounded-tl-full rounded-bl-full transform rotate-6"></div>
           <div className="w-8 h-16 bg-[#FFDFB9]/40 rounded-tl-full rounded-bl-full"></div>
           <div className="w-8 h-16 bg-[#9F9EA8]/30 rounded-tl-full rounded-bl-full transform -rotate-6"></div>
-          <div className="w-8 h-16 bg-[#E85A5A]/40 rounded-tl-full rounded-bl-full transform -rotate-12"></div>
+          <div className="w-8 h-16 bg-[#ACE1AF]/40 rounded-tl-full rounded-bl-full transform -rotate-12"></div>
         </div>
       )}
       
