@@ -93,7 +93,14 @@ export default function Home() {
       <div className="container relative z-10 mx-auto px-4 py-8">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <ChilloutsBrand size="md" />
+            <div className="flex items-center gap-2">
+              <ChilloutsBrand size="md" />
+              <span
+                className="h-3 w-3 shrink-0 rounded-full bg-[#2563eb]"
+                aria-hidden="true"
+                title="Blauwe stip"
+              />
+            </div>
             <p className="mt-2 max-w-lg text-sm text-white/55">
               Beheer en volg chill-outs voor alle studenten
             </p>

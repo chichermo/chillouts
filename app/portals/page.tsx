@@ -141,11 +141,18 @@ export default function PortalsPage() {
           <p className="text-[11px] font-semibold tracking-[0.28em] text-white/40 uppercase">
             Element · Sterk in verbinding
           </p>
-          <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
-            Kies je{' '}
-            <span className="bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
-              portaal
+          <h1 className="mt-3 inline-flex items-center gap-3 text-3xl font-black tracking-tight md:text-4xl">
+            <span>
+              Kies je{' '}
+              <span className="bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
+                portaal
+              </span>
             </span>
+            <span
+              className="h-8 w-8 shrink-0 rounded-full bg-[#2563eb] md:h-10 md:w-10"
+              aria-hidden="true"
+              title="Blauwe stip"
+            />
           </h1>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/55">
             Welkom,{' '}
