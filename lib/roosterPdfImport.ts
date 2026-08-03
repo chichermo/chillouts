@@ -4,6 +4,7 @@
  */
 
 import type { Timetable, TimetableSlots } from '@/types';
+import { cleanPersonNameText } from './studentImport';
 
 export type RoosterPdfParseResult = {
   year: string | null;
@@ -57,11 +58,11 @@ function looksLikeTeacher(s: string): boolean {
 }
 
 export function normalizeTeacherName(raw: string): string {
-  return String(raw || '')
-    .replace(/^\*+/, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/\.+$/, '');
+  return cleanPersonNameText(
+    String(raw || '')
+      .replace(/^\*+/, '')
+      .replace(/\.+$/, '')
+  );
 }
 
 /** "1Aarde" / "1Aard" → "1 Aarde" when possible */

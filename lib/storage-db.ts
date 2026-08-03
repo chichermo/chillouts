@@ -14,6 +14,7 @@ import {
   type PruneChilloutRegistrationOptions,
 } from './utils';
 import { getAppSetting, setAppSetting } from './app-settings';
+import { fixSemicolonName } from './studentImport';
 
 const CHILLOUT_MIGRATION_KEY = 'chillout_storage_migration_v3';
 
@@ -98,7 +99,11 @@ async function loadStudentsFromSupabase(): Promise<Student[]> {
     .order('name', { ascending: true });
 
   if (error) throw error;
-  return students || [];
+  // Normalize accents on read so legacy "Jos é" displays as "José"
+  return (students || []).map((s: Student) => ({
+    ...s,
+    name: fixSemicolonName(String(s.name || '')),
+  }));
 }
 
 async function loadDailyRecordsFromSupabase(): Promise<{ [date: string]: DailyRecord }> {
@@ -218,11 +223,15 @@ async function saveToSupabase(data: AppData): Promise<boolean> {
   if (!isSupabaseEnabled) return false;
 
   try {
-    // Guardar estudiantes (upsert)
+    // Guardar estudiantes (upsert) — normalize names so legacy "Jos é" is repaired on write
     if (data.students.length > 0) {
+      const students = data.students.map((s) => ({
+        ...s,
+        name: fixSemicolonName(String(s.name || '')),
+      }));
       const { error: studentsError } = await supabase!
         .from('students')
-        .upsert(data.students, { onConflict: 'id' });
+        .upsert(students, { onConflict: 'id' });
 
       if (studentsError) throw studentsError;
     }
@@ -314,6 +323,7 @@ export async function addStudent(student: Omit<Student, 'id'>): Promise<Student>
   const data = await loadData();
   const newStudent: Student = {
     ...student,
+    name: fixSemicolonName(String(student.name || '')),
     id: `student_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
   };
   
@@ -348,7 +358,7 @@ export async function addStudentsBulk(
       const status: Student['status'] = row.status === 'Inactief' ? 'Inactief' : 'Actief';
       return {
         id: 'id' in row && row.id ? row.id : `student_${stamp}_${index}`,
-        name: String(row.name || '').trim(),
+        name: fixSemicolonName(String(row.name || '')),
         klas: String(row.klas || '').trim(),
         status,
       };
@@ -373,7 +383,11 @@ export async function updateStudent(studentId: string, updates: Partial<Student>
   const data = await loadData();
   const index = data.students.findIndex(s => s.id === studentId);
   if (index !== -1) {
-    data.students[index] = { ...data.students[index], ...updates };
+    const next = { ...data.students[index], ...updates };
+    if (updates.name != null) {
+      next.name = fixSemicolonName(String(updates.name));
+    }
+    data.students[index] = next;
     await saveData(data);
   }
 }

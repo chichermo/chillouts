@@ -2,7 +2,9 @@
 export function cellExact(row: Record<string, unknown>, keys: string[]): string {
   const headers = Object.keys(row);
   for (const key of keys) {
-    const hit = headers.find((k) => k.trim().toLowerCase() === key.toLowerCase());
+    const hit = headers.find(
+      (k) => k.replace(/^\uFEFF/, '').trim().toLowerCase() === key.toLowerCase()
+    );
     if (hit != null && row[hit] != null && String(row[hit]).trim() !== '') {
       return String(row[hit]).trim();
     }
@@ -10,11 +12,34 @@ export function cellExact(row: Record<string, unknown>, keys: string[]): string 
   return '';
 }
 
+/**
+ * Collapse whitespace / fix accent artifacts without breaking grapheme clusters.
+ * Fixes legacy bug: [A-ZÀ-Ÿ] matched lowercase é/ç → "José" became "Jos é".
+ */
+export function cleanPersonNameText(value: string): string {
+  return String(value || '')
+    .normalize('NFC')
+    // Excel / NFD: base letter + spaces + combining mark → single grapheme
+    .replace(/(\S)\s+(\p{M})/gu, '$1$2')
+    // Soft hyphen + odd Unicode spaces → normal space
+    .replace(/\u00AD/g, '')
+    .replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, ' ')
+    // Repair "Jos é" / "Fran çoise" (space before lowercase Latin-1 accented letter)
+    .replace(
+      /(\p{L})\s+([àáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ])/gu,
+      '$1$2'
+    )
+    .normalize('NFC')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /** Insert space in CamelCase glue: JanJanssen → Jan Janssen */
 export function unglueCamelCase(value: string): string {
-  return value
-    .replace(/([a-zà-ÿ])([A-ZÀ-Ÿ])/g, '$1 $2')
-    .replace(/([A-ZÀ-Ÿ]{2,})([A-ZÀ-Ÿ][a-zà-ÿ])/g, '$1 $2')
+  // Use Unicode letter classes — NOT [A-ZÀ-Ÿ], which wrongly includes lowercase é/ç.
+  return cleanPersonNameText(value)
+    .replace(/(\p{Ll})(\p{Lu})/gu, '$1 $2')
+    .replace(/(\p{Lu}{2,})(\p{Lu}\p{Ll})/gu, '$1 $2')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -65,7 +90,7 @@ export function fixSemicolonName(raw: string): string {
 
 export function normalizePersonName(...parts: Array<string | undefined | null>): string {
   const cleaned = parts
-    .map((p) => (p == null ? '' : String(p).replace(/\s+/g, ' ').trim()))
+    .map((p) => (p == null ? '' : cleanPersonNameText(String(p))))
     .filter(Boolean);
 
   // If a single part still has ";", expand it
