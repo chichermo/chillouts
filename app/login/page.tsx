@@ -135,7 +135,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="w-full rounded-2xl bg-gradient-to-r from-[#ACE1AF] to-[#7ec98a] px-4 py-3.5 font-bold text-[#1a1a28] shadow-lg transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isLoading ? 'Bezig…' : 'Naar portalen'}
+                {isLoading ? 'Bezig…' : 'Naar Element'}
               </button>
 
               <div className="text-center">

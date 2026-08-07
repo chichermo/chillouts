@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-/** Nablijven/Detentions solo via Element portaal — niet meer in Chill-outs menu. */
+/** Nablijven/Detentions solo via Element — niet meer in Chill-outs menu. */
 export default function NablijvenRedirectPage() {
   const router = useRouter();
   useEffect(() => {
@@ -11,7 +11,7 @@ export default function NablijvenRedirectPage() {
   }, [router]);
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#1a1a28] text-white">
-      Doorsturen naar portalen…
+      Doorsturen naar Element…
     </div>
   );
 }

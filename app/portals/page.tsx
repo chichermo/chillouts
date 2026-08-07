@@ -94,7 +94,7 @@ export default function PortalsPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#14141f] text-white">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-pulse rounded-full bg-[#ACE1AF]/40" />
-          <p className="text-sm text-white/60">Portalen laden…</p>
+          <p className="text-sm text-white/60">Apps laden…</p>
         </div>
       </div>
     );
@@ -144,14 +144,14 @@ export default function PortalsPage() {
           <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
             Kies je{' '}
             <span className="bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
-              portaal
+              app
             </span>
           </h1>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/55">
             Welkom,{' '}
             <span className="font-semibold text-white/85">{user?.username || 'gebruiker'}</span>
             {' — '}
-            één sessie voor Chill-outs, Nablijven en O2.
+            Element-apps: Chill-outs, Nablijven en O2.
           </p>
         </div>
 
@@ -163,7 +163,7 @@ export default function PortalsPage() {
 
         {portals.length === 0 ? (
           <div className="rounded-3xl border border-white/12 bg-white/[0.04] p-10 text-white/70">
-            Er zijn nog geen portalen aan jouw account gekoppeld. Vraag een beheerder om toegang
+            Er zijn nog geen apps aan jouw account gekoppeld. Vraag een beheerder om toegang
             via Gebruikers.
           </div>
         ) : (
@@ -228,10 +228,10 @@ export default function PortalsPage() {
                       }}
                     >
                       {isOpening
-                        ? 'Open portaal…'
+                        ? 'App openen…'
                         : portal.comingSoon
                           ? 'Bekijken'
-                          : 'Open portaal'}
+                          : 'Open app'}
                       <span
                         className="inline-block transition-transform duration-300 group-hover:translate-x-1"
                         aria-hidden
@@ -258,7 +258,7 @@ export default function PortalsPage() {
               href="/users"
               className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm text-white/65 transition hover:bg-white/10 hover:text-white"
             >
-              Portaalrechten beheren
+              Apprechten beheren
             </Link>
           </div>
         )}

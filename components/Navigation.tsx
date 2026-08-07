@@ -29,7 +29,7 @@ export default function Navigation() {
     const allLinks = [
       {
         href: '/portals',
-        label: 'Portalen',
+        label: 'Element',
         permission: null as keyof UserPermissions | null,
         icon: (
           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

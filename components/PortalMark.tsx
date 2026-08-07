@@ -7,7 +7,7 @@ type PortalMarkProps = {
   className?: string;
 };
 
-/** Eigen merkteken per portaal (SVG). */
+/** Eigen merkteken per Element-app (SVG). */
 export default function PortalMark({ id, className = 'h-16 w-16' }: PortalMarkProps) {
   if (id === 'chillouts') {
     // Eigen merk: afgeronde "kamer" + persoon op zitzak (chill-out), geen druppelvorm.

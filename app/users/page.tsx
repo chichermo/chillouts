@@ -14,9 +14,9 @@ import {
 import { isAdmin, getCurrentUser, refreshCurrentUserFromDb } from '@/lib/auth';
 
 const PERMISSION_LABELS: { key: keyof UserPermissions; label: string; group: string }[] = [
-  { key: 'portal_chillouts', label: 'Portal Chill-outs', group: 'Portalen' },
-  { key: 'portal_detentions', label: 'Portal Nablijven', group: 'Portalen' },
-  { key: 'portal_o2', label: 'Portal O2', group: 'Portalen' },
+  { key: 'portal_chillouts', label: 'App Chill-outs', group: 'Element apps' },
+  { key: 'portal_detentions', label: 'App Nablijven', group: 'Element apps' },
+  { key: 'portal_o2', label: 'App O2', group: 'Element apps' },
   { key: 'dagelijks', label: 'Dagelijks', group: 'Chill-outs' },
   { key: 'weekoverzicht', label: 'Weekoverzicht', group: 'Chill-outs' },
   { key: 'statistieken', label: 'Statistieken', group: 'Chill-outs' },
@@ -245,7 +245,7 @@ export default function UsersPage() {
           <div>
             <h1 className="text-2xl font-bold text-white md:text-3xl">Gebruikersbeheer</h1>
             <p className="mt-1 text-sm text-white/60">
-              Rollen, rechten, wachtwoorden en portaaltoegang beheren
+              Rollen, rechten, wachtwoorden en apptoegang beheren
             </p>
           </div>
           <button
@@ -373,7 +373,7 @@ export default function UsersPage() {
                   {panel === 'create' ? 'Nieuwe gebruiker' : 'Gebruiker bewerken'}
                 </h2>
                 <p className="text-sm text-white/50">
-                  Pas rol, rechten, wachtwoord en portaaltoegang aan
+                  Pas rol, rechten, wachtwoord en apptoegang aan
                 </p>
               </div>
               <button

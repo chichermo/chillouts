@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
 
-/** Entrada de chillouts.vercel.app: login o portales, nunca el dashboard directo. */
+/** Entrada del portaal Element: login of apps-hub, nooit direct naar Chill-outs dashboard. */
 export default function RootGate() {
   const router = useRouter();
 

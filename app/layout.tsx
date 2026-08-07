@@ -4,14 +4,18 @@ import AuthGuard from "@/components/AuthGuard";
 import PWARegister from "@/components/PWARegister";
 
 export const metadata: Metadata = {
-  title: "Chill-outs Beheer",
-  description: "Applicatie voor het beheren van chill-outs voor studenten",
+  applicationName: "Element",
+  title: {
+    default: "Element",
+    template: "%s · Element",
+  },
+  description: "Element-portaal: Chill-outs, Nablijven en O2",
   manifest: "/manifest.json",
   themeColor: "#2a2a3a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Chill-outs Beheer",
+    title: "Element",
   },
   viewport: {
     width: "device-width",
@@ -40,10 +44,11 @@ export default function RootLayout({
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="manifest" href="/manifest.json" />
+          <meta name="application-name" content="Element" />
           <meta name="theme-color" content="#2a2a3a" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-          <meta name="apple-mobile-web-app-title" content="Chill-outs Beheer" />
+          <meta name="apple-mobile-web-app-title" content="Element" />
         </head>
         <body className="antialiased font-sans" suppressHydrationWarning>
           <PWARegister />

@@ -33,7 +33,7 @@ export default function O2PortalRedirectPage() {
         }
         window.location.href = data.url;
       } catch {
-        setMessage('Kon O2 niet openen. Ga terug naar portalen.');
+        setMessage('Kon O2 niet openen. Ga terug naar Element.');
         setTimeout(() => router.replace('/portals'), 1500);
       }
     };
