@@ -42,6 +42,7 @@ export async function login(username: string, password: string): Promise<boolean
           backup: true,
           portal_chillouts: true,
           portal_detentions: true,
+          detentions_full: true,
           portal_o2: true,
           students: true,
           audit: true,

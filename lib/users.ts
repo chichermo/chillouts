@@ -14,6 +14,8 @@ export interface User {
     backup?: boolean;
     portal_chillouts?: boolean;
     portal_detentions?: boolean;
+    /** true = volledig Nablijven; false = enkel kalender & dashboard (als portal_detentions aan staat) */
+    detentions_full?: boolean;
     portal_o2?: boolean;
     students?: boolean;
     audit?: boolean;
@@ -38,10 +40,14 @@ export interface UserPermissions {
   backup: boolean;
   portal_chillouts: boolean;
   portal_detentions: boolean;
+  /** Volledig Nablijven; false = enkel kalender & dashboard */
+  detentions_full: boolean;
   portal_o2: boolean;
   students: boolean;
   audit: boolean;
 }
+
+export type DetentionsAccessScope = 'none' | 'limited' | 'full';
 
 export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
   admin: {
@@ -53,6 +59,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     backup: true,
     portal_chillouts: true,
     portal_detentions: true,
+    detentions_full: true,
     portal_o2: true,
     students: true,
     audit: true,
@@ -66,6 +73,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     backup: false,
     portal_chillouts: true,
     portal_detentions: true,
+    detentions_full: false,
     portal_o2: false,
     students: true,
     audit: false,
@@ -79,6 +87,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     backup: false,
     portal_chillouts: true,
     portal_detentions: true,
+    detentions_full: false,
     portal_o2: false,
     students: false,
     audit: false,
@@ -92,6 +101,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     backup: false,
     portal_chillouts: true,
     portal_detentions: true,
+    detentions_full: false,
     portal_o2: false,
     students: false,
     audit: false,
@@ -318,4 +328,35 @@ export function hasPermission(user: User | null, permission: keyof UserPermissio
   if (user.role === 'admin') return true;
   if (!user.permissions) return false;
   return user.permissions[permission] === true;
+}
+
+/**
+ * Nablijven-toegang:
+ * - none: geen portaal
+ * - limited: enkel kalender & dashboard
+ * - full: volledig portaal
+ * Ontbrekende detentions_full bij bestaande users = full (achterwaarts compatibel).
+ */
+export function getDetentionsAccessScope(user: User | null): DetentionsAccessScope {
+  if (!user || !user.active) return 'none';
+  if (user.role === 'admin') return 'full';
+  if (!user.permissions?.portal_detentions) return 'none';
+  if (user.permissions.detentions_full === false) return 'limited';
+  return 'full';
+}
+
+/** Normaliseer permissions voor UI/opslag (legacy users zonder detentions_full). */
+export function normalizeUserPermissions(
+  role: User['role'],
+  permissions?: Partial<UserPermissions> | User['permissions'] | null
+): UserPermissions {
+  const base = { ...(ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.reports_access) };
+  const merged = { ...base, ...(permissions || {}) } as UserPermissions;
+  if (merged.portal_detentions && (permissions as UserPermissions | null | undefined)?.detentions_full === undefined) {
+    merged.detentions_full = true;
+  }
+  if (!merged.portal_detentions) {
+    merged.detentions_full = false;
+  }
+  return merged;
 }

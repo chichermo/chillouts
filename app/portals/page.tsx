@@ -11,6 +11,7 @@ import {
   refreshCurrentUserFromDb,
 } from '@/lib/auth';
 import { getVisiblePortals, type PortalDef } from '@/lib/portals';
+import { getDetentionsAccessScope } from '@/lib/users';
 import PortalMark from '@/components/PortalMark';
 import type { User } from '@/lib/users';
 
@@ -48,6 +49,35 @@ export default function PortalsPage() {
 
     if (portal.id === 'detentions' || portal.id === 'o2') {
       if (!user) return;
+      if (portal.id === 'detentions') {
+        const scope = getDetentionsAccessScope(user);
+        if (scope === 'none') {
+          setError('Geen toegang tot Nablijven.');
+          return;
+        }
+        setOpening(portal.id);
+        try {
+          const res = await fetch('/api/portal-sso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              target: portal.id,
+              username: user.username,
+              role: user.role,
+              detentionsScope: scope,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok || !data?.url) {
+            throw new Error(data?.error || 'Aanmelden mislukt');
+          }
+          window.location.href = data.url;
+        } catch (e) {
+          setError(e instanceof Error ? e.message : 'Kon Nablijven niet openen');
+          setOpening(null);
+        }
+        return;
+      }
       setOpening(portal.id);
       try {
         const res = await fetch('/api/portal-sso', {
@@ -65,13 +95,7 @@ export default function PortalsPage() {
         }
         window.location.href = data.url;
       } catch (e) {
-        setError(
-          e instanceof Error
-            ? e.message
-            : portal.id === 'o2'
-              ? 'Kon O2 niet openen'
-              : 'Kon Nablijven niet openen'
-        );
+        setError(e instanceof Error ? e.message : 'Kon O2 niet openen');
         setOpening(null);
       }
       return;

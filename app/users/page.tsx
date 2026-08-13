@@ -3,19 +3,20 @@
 import { useState, useEffect, useMemo } from 'react';
 import Navigation from '@/components/Navigation';
 import {
-  ROLE_PERMISSIONS,
   getAllUsers,
   createUser,
   updateUser,
   deleteUser,
+  normalizeUserPermissions,
+  getDetentionsAccessScope,
   type User,
   type UserPermissions,
+  type DetentionsAccessScope,
 } from '@/lib/users';
 import { isAdmin, getCurrentUser, refreshCurrentUserFromDb } from '@/lib/auth';
 
 const PERMISSION_LABELS: { key: keyof UserPermissions; label: string; group: string }[] = [
   { key: 'portal_chillouts', label: 'App Chill-outs', group: 'Element apps' },
-  { key: 'portal_detentions', label: 'App Nablijven', group: 'Element apps' },
   { key: 'portal_o2', label: 'App O2', group: 'Element apps' },
   { key: 'dagelijks', label: 'Dagelijks', group: 'Chill-outs' },
   { key: 'weekoverzicht', label: 'Weekoverzicht', group: 'Chill-outs' },
@@ -26,6 +27,12 @@ const PERMISSION_LABELS: { key: keyof UserPermissions; label: string; group: str
   { key: 'backup', label: 'Backup / archief', group: 'Beheer' },
   { key: 'audit', label: 'Audit log', group: 'Beheer' },
 ];
+
+const PERMISSION_DISPLAY_LABELS: Partial<Record<keyof UserPermissions, string>> = {
+  ...Object.fromEntries(PERMISSION_LABELS.map((p) => [p.key, p.label])),
+  portal_detentions: 'App Nablijven',
+  detentions_full: 'Nablijven volledig',
+};
 
 const ROLE_LABELS: Record<User['role'], string> = {
   admin: 'Admin',
@@ -48,7 +55,7 @@ function emptyForm(role: User['role'] = 'reports_access'): FormState {
     password: '',
     role,
     active: true,
-    permissions: { ...ROLE_PERMISSIONS[role] },
+    permissions: normalizeUserPermissions(role),
   };
 }
 
@@ -69,6 +76,14 @@ function PermissionsEditor({
     return Array.from(map.entries());
   }, []);
 
+  const setDetentionsAccess = (enabled: boolean, full: boolean) => {
+    onChange({
+      ...permissions,
+      portal_detentions: enabled,
+      detentions_full: enabled ? full : false,
+    });
+  };
+
   return (
     <div className="space-y-4">
       {groups.map(([group, items]) => (
@@ -77,6 +92,48 @@ function PermissionsEditor({
             {group}
           </p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {group === 'Element apps' && (
+              <div className="sm:col-span-2 space-y-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-3">
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-white/85">
+                  <input
+                    type="checkbox"
+                    checked={!!permissions.portal_detentions}
+                    onChange={(e) =>
+                      setDetentionsAccess(e.target.checked, e.target.checked ? true : false)
+                    }
+                    className="h-4 w-4 rounded border-white/30 text-[#ACE1AF]"
+                  />
+                  App Nablijven
+                </label>
+                {permissions.portal_detentions && (
+                  <div className="ml-6 space-y-1.5 border-l border-white/10 pl-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-white/40">
+                      Toegangsniveau
+                    </p>
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+                      <input
+                        type="radio"
+                        name="detentions_scope"
+                        checked={permissions.detentions_full !== false}
+                        onChange={() => setDetentionsAccess(true, true)}
+                        className="h-4 w-4 border-white/30 text-[#ACE1AF]"
+                      />
+                      Volledig portaal
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-2 text-sm text-white/80">
+                      <input
+                        type="radio"
+                        name="detentions_scope"
+                        checked={permissions.detentions_full === false}
+                        onChange={() => setDetentionsAccess(true, false)}
+                        className="h-4 w-4 border-white/30 text-[#ACE1AF]"
+                      />
+                      Enkel kalender en dashboard
+                    </label>
+                  </div>
+                )}
+              </div>
+            )}
             {items.map(({ key, label }) => (
               <label
                 key={key}
@@ -149,10 +206,7 @@ export default function UsersPage() {
       password: '',
       role: user.role,
       active: user.active,
-      permissions: {
-        ...ROLE_PERMISSIONS[user.role],
-        ...user.permissions,
-      } as UserPermissions,
+      permissions: normalizeUserPermissions(user.role, user.permissions),
     });
     setPanel('edit');
     setError('');
@@ -168,7 +222,7 @@ export default function UsersPage() {
     setForm((prev) => ({
       ...prev,
       role,
-      permissions: { ...ROLE_PERMISSIONS[role] },
+      permissions: normalizeUserPermissions(role),
     }));
   };
 
@@ -225,6 +279,38 @@ export default function UsersPage() {
       await loadUsers();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Verwijderen mislukt');
+    }
+  };
+
+  const setNablijvenScope = async (user: User, scope: DetentionsAccessScope) => {
+    if (user.role === 'admin' && scope !== 'full') {
+      setError('Admin behoudt altijd volledige Nablijven-toegang.');
+      return;
+    }
+    const currentScope = getDetentionsAccessScope(user);
+    if (currentScope === scope) return;
+
+    const permissions = normalizeUserPermissions(user.role, user.permissions);
+    if (scope === 'none') {
+      permissions.portal_detentions = false;
+      permissions.detentions_full = false;
+    } else if (scope === 'limited') {
+      permissions.portal_detentions = true;
+      permissions.detentions_full = false;
+    } else {
+      permissions.portal_detentions = true;
+      permissions.detentions_full = true;
+    }
+
+    try {
+      setError('');
+      await updateUser(user.id, { permissions });
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, permissions } : u))
+      );
+      flash(`Nablijven-toegang van ${user.username} bijgewerkt.`);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Opslaan mislukt');
     }
   };
 
@@ -299,12 +385,13 @@ export default function UsersPage() {
             <div className="divide-y divide-white/8">
               {filtered.map((user) => {
                 const activePerms = Object.entries(user.permissions || {}).filter(([, v]) => v);
+                const nablijvenScope = getDetentionsAccessScope(user);
                 return (
                   <div
                     key={user.id}
                     className="flex flex-col gap-3 px-4 py-3 transition hover:bg-white/[0.03] sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold text-white">{user.username}</span>
                         <span className="rounded-md bg-white/10 px-2 py-0.5 text-[11px] text-white/75">
@@ -326,18 +413,34 @@ export default function UsersPage() {
                           ? new Date(user.last_login).toLocaleString('nl-NL')
                           : 'nog niet'}
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {activePerms.slice(0, 8).map(([key]) => (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <label className="flex items-center gap-2 text-[11px] text-white/55">
+                          <span className="shrink-0">Nablijven</span>
+                          <select
+                            value={nablijvenScope}
+                            disabled={user.role === 'admin'}
+                            onChange={(e) =>
+                              setNablijvenScope(user, e.target.value as DetentionsAccessScope)
+                            }
+                            className="rounded-lg border border-white/15 bg-[#2a2a3a] px-2 py-1 text-[11px] text-white outline-none focus:border-[#FFDFB9]/50"
+                            aria-label={`Nablijven-toegang voor ${user.username}`}
+                          >
+                            <option value="none">Geen toegang</option>
+                            <option value="limited">Enkel kalender &amp; dashboard</option>
+                            <option value="full">Volledig portaal</option>
+                          </select>
+                        </label>
+                        {activePerms
+                          .filter(([key]) => key !== 'portal_detentions' && key !== 'detentions_full')
+                          .slice(0, 5)
+                          .map(([key]) => (
                           <span
                             key={key}
                             className="rounded bg-[#ACE1AF]/15 px-1.5 py-0.5 text-[10px] text-[#ACE1AF]"
                           >
-                            {PERMISSION_LABELS.find((p) => p.key === key)?.label || key}
+                            {PERMISSION_DISPLAY_LABELS[key as keyof UserPermissions] || key}
                           </span>
                         ))}
-                        {activePerms.length > 8 && (
-                          <span className="text-[10px] text-white/40">+{activePerms.length - 8}</span>
-                        )}
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-2">

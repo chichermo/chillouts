@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createPortalSsoToken, mapChillRoleToDetentionRole } from '@/lib/portal-sso';
+import {
+  createPortalSsoToken,
+  mapChillRoleToDetentionRole,
+  toDetentionsSsoScope,
+} from '@/lib/portal-sso';
 import { DETENTIONS_APP_URL, O2_APP_URL } from '@/lib/portals';
-import type { User } from '@/lib/users';
+import type { DetentionsAccessScope, User } from '@/lib/users';
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +13,7 @@ export async function POST(request: Request) {
     const username = String(body?.username || '').trim();
     const role = body?.role as User['role'] | undefined;
     const target = String(body?.target || 'detentions');
+    const detentionsScope = (body?.detentionsScope || 'full') as DetentionsAccessScope;
 
     if (!username || !role) {
       return NextResponse.json({ error: 'Gebruiker ontbreekt' }, { status: 400 });
@@ -18,7 +23,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Onbekend portaal' }, { status: 400 });
     }
 
-    const token = await createPortalSsoToken({ username, role });
+    if (target === 'detentions' && detentionsScope === 'none') {
+      return NextResponse.json({ error: 'Geen toegang tot Nablijven' }, { status: 403 });
+    }
+
+    const ssoScope = toDetentionsSsoScope(detentionsScope) || 'full';
+    const token = await createPortalSsoToken({
+      username,
+      role,
+      detentionsScope: target === 'detentions' ? ssoScope : undefined,
+    });
 
     if (target === 'o2') {
       const url = new URL('portal-entry.html', O2_APP_URL.endsWith('/') ? O2_APP_URL : `${O2_APP_URL}/`);
@@ -33,6 +47,7 @@ export async function POST(request: Request) {
     url.searchParams.set('token', token);
     url.searchParams.set('role', detentionRole);
     url.searchParams.set('user', username);
+    url.searchParams.set('scope', ssoScope);
 
     return NextResponse.json({ url: url.toString() });
   } catch (error) {

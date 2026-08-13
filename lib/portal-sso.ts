@@ -2,7 +2,7 @@
  * Lightweight SSO between Element apps (Chillouts ↔ Detentions / O2).
  * Override with PORTAL_SSO_SECRET on both Vercel projects.
  */
-import type { User } from './users';
+import type { DetentionsAccessScope, User } from './users';
 
 const FALLBACK_SECRET = 'element-portal-sso-v1-school-internal';
 
@@ -14,6 +14,7 @@ export type PortalSsoPayload = {
   username: string;
   role: User['role'];
   exp: number;
+  detentionsScope?: 'full' | 'limited';
 };
 
 function toBase64Url(bytes: ArrayBuffer | Uint8Array): string {
@@ -46,13 +47,14 @@ async function hmacSign(message: string, secret: string): Promise<string> {
 }
 
 export async function createPortalSsoToken(
-  user: Pick<User, 'username' | 'role'>,
+  user: Pick<User, 'username' | 'role'> & { detentionsScope?: 'full' | 'limited' },
   ttlSeconds = 120
 ): Promise<string> {
   const payload: PortalSsoPayload = {
     username: user.username,
     role: user.role,
     exp: Math.floor(Date.now() / 1000) + ttlSeconds,
+    ...(user.detentionsScope ? { detentionsScope: user.detentionsScope } : {}),
   };
   const body = toBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
   const sig = await hmacSign(body, getPortalSsoSecret());
@@ -85,4 +87,11 @@ export function mapChillRoleToDetentionRole(
   if (role === 'full_access') return 'directie';
   if (role === 'reports_access') return 'coordinator';
   return 'leerkracht';
+}
+
+export function toDetentionsSsoScope(
+  scope: DetentionsAccessScope
+): 'full' | 'limited' | null {
+  if (scope === 'full' || scope === 'limited') return scope;
+  return null;
 }
