@@ -10,6 +10,7 @@ import {
 } from '@/lib/utils';
 import { DailyRecord } from '@/types';
 import ChilloutStackedBarChart from '@/components/charts/ChilloutStackedBarChart';
+import LesuurCascadeChart from '@/components/charts/LesuurCascadeChart';
 import StickyTableWrap from '@/components/StickyTableWrap';
 import { CHILLOUT_CHART_COLORS } from '@/lib/chartTheme';
 
@@ -235,15 +236,13 @@ export default function StatsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="glass-effect rounded-lg shadow-md p-4 border border-white/20">
             <h2 className="text-lg font-bold mb-3 text-white">Chill-outs per Lesuur</h2>
-            <ChilloutStackedBarChart
+            <LesuurCascadeChart
               data={[1, 2, 3, 4, 5, 6, 7].map((hour) => {
                 const h = stats.byHour[hour] || { total: 0, vr: 0, vl: 0, generic: 0 };
                 return { label: `L${hour}`, vr: h.vr, vl: h.vl, generic: h.generic };
               })}
-              layout="vertical"
-              height={300}
-              cascade
-              ariaLabel="Gestapelde cascade-grafiek chill-outs per lesuur"
+              height={320}
+              ariaLabel="Cascade gestapelde grafiek chill-outs per lesuur"
             />
           </div>
 
