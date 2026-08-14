@@ -133,7 +133,8 @@ function makeCascadeShape(
   isVertical: boolean,
   radius: [number, number, number, number]
 ) {
-  return function CascadeShape(props: BarShapeProps) {
+  return function CascadeShape(rawProps: unknown) {
+    const props = (rawProps || {}) as BarShapeProps;
     const x = props.x ?? 0;
     const y = props.y ?? 0;
     const width = props.width ?? 0;
@@ -141,7 +142,9 @@ function makeCascadeShape(
     const fill = props.fill ?? '#fff';
     const index = props.index ?? 0;
 
-    if (width <= 0 || height <= 0) return null;
+    if (width <= 0 || height <= 0) {
+      return <g />;
+    }
 
     const delay = index * 0.08 + seriesIndex * 0.32;
     const origin = isVertical ? 'bottom center' : 'center left';
