@@ -16,6 +16,7 @@ import jsPDF from 'jspdf';
 import LesuurPerDagBarChart from '@/components/charts/LesuurPerDagBarChart';
 import DayHourHeatmap from '@/components/charts/DayHourHeatmap';
 import TrendLineChart from '@/components/charts/TrendLineChart';
+import ChilloutStackedBarChart from '@/components/charts/ChilloutStackedBarChart';
 import { buildTrendSeries, type TrendPoint } from '@/lib/chartTrend';
 import StickyTableWrap from '@/components/StickyTableWrap';
 import { BAR_TOP_RADIUS, CHART_AXIS_TICK, CHART_GRID_STROKE, CHART_TOOLTIP_STYLE } from '@/lib/chartTheme';
@@ -1341,18 +1342,19 @@ export default function ReportsPage() {
               <h2 className="text-xl font-bold mb-4 text-white">
                 {filters.hour ? `Chill-outs voor Lesuur ${filters.hour}` : 'Chill-outs per Lesuur'}
               </h2>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.byHour} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="22%">
-                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
-                  <XAxis dataKey="hour" stroke="transparent" tick={CHART_AXIS_TICK} />
-                  <YAxis stroke="transparent" tick={CHART_AXIS_TICK} allowDecimals={false} />
-                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} cursor={{ fill: 'rgba(255,255,255,0.06)' }} />
-                  <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }} />
-                  <Bar dataKey="vr" fill={COLORS.vr} name="VR" radius={BAR_TOP_RADIUS} maxBarSize={40} isAnimationActive={!isExportingCharts} />
-                  <Bar dataKey="vl" fill={COLORS.vl} name="VL" radius={BAR_TOP_RADIUS} maxBarSize={40} isAnimationActive={!isExportingCharts} />
-                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" radius={BAR_TOP_RADIUS} maxBarSize={40} isAnimationActive={!isExportingCharts} />
-                </BarChart>
-              </ResponsiveContainer>
+              <ChilloutStackedBarChart
+                data={stats.byHour.map((h) => ({
+                  label: String(h.hour),
+                  vr: h.vr,
+                  vl: h.vl,
+                  generic: h.generic,
+                }))}
+                layout="vertical"
+                height={300}
+                cascade
+                isAnimationActive={!isExportingCharts}
+                ariaLabel="Gestapelde cascade-grafiek chill-outs per lesuur"
+              />
             </div>
           )}
 

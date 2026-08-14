@@ -480,6 +480,7 @@ export default function BackupPage() {
                       })}
                       layout="vertical"
                       height={300}
+                      cascade
                       ariaLabel="Backup chill-outs per lesuur"
                     />
                   </div>

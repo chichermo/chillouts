@@ -242,7 +242,8 @@ export default function StatsPage() {
               })}
               layout="vertical"
               height={300}
-              ariaLabel="Gestapelde balken chill-outs per lesuur"
+              cascade
+              ariaLabel="Gestapelde cascade-grafiek chill-outs per lesuur"
             />
           </div>
 
