@@ -1339,9 +1339,6 @@ export default function ReportsPage() {
           {/* Grafiek per lesuur - Solo mostrar si hay datos */}
           {stats.byHour.length > 0 && (
             <div id="chart-lesuur" className="glass-effect rounded-lg p-6 border border-white/20">
-              <h2 className="text-xl font-bold mb-4 text-white">
-                {filters.hour ? `Chill-outs voor Lesuur ${filters.hour}` : 'Chill-outs per Lesuur'}
-              </h2>
               <LesuurCascadeChart
                 data={stats.byHour.map((h) => ({
                   label: `L${h.hour}`,
@@ -1349,7 +1346,8 @@ export default function ReportsPage() {
                   vl: h.vl,
                   generic: h.generic,
                 }))}
-                height={320}
+                height={460}
+                title={filters.hour ? `Chill-outs voor Lesuur ${filters.hour}` : 'Chill-outs per Lesuur'}
                 isAnimationActive={!isExportingCharts}
                 ariaLabel="Cascade gestapelde grafiek chill-outs per lesuur"
               />

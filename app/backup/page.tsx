@@ -473,13 +473,12 @@ export default function BackupPage() {
 
                 <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="glass-effect rounded-lg border border-white/20 p-4 shadow-md">
-                    <h2 className="mb-3 text-lg font-bold text-white">Chill-outs per Lesuur</h2>
                     <LesuurCascadeChart
                       data={[1, 2, 3, 4, 5, 6, 7].map((hour) => {
                         const h = stats.byHour[hour] || emptyCount();
                         return { label: `L${hour}`, vr: h.vr, vl: h.vl, generic: h.generic };
                       })}
-                      height={320}
+                      height={460}
                       ariaLabel="Backup chill-outs per lesuur cascade"
                     />
                   </div>

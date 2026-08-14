@@ -1,59 +1,92 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { CHILLOUT_CHART_COLORS } from '@/lib/chartTheme';
 import type { ChilloutBarPoint } from '@/components/charts/ChilloutStackedBarChart';
 
-type SeriesKey = 'vr' | 'vl' | 'generic';
-
-const SERIES: { key: SeriesKey; name: string; color: string }[] = [
-  { key: 'vr', name: 'VR', color: CHILLOUT_CHART_COLORS.vr },
-  { key: 'vl', name: 'VL', color: CHILLOUT_CHART_COLORS.vl },
-  { key: 'generic', name: 'Chillouts', color: CHILLOUT_CHART_COLORS.generic },
-];
+/** Palette close to the Jitter cascade template blocks */
+const LAYER_COLORS = [
+  '#8EC5F7', // soft blue
+  '#C8CBD2', // soft gray
+  '#FF8A3D', // orange
+  '#D6F26A', // lime
+  '#C4A484', // tan
+  '#F5A3B3', // rose (maps to chillouts brand)
+  '#7DDEA8', // mint (maps to VL)
+] as const;
 
 interface LesuurCascadeChartProps {
   data: ChilloutBarPoint[];
   height?: number;
   ariaLabel: string;
-  /** Disable entrance motion (e.g. PDF/export capture) */
   isAnimationActive?: boolean;
+  title?: string;
 }
 
 /**
- * Presentation-style stacked cascade chart (Jitter "Stacked Chart: Cascade").
- * Not a classic analytics bar chart: separated rounded layers cascade into place.
+ * Visual replica of Jitter "Stacked Chart: Cascade":
+ * horizontal layers with alternating offsets, bold %, cascade entrance.
+ * Mapped to Chill-outs per Lesuur.
  */
 export default function LesuurCascadeChart({
   data,
-  height = 320,
+  height = 420,
   ariaLabel,
   isAnimationActive = true,
+  title = 'Chill-outs per Lesuur',
 }: LesuurCascadeChartProps) {
-  const [hovered, setHovered] = useState<{ col: number; key: SeriesKey } | null>(null);
+  const layers = useMemo(() => {
+    const grandTotal = data.reduce((s, d) => s + d.vr + d.vl + d.generic, 0);
+    const maxTotal = Math.max(1, ...data.map((d) => d.vr + d.vl + d.generic));
 
-  const maxTotal = useMemo(
-    () => Math.max(1, ...data.map((d) => d.vr + d.vl + d.generic)),
-    [data]
-  );
+    return data
+      .map((d, index) => {
+        const total = d.vr + d.vl + d.generic;
+        const pct = grandTotal > 0 ? Math.round((total / grandTotal) * 100) : 0;
+        const widthPct = Math.max(28, Math.round((total / maxTotal) * 100));
+        const dominant =
+          total <= 0
+            ? null
+            : d.vr >= d.vl && d.vr >= d.generic
+              ? 'VR'
+              : d.vl >= d.generic
+                ? 'VL'
+                : 'Chillouts';
+        return {
+          id: d.label,
+          label: d.label.startsWith('L') ? `Lesuur ${d.label.slice(1)}` : d.label,
+          short: d.label,
+          total,
+          pct,
+          widthPct,
+          dominant,
+          vr: d.vr,
+          vl: d.vl,
+          generic: d.generic,
+          color: LAYER_COLORS[index % LAYER_COLORS.length],
+          index,
+        };
+      })
+      .filter((l) => l.total > 0);
+  }, [data]);
 
-  const plotH = Math.max(180, height - 88);
+  const empty = layers.length === 0;
 
   return (
-    <div role="img" aria-label={ariaLabel} className="w-full min-w-0 select-none">
+    <div role="img" aria-label={ariaLabel} className="w-full min-w-0">
       <style>{`
-        @keyframes jitterCascadeLayer {
+        @keyframes jitterLayerIn {
           0% {
             opacity: 0;
-            transform: translateY(-28px) scale(0.92);
-            filter: blur(4px);
+            transform: translateY(-36px) scale(0.96);
+            filter: blur(6px);
           }
-          55% {
+          60% {
             opacity: 1;
             filter: blur(0);
           }
-          78% {
-            transform: translateY(3px) scale(1.02);
+          80% {
+            transform: translateY(4px) scale(1.01);
           }
           100% {
             opacity: 1;
@@ -61,215 +94,116 @@ export default function LesuurCascadeChart({
             filter: blur(0);
           }
         }
-        @keyframes jitterCascadeRail {
-          from { opacity: 0; transform: scaleY(0.4); }
-          to { opacity: 1; transform: scaleY(1); }
-        }
-        @keyframes jitterCascadeLabel {
-          from { opacity: 0; transform: translateY(8px); }
+        @keyframes jitterCardIn {
+          from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes jitterCascadeTotal {
-          from { opacity: 0; transform: translateY(6px) scale(0.9); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .jitter-cascade-root {
-          --cascade-ease: cubic-bezier(0.22, 1.15, 0.36, 1);
         }
       `}</style>
 
-      {/* Legend — pill markers like motion templates */}
-      <div className="mb-5 flex flex-wrap items-center gap-2.5">
-        {SERIES.map((s, i) => (
-          <span
-            key={s.key}
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/80"
-            style={
-              isAnimationActive
-                ? {
-                    animation: `jitterCascadeLabel 0.45s var(--cascade-ease) ${0.05 + i * 0.08}s both`,
-                  }
-                : undefined
-            }
-          >
-            <span
-              className="h-2.5 w-2.5 rounded-full shadow-[0_0_12px_currentColor]"
-              style={{ background: s.color, color: s.color }}
-            />
-            {s.name}
-          </span>
-        ))}
-      </div>
-
       <div
-        className="jitter-cascade-root relative overflow-hidden rounded-[1.35rem] border border-white/[0.08] px-3 pb-3 pt-5 md:px-5"
+        className="relative overflow-hidden rounded-[1.25rem] border border-black/40"
         style={{
           minHeight: height,
-          background:
-            'radial-gradient(120% 90% at 50% 0%, rgba(194,224,252,0.10), transparent 55%), radial-gradient(90% 70% at 80% 100%, rgba(172,225,175,0.08), transparent 50%), linear-gradient(180deg, rgba(28,28,42,0.92), rgba(18,18,28,0.98))',
+          background: '#1a1a1a',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+          animation: isAnimationActive ? 'jitterCardIn 0.45s ease-out both' : undefined,
         }}
       >
-        {/* Soft floor glow */}
-        <div
-          className="pointer-events-none absolute inset-x-8 bottom-10 h-16 rounded-full opacity-50 blur-2xl"
-          style={{
-            background:
-              'linear-gradient(90deg, rgba(59,130,246,0.25), rgba(16,185,129,0.22), rgba(252,165,165,0.2))',
-          }}
-        />
+        {/* Header — matches template chrome */}
+        <div className="flex items-center justify-between px-5 pb-2 pt-4 md:px-6">
+          <h3 className="text-[15px] font-semibold tracking-tight text-white/90">{title}</h3>
+          <div className="flex items-center gap-3 text-white/35">
+            <span className="inline-flex gap-1">
+              <span className="h-1 w-1 rounded-full bg-current" />
+              <span className="h-1 w-1 rounded-full bg-current" />
+              <span className="h-1 w-1 rounded-full bg-current" />
+            </span>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+            </svg>
+          </div>
+        </div>
 
-        <div
-          className="relative grid items-end gap-2 sm:gap-3"
-          style={{
-            gridTemplateColumns: `repeat(${Math.max(data.length, 1)}, minmax(0, 1fr))`,
-            height: plotH,
-          }}
-        >
-          {data.map((col, colIndex) => {
-            const total = col.vr + col.vl + col.generic;
-            const stackH = (total / maxTotal) * (plotH - 36);
-            const layers = SERIES.map((s) => ({
-              ...s,
-              value: col[s.key],
-              pct: total > 0 ? col[s.key] / total : 0,
-            })).filter((l) => l.value > 0);
+        {empty ? (
+          <div className="flex h-48 items-center justify-center text-sm text-white/40">
+            Geen chill-outs in deze periode
+          </div>
+        ) : (
+          <div className="relative px-4 pb-5 pt-2 md:px-5">
+            <div className="flex flex-col gap-2.5">
+              {layers.map((layer, i) => {
+                // Zig-zag horizontal offset like the Jitter template
+                const side = i % 2 === 0 ? 'left' : 'right';
+                const inset = i === 0 ? 0 : 10 + (i % 3) * 4;
+                const delay = 0.12 + i * 0.28;
 
-            // Empty column still shows rail
-            const showLayers =
-              layers.length > 0
-                ? layers
-                : [];
-
-            return (
-              <div key={col.label} className="flex h-full flex-col items-center justify-end">
-                {/* Total above stack */}
-                <div
-                  className="mb-1.5 text-[11px] font-bold tabular-nums text-white/90"
-                  style={
-                    isAnimationActive
-                      ? {
-                          animation: `jitterCascadeTotal 0.5s var(--cascade-ease) ${
-                            0.9 + colIndex * 0.08 + SERIES.length * 0.22
-                          }s both`,
-                        }
-                      : undefined
-                  }
-                >
-                  {total > 0 ? total : ''}
-                </div>
-
-                <div
-                  className="relative flex w-full max-w-[52px] flex-col justify-end sm:max-w-[58px]"
-                  style={{ height: plotH - 28 }}
-                >
-                  {/* Track / rail */}
+                return (
                   <div
-                    className="absolute inset-x-[18%] bottom-0 top-0 rounded-full bg-white/[0.04]"
-                    style={
-                      isAnimationActive
-                        ? {
-                            transformOrigin: 'bottom center',
-                            animation: `jitterCascadeRail 0.55s var(--cascade-ease) ${
-                              colIndex * 0.05
-                            }s both`,
-                          }
-                        : undefined
-                    }
-                  />
-
-                  {/* Stack — bottom to top = VR → VL → Chillouts */}
-                  <div
-                    className="relative z-[1] mx-auto flex w-[78%] flex-col-reverse gap-[3px]"
-                    style={{ height: Math.max(stackH, total > 0 ? 8 : 0) }}
+                    key={layer.id}
+                    className="relative"
+                    style={{
+                      [side === 'left' ? 'marginRight' : 'marginLeft']: `${inset}%`,
+                      [side === 'left' ? 'marginLeft' : 'marginRight']: 0,
+                      width: `${layer.widthPct}%`,
+                      maxWidth: '100%',
+                      animation: isAnimationActive
+                        ? `jitterLayerIn 0.9s cubic-bezier(0.22, 1.2, 0.36, 1) ${delay}s both`
+                        : undefined,
+                    }}
                   >
-                    {showLayers.map((layer) => {
-                      const seriesIndex = SERIES.findIndex((s) => s.key === layer.key);
-                      const delay =
-                        colIndex * 0.07 + seriesIndex * 0.28;
-                      const isHot =
-                        hovered?.col === colIndex && hovered.key === layer.key;
-                      const segH = Math.max(10, layer.pct * stackH - (showLayers.length > 1 ? 1 : 0));
+                    <div
+                      className="relative overflow-hidden rounded-[6px] border-[2.5px] border-black px-4 py-3 shadow-[0_10px_0_rgba(0,0,0,0.35)] transition-transform duration-200 hover:-translate-y-0.5"
+                      style={{ background: layer.color, minHeight: 72 }}
+                      title={`${layer.label}: ${layer.total} (${layer.pct}%) · VR ${layer.vr} · VL ${layer.vl} · Chillouts ${layer.generic}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-[28px] font-black leading-none tracking-tight text-black md:text-[32px]">
+                            {layer.pct}%
+                          </div>
+                          <div className="mt-1 text-[12px] font-semibold leading-snug text-black/75 md:text-[13px]">
+                            {layer.label}
+                            <span className="text-black/50"> · {layer.total} chill-outs</span>
+                          </div>
+                        </div>
+                        <div className="rounded-md border border-black/15 bg-black/5 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black/70">
+                          {layer.short}
+                        </div>
+                      </div>
 
-                      return (
-                        <button
-                          key={layer.key}
-                          type="button"
-                          title={`${col.label}: ${layer.name} ${layer.value}`}
-                          className="relative w-full origin-bottom rounded-[10px] border border-white/15 outline-none transition-[filter,transform] duration-200"
-                          style={{
-                            height: segH,
-                            background: `linear-gradient(180deg, ${layer.color}ee 0%, ${layer.color} 55%, ${layer.color}cc 100%)`,
-                            boxShadow: isHot
-                              ? `0 10px 28px ${layer.color}66, inset 0 1px 0 rgba(255,255,255,0.35)`
-                              : `0 8px 18px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.28)`,
-                            transform: isHot ? 'scale(1.04)' : undefined,
-                            animation: isAnimationActive
-                              ? `jitterCascadeLayer 0.85s var(--cascade-ease) ${delay}s both`
-                              : undefined,
-                          }}
-                          onMouseEnter={() => setHovered({ col: colIndex, key: layer.key })}
-                          onMouseLeave={() => setHovered(null)}
-                          onFocus={() => setHovered({ col: colIndex, key: layer.key })}
-                          onBlur={() => setHovered(null)}
-                        >
-                          {/* Gloss */}
+                      {/* Mini breakdown chips */}
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                        {layer.vr > 0 && (
                           <span
-                            className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-[10px] opacity-40"
-                            style={{
-                              background:
-                                'linear-gradient(180deg, rgba(255,255,255,0.45), transparent)',
-                            }}
-                          />
-                          {segH >= 22 && (
-                            <span className="relative z-[1] flex h-full items-center justify-center text-[10px] font-bold tabular-nums text-[#0f1020]/85">
-                              {layer.value}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                            className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] font-bold text-black/80"
+                            style={{ background: `${CHILLOUT_CHART_COLORS.vr}55` }}
+                          >
+                            VR {layer.vr}
+                          </span>
+                        )}
+                        {layer.vl > 0 && (
+                          <span
+                            className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] font-bold text-black/80"
+                            style={{ background: `${CHILLOUT_CHART_COLORS.vl}55` }}
+                          >
+                            VL {layer.vl}
+                          </span>
+                        )}
+                        {layer.generic > 0 && (
+                          <span
+                            className="rounded-full border border-black/15 px-2 py-0.5 text-[10px] font-bold text-black/80"
+                            style={{ background: `${CHILLOUT_CHART_COLORS.generic}99` }}
+                          >
+                            Chillouts {layer.generic}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* X labels */}
-        <div
-          className="mt-3 grid gap-2 sm:gap-3"
-          style={{ gridTemplateColumns: `repeat(${Math.max(data.length, 1)}, minmax(0, 1fr))` }}
-        >
-          {data.map((col, colIndex) => (
-            <div
-              key={col.label}
-              className="text-center text-[11px] font-semibold tracking-wide text-white/55"
-              style={
-                isAnimationActive
-                  ? {
-                      animation: `jitterCascadeLabel 0.4s var(--cascade-ease) ${
-                        0.35 + colIndex * 0.06
-                      }s both`,
-                    }
-                  : undefined
-              }
-            >
-              {col.label}
+                );
+              })}
             </div>
-          ))}
-        </div>
-
-        {/* Hover detail */}
-        {hovered && data[hovered.col] && (
-          <div className="pointer-events-none absolute left-1/2 top-3 z-10 -translate-x-1/2 rounded-xl border border-white/15 bg-[#12121c]/95 px-3 py-2 text-xs text-white shadow-xl backdrop-blur-md">
-            <span className="font-semibold text-white/90">{data[hovered.col].label}</span>
-            <span className="mx-1.5 text-white/30">·</span>
-            <span style={{ color: SERIES.find((s) => s.key === hovered.key)?.color }}>
-              {SERIES.find((s) => s.key === hovered.key)?.name}
-            </span>
-            <span className="ml-1.5 font-bold tabular-nums">
-              {data[hovered.col][hovered.key]}
-            </span>
           </div>
         )}
       </div>
