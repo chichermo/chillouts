@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import type { ChilloutBarPoint } from '@/components/charts/ChilloutStackedBarChart';
 
-/** Soft fills that keep the Jitter block look, tinted per type */
 const SEGMENT_COLORS = {
   vr: '#7EB6F2',
   vl: '#6FDBA0',
@@ -27,8 +26,8 @@ type Segment = {
 };
 
 /**
- * Jitter "Stacked Chart: Cascade" layout, with VR / VL / Chillouts
- * differentiated as colored segments inside each lesuur layer.
+ * Jitter cascade layers with VR / VL / Chillouts color segments inside each bar.
+ * Content is laid out in fixed rows so labels never overlap the fill badges.
  */
 export default function LesuurCascadeChart({
   data,
@@ -45,7 +44,8 @@ export default function LesuurCascadeChart({
       .map((d, index) => {
         const total = d.vr + d.vl + d.generic;
         const pct = grandTotal > 0 ? Math.round((total / grandTotal) * 100) : 0;
-        const widthPct = Math.max(34, Math.round((total / maxTotal) * 100));
+        // Keep bars wide enough for readable typography
+        const widthPct = Math.max(48, Math.round((total / maxTotal) * 100));
         const segments: Segment[] = (
           [
             { key: 'vr' as const, name: 'VR', value: d.vr, color: SEGMENT_COLORS.vr },
@@ -86,16 +86,10 @@ export default function LesuurCascadeChart({
         @keyframes jitterLayerIn {
           0% {
             opacity: 0;
-            transform: translateY(-36px) scale(0.96);
-            filter: blur(6px);
+            transform: translateY(-28px) scale(0.97);
+            filter: blur(4px);
           }
-          60% {
-            opacity: 1;
-            filter: blur(0);
-          }
-          80% {
-            transform: translateY(4px) scale(1.01);
-          }
+          70% { opacity: 1; filter: blur(0); }
           100% {
             opacity: 1;
             transform: translateY(0) scale(1);
@@ -103,11 +97,11 @@ export default function LesuurCascadeChart({
           }
         }
         @keyframes jitterSegmentIn {
-          from { transform: scaleX(0); opacity: 0.5; }
+          from { transform: scaleX(0); opacity: 0.55; }
           to { transform: scaleX(1); opacity: 1; }
         }
         @keyframes jitterCardIn {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
@@ -136,7 +130,6 @@ export default function LesuurCascadeChart({
           </div>
         </div>
 
-        {/* Type legend */}
         <div className="flex flex-wrap gap-2 px-5 pb-3 md:px-6">
           {(
             [
@@ -164,83 +157,85 @@ export default function LesuurCascadeChart({
           </div>
         ) : (
           <div className="relative px-4 pb-5 pt-1 md:px-5">
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3">
               {layers.map((layer, i) => {
                 const side = i % 2 === 0 ? 'left' : 'right';
-                const inset = i === 0 ? 0 : 10 + (i % 3) * 4;
-                const delay = 0.12 + i * 0.28;
+                const inset = i === 0 ? 0 : 8 + (i % 3) * 3;
+                const delay = 0.1 + i * 0.24;
 
                 return (
                   <div
                     key={layer.id}
-                    className="relative"
+                    className="relative min-w-[220px]"
                     style={{
                       [side === 'left' ? 'marginRight' : 'marginLeft']: `${inset}%`,
-                      [side === 'left' ? 'marginLeft' : 'marginRight']: 0,
                       width: `${layer.widthPct}%`,
                       maxWidth: '100%',
                       animation: isAnimationActive
-                        ? `jitterLayerIn 0.9s cubic-bezier(0.22, 1.2, 0.36, 1) ${delay}s both`
+                        ? `jitterLayerIn 0.85s cubic-bezier(0.22, 1.15, 0.36, 1) ${delay}s both`
                         : undefined,
                     }}
                   >
                     <div
-                      className="relative overflow-hidden rounded-[6px] border-[2.5px] border-black shadow-[0_10px_0_rgba(0,0,0,0.35)] transition-transform duration-200 hover:-translate-y-0.5"
-                      style={{ minHeight: 78 }}
-                      title={`${layer.label}: ${layer.total} (${layer.pct}%) · VR ${
-                        layer.segments.find((s) => s.key === 'vr')?.value || 0
-                      } · VL ${layer.segments.find((s) => s.key === 'vl')?.value || 0} · Chillouts ${
-                        layer.segments.find((s) => s.key === 'generic')?.value || 0
-                      }`}
+                      className="relative overflow-hidden rounded-[6px] border-[2.5px] border-black shadow-[0_10px_0_rgba(0,0,0,0.35)]"
+                      title={`${layer.label}: ${layer.total} (${layer.pct}%)`}
                     >
-                      {/* Stacked VR / VL / Chillouts fill */}
-                      <div className="absolute inset-0 flex">
+                      {/* Color stack — background only, no text inside segments */}
+                      <div className="absolute inset-0 flex" aria-hidden>
                         {layer.segments.map((seg, segIndex) => (
                           <div
                             key={seg.key}
-                            className="relative h-full origin-left border-r border-black/25 last:border-r-0"
+                            className="h-full origin-left border-r border-black/20 last:border-r-0"
                             style={{
                               width: `${seg.pct}%`,
                               background: seg.color,
-                              animation:
-                                isAnimationActive
-                                  ? `jitterSegmentIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) ${
-                                      delay + 0.18 + segIndex * 0.12
-                                    }s both`
-                                  : undefined,
+                              animation: isAnimationActive
+                                ? `jitterSegmentIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${
+                                    delay + 0.15 + segIndex * 0.1
+                                  }s both`
+                                : undefined,
                             }}
-                          >
-                            {seg.pct >= 22 && (
-                              <span className="absolute bottom-1.5 left-1.5 rounded border border-black/20 bg-black/10 px-1.5 py-0.5 text-[9px] font-black tracking-wide text-black/80">
-                                {seg.name} {seg.value}
-                              </span>
-                            )}
-                          </div>
+                          />
                         ))}
                       </div>
 
-                      {/* Soft top gloss */}
-                      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-1/2 bg-gradient-to-b from-white/25 to-transparent" />
+                      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-10 bg-gradient-to-b from-white/30 to-transparent" />
 
-                      {/* Content overlay */}
-                      <div className="relative z-[2] flex items-start justify-between gap-3 px-4 py-3">
-                        <div>
-                          <div
-                            className="text-[28px] font-black leading-none tracking-tight text-black md:text-[32px]"
-                            style={{ textShadow: '0 1px 0 rgba(255,255,255,0.35)' }}
+                      {/* Fixed content rows — never overlap */}
+                      <div className="relative z-[2] flex flex-col gap-2 px-3.5 py-3 sm:px-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <p
+                            className="text-[28px] font-black leading-none tracking-tight text-black md:text-[30px]"
+                            style={{ textShadow: '0 1px 0 rgba(255,255,255,0.4)' }}
                           >
                             {layer.pct}%
-                          </div>
-                          <div
-                            className="mt-1 text-[12px] font-semibold leading-snug text-black/80 md:text-[13px]"
-                            style={{ textShadow: '0 1px 0 rgba(255,255,255,0.25)' }}
-                          >
-                            {layer.label}
-                            <span className="text-black/55"> · {layer.total} chill-outs</span>
-                          </div>
+                          </p>
+                          <span className="shrink-0 rounded-md border border-black/20 bg-white/45 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black/75">
+                            {layer.short}
+                          </span>
                         </div>
-                        <div className="rounded-md border border-black/20 bg-white/35 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black/75 backdrop-blur-[2px]">
-                          {layer.short}
+
+                        <p
+                          className="truncate text-[12px] font-semibold leading-tight text-black/80 md:text-[13px]"
+                          style={{ textShadow: '0 1px 0 rgba(255,255,255,0.28)' }}
+                        >
+                          {layer.label}
+                          <span className="text-black/55"> · {layer.total} chill-outs</span>
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {layer.segments.map((seg) => (
+                            <span
+                              key={seg.key}
+                              className="inline-flex items-center gap-1 rounded-full border border-black/20 bg-black/10 px-2 py-0.5 text-[10px] font-bold text-black/85 backdrop-blur-[1px]"
+                            >
+                              <span
+                                className="h-1.5 w-1.5 rounded-[2px] border border-black/30"
+                                style={{ background: seg.color }}
+                              />
+                              {seg.name} {seg.value}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     </div>
