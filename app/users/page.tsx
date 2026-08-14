@@ -128,7 +128,7 @@ function PermissionsEditor({
                         onChange={() => setDetentionsAccess(true, false)}
                         className="h-4 w-4 border-white/30 text-[#ACE1AF]"
                       />
-                      Enkel kalender en dashboard
+                      Zonder leerlingen- en personeelslijsten
                     </label>
                   </div>
                 )}
@@ -426,7 +426,7 @@ export default function UsersPage() {
                             aria-label={`Nablijven-toegang voor ${user.username}`}
                           >
                             <option value="none">Geen toegang</option>
-                            <option value="limited">Enkel kalender &amp; dashboard</option>
+                            <option value="limited">Zonder leerlingen &amp; personeel</option>
                             <option value="full">Volledig portaal</option>
                           </select>
                         </label>

@@ -14,7 +14,7 @@ export interface User {
     backup?: boolean;
     portal_chillouts?: boolean;
     portal_detentions?: boolean;
-    /** true = volledig Nablijven; false = enkel kalender & dashboard (als portal_detentions aan staat) */
+    /** true = volledig Nablijven; false = zonder leerlingen- en personeelslijsten */
     detentions_full?: boolean;
     portal_o2?: boolean;
     students?: boolean;
@@ -40,7 +40,7 @@ export interface UserPermissions {
   backup: boolean;
   portal_chillouts: boolean;
   portal_detentions: boolean;
-  /** Volledig Nablijven; false = enkel kalender & dashboard */
+  /** Volledig Nablijven; false = zonder leerlingen- en personeelslijsten */
   detentions_full: boolean;
   portal_o2: boolean;
   students: boolean;
@@ -333,7 +333,7 @@ export function hasPermission(user: User | null, permission: keyof UserPermissio
 /**
  * Nablijven-toegang:
  * - none: geen portaal
- * - limited: enkel kalender & dashboard
+ * - limited: zonder leerlingen- en personeelslijsten
  * - full: volledig portaal
  * Ontbrekende detentions_full bij bestaande users = full (achterwaarts compatibel).
  */
