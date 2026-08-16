@@ -11,7 +11,7 @@ import {
 } from '@/lib/auth';
 import { getVisiblePortals, type PortalDef } from '@/lib/portals';
 import { getDetentionsAccessScope } from '@/lib/users';
-import PortalIconBadge from '@/components/PortalIconBadge';
+import PortalMark from '@/components/PortalMark';
 import ElementBrand from '@/components/ElementBrand';
 import type { User } from '@/lib/users';
 
@@ -181,78 +181,110 @@ export default function PortalsPage() {
             via Gebruikers.
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
             {portals.map((portal, index) => {
               const isHovered = hovered === portal.id;
               const isOpening = opening === portal.id;
               return (
-                <button
-                  key={portal.id}
-                  type="button"
-                  onClick={() => openPortal(portal)}
-                  onMouseEnter={() => setHovered(portal.id)}
-                  onMouseLeave={() => setHovered(null)}
-                  onFocus={() => setHovered(portal.id)}
-                  onBlur={() => setHovered(null)}
-                  disabled={isOpening}
-                  className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#1c1c2a]/80 p-7 text-left shadow-[0_24px_60px_rgba(0,0,0,0.4)] backdrop-blur-xl transition-all duration-500 ease-out hover:-translate-y-2 hover:border-white/25 hover:shadow-[0_36px_80px_rgba(0,0,0,0.5)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-70 animate-[portalIn_0.55s_ease-out_both]"
-                  style={{
-                    animationDelay: `${index * 0.1}s`,
-                  }}
-                >
+                <div key={portal.id} className="relative" style={{ animationDelay: `${index * 0.1}s` }}>
+                  {/* Soft floor shadow — same language as logo pill */}
                   <div
-                    className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
-                    style={{ background: portal.accent }}
-                  />
-                  <div
-                    className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 transition-transform duration-500 group-hover:scale-x-100"
-                    style={{ background: portal.accent }}
+                    className="pointer-events-none absolute -bottom-3 left-1/2 h-8 w-[78%] -translate-x-1/2 rounded-full blur-2xl transition-opacity duration-300"
+                    style={{
+                      background: `radial-gradient(ellipse, ${portal.accent}55 0%, rgba(0,0,0,0.65) 55%, transparent 75%)`,
+                      opacity: isHovered ? 1 : 0.75,
+                    }}
                   />
 
-                  <div className="relative flex items-start justify-between gap-3">
-                    <PortalIconBadge id={portal.id} accent={portal.accent} lifted={isHovered} />
-                    {portal.comingSoon && (
-                      <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white/55 uppercase">
-                        Binnenkort
-                      </span>
-                    )}
-                  </div>
-
-                  <h2 className="relative mt-6 text-2xl font-black tracking-tight text-white md:text-[1.75rem]">
-                    {portal.title}
-                  </h2>
-                  <p className="relative mt-2 min-h-[3rem] text-sm leading-relaxed text-white/60">
-                    {portal.subtitle}
-                  </p>
-
-                  <div className="relative mt-8 flex items-center justify-between">
-                    <span
-                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all duration-300 group-hover:gap-3"
+                  <button
+                    type="button"
+                    onClick={() => openPortal(portal)}
+                    onMouseEnter={() => setHovered(portal.id)}
+                    onMouseLeave={() => setHovered(null)}
+                    onFocus={() => setHovered(portal.id)}
+                    onBlur={() => setHovered(null)}
+                    disabled={isOpening}
+                    className="group relative w-full overflow-hidden rounded-[1.75rem] border border-white/10 p-7 text-left transition-transform duration-300 ease-out hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-70 animate-[portalIn_0.55s_ease-out_both]"
+                    style={{
+                      animationDelay: `${index * 0.1}s`,
+                      background:
+                        'linear-gradient(160deg, #2a2a36 0%, #16161f 45%, #0c0c12 100%)',
+                      boxShadow: isHovered
+                        ? `inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 22px rgba(0,0,0,0.45), 0 22px 48px rgba(0,0,0,0.55), 0 0 32px ${portal.accent}22`
+                        : 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -10px 22px rgba(0,0,0,0.5), 0 18px 40px rgba(0,0,0,0.5)',
+                    }}
+                  >
+                    {/* Specular rim */}
+                    <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+                    {/* Accent wash */}
+                    <div
+                      className="pointer-events-none absolute inset-0 opacity-25"
                       style={{
-                        background: `${portal.accent}22`,
-                        color: portal.accent,
-                      }}
-                    >
-                      {isOpening
-                        ? 'App openen…'
-                        : portal.comingSoon
-                          ? 'Bekijken'
-                          : 'Open app'}
-                      <span
-                        className="inline-block transition-transform duration-300 group-hover:translate-x-1"
-                        aria-hidden
-                      >
-                        →
-                      </span>
-                    </span>
-                    <span
-                      className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.04] transition-all duration-500 group-hover:scale-110 group-hover:border-white/25"
-                      style={{
-                        boxShadow: isHovered ? `inset 0 0 20px ${portal.accent}55` : undefined,
+                        background: `radial-gradient(circle at 18% 12%, ${portal.accent}66, transparent 42%)`,
                       }}
                     />
-                  </div>
-                </button>
+                    <div
+                      className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+                      style={{ background: portal.accent }}
+                    />
+                    <div
+                      className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 transition-transform duration-500 group-hover:scale-x-100"
+                      style={{ background: portal.accent }}
+                    />
+
+                    <div className="relative flex items-start justify-between gap-3">
+                      <div
+                        className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl border border-white/10"
+                        style={{
+                          background: `linear-gradient(145deg, ${portal.accent}33, transparent)`,
+                          boxShadow: isHovered ? `0 12px 40px ${portal.accent}44` : undefined,
+                        }}
+                      >
+                        <PortalMark id={portal.id} className="h-14 w-14" />
+                      </div>
+                      {portal.comingSoon && (
+                        <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white/55 uppercase">
+                          Binnenkort
+                        </span>
+                      )}
+                    </div>
+
+                    <h2 className="relative mt-6 text-2xl font-black tracking-tight text-white md:text-[1.75rem]">
+                      {portal.title}
+                    </h2>
+                    <p className="relative mt-2 min-h-[3rem] text-sm leading-relaxed text-white/60">
+                      {portal.subtitle}
+                    </p>
+
+                    <div className="relative mt-8 flex items-center justify-between">
+                      <span
+                        className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all duration-300 group-hover:gap-3"
+                        style={{
+                          background: `${portal.accent}22`,
+                          color: portal.accent,
+                        }}
+                      >
+                        {isOpening
+                          ? 'App openen…'
+                          : portal.comingSoon
+                            ? 'Bekijken'
+                            : 'Open app'}
+                        <span
+                          className="inline-block transition-transform duration-300 group-hover:translate-x-1"
+                          aria-hidden
+                        >
+                          →
+                        </span>
+                      </span>
+                      <span
+                        className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.04] transition-all duration-500 group-hover:scale-110 group-hover:border-white/25"
+                        style={{
+                          boxShadow: isHovered ? `inset 0 0 20px ${portal.accent}55` : undefined,
+                        }}
+                      />
+                    </div>
+                  </button>
+                </div>
               );
             })}
           </div>
