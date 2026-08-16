@@ -186,7 +186,13 @@ export default function PortalsPage() {
               const isHovered = hovered === portal.id;
               const isOpening = opening === portal.id;
               return (
-                <div key={portal.id} className="relative" style={{ animationDelay: `${index * 0.1}s` }}>
+                <div
+                  key={portal.id}
+                  className="portal-card-float relative"
+                  style={{
+                    animationDelay: `${index * 0.55}s`,
+                  }}
+                >
                   {/* Soft floor shadow — same language as logo pill */}
                   <div
                     className="pointer-events-none absolute -bottom-3 left-1/2 h-8 w-[78%] -translate-x-1/2 rounded-full blur-2xl transition-opacity duration-300"
@@ -204,7 +210,7 @@ export default function PortalsPage() {
                     onFocus={() => setHovered(portal.id)}
                     onBlur={() => setHovered(null)}
                     disabled={isOpening}
-                    className="group relative w-full overflow-hidden rounded-[1.75rem] border border-white/10 p-7 text-left transition-transform duration-300 ease-out hover:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-70 animate-[portalIn_0.55s_ease-out_both]"
+                    className="group relative w-full overflow-hidden rounded-[1.75rem] border border-white/10 p-7 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:opacity-70 animate-[portalIn_0.55s_ease-out_both]"
                     style={{
                       animationDelay: `${index * 0.1}s`,
                       background:

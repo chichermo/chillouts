@@ -160,4 +160,23 @@ p, span, div, .text-body {
   }
 }
 
+@keyframes portalCardFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.portal-card-float {
+  animation: portalCardFloat 5.5s ease-in-out infinite;
+}
+
+.portal-card-float:hover,
+.portal-card-float:focus-within {
+  animation-play-state: paused;
+}
+
 
