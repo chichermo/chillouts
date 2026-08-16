@@ -56,7 +56,7 @@ export default function LoginPage() {
             Element · Sterk in verbinding
           </p>
           <div className="mb-7">
-            <ElementBrand size="lg" />
+            <ElementBrand size="lg" switcher />
           </div>
           <h1 className="text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
             Welkom bij het

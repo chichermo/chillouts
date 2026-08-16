@@ -152,13 +152,10 @@ export default function PortalsPage() {
 
       <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-20 pt-2 md:px-8">
         <div className="mb-10 flex flex-col items-center text-center">
-          <div className="mb-4">
-            <ElementBrand size="lg" />
+          <div className="mb-5">
+            <ElementBrand size="lg" switcher />
           </div>
-          <p className="text-[11px] font-semibold tracking-[0.28em] text-white/40 uppercase">
-            Element · Sterk in verbinding
-          </p>
-          <h1 className="mt-3 text-3xl font-black tracking-tight md:text-4xl">
+          <h1 className="mt-1 text-3xl font-black tracking-tight md:text-4xl">
             Kies je{' '}
             <span className="bg-gradient-to-r from-[#ACE1AF] via-[#C2E0FC] to-[#FFDFB9] bg-clip-text text-transparent">
               app

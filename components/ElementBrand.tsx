@@ -1,102 +1,196 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import PortalMark from '@/components/PortalMark';
+import type { PortalId } from '@/lib/portals';
+
+type BrandSlide = {
+  id: 'element' | PortalId;
+  label: string;
+  accent: string;
+};
+
+const SLIDES: BrandSlide[] = [
+  { id: 'element', label: 'Element', accent: '#C2E0FC' },
+  { id: 'chillouts', label: 'Chill-outs', accent: '#ACE1AF' },
+  { id: 'detentions', label: 'Nablijven', accent: '#FFDFB9' },
+  { id: 'o2', label: 'O2', accent: '#C2E0FC' },
+];
 
 type ElementBrandProps = {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  /** Cycle Element → Chill-outs → Nablijven → O2 with blur (Jitter-style) */
+  switcher?: boolean;
   animated?: boolean;
 };
 
+const PILL = {
+  sm: { w: 200, h: 72, mark: 'h-10 w-10', img: 120 },
+  md: { w: 260, h: 92, mark: 'h-14 w-14', img: 160 },
+  lg: { w: 300, h: 108, mark: 'h-16 w-16', img: 190 },
+} as const;
+
 /**
- * Readable Element wordmark with light 3D presence.
- * Wide plate (not a tiny square card) so "element" stays legible.
+ * Floating 3D logo pill inspired by Jitter "Blur: Logo Switcher".
+ * Optional auto-switcher across Element + app marks.
  */
 export default function ElementBrand({
   size = 'md',
   className = '',
+  switcher = true,
   animated = true,
 }: ElementBrandProps) {
-  const dims =
-    size === 'lg'
-      ? { width: 260, height: 112, imgW: 240, radius: 'rounded-2xl' }
-      : size === 'sm'
-        ? { width: 148, height: 64, imgW: 134, radius: 'rounded-xl' }
-        : { width: 200, height: 88, imgW: 184, radius: 'rounded-2xl' };
+  const [index, setIndex] = useState(0);
+  const [phase, setPhase] = useState<'in' | 'out'>('in');
+  const dims = PILL[size];
+  const slide = SLIDES[index];
+
+  useEffect(() => {
+    if (!switcher || !animated) return;
+    const id = window.setInterval(() => {
+      setPhase('out');
+      window.setTimeout(() => {
+        setIndex((i) => (i + 1) % SLIDES.length);
+        setPhase('in');
+      }, 320);
+    }, 2800);
+    return () => window.clearInterval(id);
+  }, [switcher, animated]);
+
+  const goTo = (next: number) => {
+    if (next === index) return;
+    setPhase('out');
+    window.setTimeout(() => {
+      setIndex(next);
+      setPhase('in');
+    }, 280);
+  };
 
   return (
-    <div className={`relative inline-flex ${className}`}>
+    <div className={`relative inline-flex flex-col items-center ${className}`}>
       <style>{`
-        @keyframes elementMarkFloat {
+        @keyframes logoPillFloat {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
+          50% { transform: translateY(-6px); }
         }
-        @keyframes elementMarkShine {
-          0% { transform: translateX(-130%) skewX(-12deg); opacity: 0; }
-          20% { opacity: 0.45; }
-          55% { opacity: 0.1; }
-          100% { transform: translateX(160%) skewX(-12deg); opacity: 0; }
+        .logo-pill-float {
+          animation: logoPillFloat 5.5s ease-in-out infinite;
         }
-        .element-mark-wrap {
-          filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)) drop-shadow(0 4px 10px rgba(194,224,252,0.18));
+        .logo-blur-in {
+          animation: logoBlurIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-        .element-mark-float {
-          animation: elementMarkFloat 5s ease-in-out infinite;
+        .logo-blur-out {
+          animation: logoBlurOut 0.32s ease-in both;
         }
-        .element-mark-shine {
-          animation: elementMarkShine 5.2s ease-in-out infinite;
+        @keyframes logoBlurIn {
+          from { opacity: 0; filter: blur(14px); transform: scale(0.92); }
+          to { opacity: 1; filter: blur(0); transform: scale(1); }
+        }
+        @keyframes logoBlurOut {
+          from { opacity: 1; filter: blur(0); transform: scale(1); }
+          to { opacity: 0; filter: blur(12px); transform: scale(1.04); }
         }
       `}</style>
 
-      {/* Soft brand glow behind — not a second card */}
+      {/* Soft floor shadow — 3D lift like the Jitter template */}
       <div
-        className="pointer-events-none absolute -inset-6 rounded-full opacity-70 blur-2xl"
+        className="pointer-events-none absolute -bottom-3 left-1/2 h-6 w-[70%] -translate-x-1/2 rounded-full blur-xl"
         style={{
-          background:
-            'radial-gradient(circle, rgba(194,224,252,0.35) 0%, rgba(172,225,175,0.2) 45%, transparent 70%)',
+          background: `radial-gradient(ellipse, ${slide.accent}55 0%, rgba(0,0,0,0.55) 55%, transparent 75%)`,
         }}
       />
 
-      <div className={`element-mark-wrap relative ${animated ? 'element-mark-float' : ''}`}>
+      <div className={`relative ${animated ? 'logo-pill-float' : ''}`}>
+        {/* Depth plate under pill */}
         <div
-          className={`relative overflow-hidden ${dims.radius} bg-white`}
+          className="absolute inset-x-2 -bottom-2 top-3 rounded-full opacity-80"
           style={{
-            width: dims.width,
-            height: dims.height,
-            boxShadow:
-              '0 1px 0 rgba(255,255,255,0.7) inset, 0 -6px 14px rgba(0,0,0,0.08) inset, 0 10px 0 rgba(0,0,0,0.18), 0 18px 36px rgba(0,0,0,0.35)',
+            background: 'linear-gradient(180deg, transparent, rgba(0,0,0,0.55))',
+            filter: 'blur(10px)',
           }}
+        />
+
+        {/* The 3D logo pill */}
+        <div
+          className="relative flex items-center justify-center overflow-hidden rounded-full border border-white/10"
+          style={{
+            width: dims.w,
+            height: dims.h,
+            background:
+              'linear-gradient(160deg, #2a2a36 0%, #12121a 48%, #0c0c12 100%)',
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -8px 18px rgba(0,0,0,0.45), 0 18px 40px rgba(0,0,0,0.55), 0 2px 0 rgba(255,255,255,0.06)',
+          }}
+          aria-live="polite"
+          aria-label={`Logo ${slide.label}`}
         >
-          {/* Top bevel highlight */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-1/3 bg-gradient-to-b from-white to-transparent opacity-80" />
+          {/* Specular rim */}
+          <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
 
-          <div className="relative flex h-full w-full items-center justify-center px-3 py-2">
-            <Image
-              src="/logo.jpg"
-              alt="Element"
-              width={dims.imgW}
-              height={Math.round(dims.imgW * 0.55)}
-              priority
-              className="h-full w-full object-contain object-center"
-              style={{
-                // Prefer the wordmark band of the sheet
-                objectPosition: '50% 42%',
-                transform: 'scale(1.35)',
-                filter: 'contrast(1.06) saturate(1.04)',
-              }}
-            />
+          <div
+            key={slide.id}
+            className={`relative flex h-full w-full items-center justify-center ${
+              phase === 'in' ? 'logo-blur-in' : 'logo-blur-out'
+            }`}
+          >
+            {slide.id === 'element' ? (
+              <div
+                className="flex h-[72%] w-[78%] items-center justify-center overflow-hidden rounded-full bg-white"
+                style={{
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.9), 0 6px 16px rgba(0,0,0,0.35)',
+                }}
+              >
+                <Image
+                  src="/logo.jpg"
+                  alt="Element"
+                  width={dims.img}
+                  height={Math.round(dims.img * 0.5)}
+                  priority
+                  className="h-[88%] w-[90%] object-contain"
+                  style={{
+                    objectPosition: '50% 42%',
+                    transform: 'scale(1.25)',
+                    filter: 'contrast(1.05)',
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <PortalMark id={slide.id} className={dims.mark} />
+                <span className="text-[11px] font-bold tracking-wide text-white/85">
+                  {slide.label}
+                </span>
+              </div>
+            )}
           </div>
-
-          {animated && (
-            <div
-              className="element-mark-shine pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/3"
-              style={{
-                background:
-                  'linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)',
-              }}
-            />
-          )}
         </div>
+      </div>
+
+      {/* Caption + dots */}
+      <div className="mt-4 flex flex-col items-center gap-2">
+        <p className="text-[11px] font-semibold tracking-[0.22em] text-white/45 uppercase">
+          {slide.label}
+        </p>
+        {switcher && (
+          <div className="flex items-center gap-1.5">
+            {SLIDES.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                aria-label={`Toon ${s.label}`}
+                onClick={() => goTo(i)}
+                className="h-1.5 rounded-full transition-all duration-300"
+                style={{
+                  width: i === index ? 18 : 6,
+                  background: i === index ? s.accent : 'rgba(255,255,255,0.22)',
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
