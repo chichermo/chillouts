@@ -11,7 +11,7 @@ import {
 } from '@/lib/auth';
 import { getVisiblePortals, type PortalDef } from '@/lib/portals';
 import { getDetentionsAccessScope } from '@/lib/users';
-import PortalMark from '@/components/PortalMark';
+import PortalIconBadge from '@/components/PortalIconBadge';
 import ElementBrand from '@/components/ElementBrand';
 import type { User } from '@/lib/users';
 
@@ -210,15 +210,7 @@ export default function PortalsPage() {
                   />
 
                   <div className="relative flex items-start justify-between gap-3">
-                    <div
-                      className="flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl border border-white/10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[-3deg]"
-                      style={{
-                        background: `linear-gradient(145deg, ${portal.accent}33, transparent)`,
-                        boxShadow: isHovered ? `0 12px 40px ${portal.accent}44` : undefined,
-                      }}
-                    >
-                      <PortalMark id={portal.id} className="h-14 w-14" />
-                    </div>
+                    <PortalIconBadge id={portal.id} accent={portal.accent} lifted={isHovered} />
                     {portal.comingSoon && (
                       <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] font-semibold tracking-wide text-white/55 uppercase">
                         Binnenkort
