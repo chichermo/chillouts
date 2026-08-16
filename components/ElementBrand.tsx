@@ -5,135 +5,97 @@ import Image from 'next/image';
 type ElementBrandProps = {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  /** Show soft float / shine motion */
   animated?: boolean;
 };
 
-const SIZES = {
-  sm: { box: 'h-14 w-14', img: 44, pad: 'p-2' },
-  md: { box: 'h-[4.5rem] w-[4.5rem]', img: 56, pad: 'p-2.5' },
-  lg: { box: 'h-24 w-24 md:h-28 md:w-28', img: 88, pad: 'p-3' },
-} as const;
-
 /**
- * Compact 3D Element brand mark (not the full poster sheet).
- * Crops into the wordmark area and sits on a depth plate.
+ * Readable Element wordmark with light 3D presence.
+ * Wide plate (not a tiny square card) so "element" stays legible.
  */
 export default function ElementBrand({
   size = 'md',
   className = '',
   animated = true,
 }: ElementBrandProps) {
-  const s = SIZES[size];
+  const dims =
+    size === 'lg'
+      ? { width: 260, height: 112, imgW: 240, radius: 'rounded-2xl' }
+      : size === 'sm'
+        ? { width: 148, height: 64, imgW: 134, radius: 'rounded-xl' }
+        : { width: 200, height: 88, imgW: 184, radius: 'rounded-2xl' };
 
   return (
     <div className={`relative inline-flex ${className}`}>
       <style>{`
-        @keyframes elementBrandFloat {
-          0%, 100% { transform: translateY(0) rotateX(10deg) rotateY(-8deg); }
-          50% { transform: translateY(-5px) rotateX(6deg) rotateY(-4deg); }
+        @keyframes elementMarkFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
         }
-        @keyframes elementBrandShine {
-          0% { transform: translateX(-120%) rotate(18deg); opacity: 0; }
-          18% { opacity: 0.55; }
-          42% { opacity: 0.15; }
-          100% { transform: translateX(160%) rotate(18deg); opacity: 0; }
+        @keyframes elementMarkShine {
+          0% { transform: translateX(-130%) skewX(-12deg); opacity: 0; }
+          20% { opacity: 0.45; }
+          55% { opacity: 0.1; }
+          100% { transform: translateX(160%) skewX(-12deg); opacity: 0; }
         }
-        @keyframes elementBrandGlow {
-          0%, 100% { opacity: 0.45; transform: scale(1); }
-          50% { opacity: 0.75; transform: scale(1.06); }
+        .element-mark-wrap {
+          filter: drop-shadow(0 14px 28px rgba(0,0,0,0.45)) drop-shadow(0 4px 10px rgba(194,224,252,0.18));
         }
-        .element-brand-scene {
-          perspective: 900px;
-          perspective-origin: 50% 40%;
+        .element-mark-float {
+          animation: elementMarkFloat 5s ease-in-out infinite;
         }
-        .element-brand-card {
-          transform-style: preserve-3d;
-          transform: rotateX(10deg) rotateY(-8deg);
-          transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .element-brand-scene:hover .element-brand-card {
-          transform: rotateX(4deg) rotateY(2deg) translateY(-2px);
-        }
-        .element-brand-card.is-animated {
-          animation: elementBrandFloat 5.5s ease-in-out infinite;
-        }
-        .element-brand-scene:hover .element-brand-card.is-animated {
-          animation: none;
-        }
-        .element-brand-shine {
-          animation: elementBrandShine 4.8s ease-in-out infinite;
-        }
-        .element-brand-glow {
-          animation: elementBrandGlow 4.5s ease-in-out infinite;
+        .element-mark-shine {
+          animation: elementMarkShine 5.2s ease-in-out infinite;
         }
       `}</style>
 
-      {/* Ambient glow */}
+      {/* Soft brand glow behind — not a second card */}
       <div
-        className={`element-brand-glow pointer-events-none absolute -inset-4 rounded-full blur-2xl ${animated ? '' : 'opacity-50'}`}
+        className="pointer-events-none absolute -inset-6 rounded-full opacity-70 blur-2xl"
         style={{
           background:
-            'radial-gradient(circle, rgba(194,224,252,0.55) 0%, rgba(172,225,175,0.28) 42%, rgba(232,151,163,0.18) 68%, transparent 75%)',
+            'radial-gradient(circle, rgba(194,224,252,0.35) 0%, rgba(172,225,175,0.2) 45%, transparent 70%)',
         }}
       />
 
-      <div className="element-brand-scene relative">
+      <div className={`element-mark-wrap relative ${animated ? 'element-mark-float' : ''}`}>
         <div
-          className={`element-brand-card relative ${s.box} ${animated ? 'is-animated' : ''}`}
+          className={`relative overflow-hidden ${dims.radius} bg-white`}
+          style={{
+            width: dims.width,
+            height: dims.height,
+            boxShadow:
+              '0 1px 0 rgba(255,255,255,0.7) inset, 0 -6px 14px rgba(0,0,0,0.08) inset, 0 10px 0 rgba(0,0,0,0.18), 0 18px 36px rgba(0,0,0,0.35)',
+          }}
         >
-          {/* Back plate / depth */}
-          <div
-            className="absolute inset-0 rounded-[1.35rem]"
-            style={{
-              transform: 'translateZ(-14px) translateY(8px) scale(0.96)',
-              background: 'linear-gradient(145deg, #2a2a3a, #12121a)',
-              boxShadow: '0 18px 36px rgba(0,0,0,0.55)',
-            }}
-          />
+          {/* Top bevel highlight */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-1/3 bg-gradient-to-b from-white to-transparent opacity-80" />
 
-          {/* Side rim */}
-          <div
-            className="absolute inset-0 rounded-[1.35rem]"
-            style={{
-              background:
-                'linear-gradient(145deg, rgba(255,255,255,0.35), rgba(255,255,255,0.05) 40%, rgba(0,0,0,0.25))',
-              boxShadow:
-                'inset 0 1px 0 rgba(255,255,255,0.45), inset 0 -2px 6px rgba(0,0,0,0.25), 0 12px 28px rgba(0,0,0,0.4)',
-            }}
-          />
-
-          {/* Front white logo plate */}
-          <div
-            className={`relative flex h-full w-full items-center justify-center overflow-hidden rounded-[1.2rem] bg-white ${s.pad}`}
-            style={{
-              boxShadow:
-                'inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -3px 8px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,0.5)',
-            }}
-          >
+          <div className="relative flex h-full w-full items-center justify-center px-3 py-2">
             <Image
               src="/logo.jpg"
               alt="Element"
-              width={s.img}
-              height={s.img}
+              width={dims.imgW}
+              height={Math.round(dims.imgW * 0.55)}
               priority
-              className="h-[78%] w-[78%] object-contain object-center"
+              className="h-full w-full object-contain object-center"
               style={{
-                filter: 'contrast(1.05) saturate(1.05)',
+                // Prefer the wordmark band of the sheet
+                objectPosition: '50% 42%',
+                transform: 'scale(1.35)',
+                filter: 'contrast(1.06) saturate(1.04)',
               }}
             />
-
-            {/* Specular sweep */}
-            {animated && (
-              <div
-                className="element-brand-shine pointer-events-none absolute inset-y-[-20%] left-0 w-1/3"
-                style={{
-                  background:
-                    'linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent)',
-                }}
-              />
-            )}
           </div>
+
+          {animated && (
+            <div
+              className="element-mark-shine pointer-events-none absolute inset-y-0 left-0 z-[2] w-1/3"
+              style={{
+                background:
+                  'linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent)',
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

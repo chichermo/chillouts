@@ -153,7 +153,7 @@ export default function PortalsPage() {
       <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-20 pt-2 md:px-8">
         <div className="mb-10 flex flex-col items-center text-center">
           <div className="mb-4">
-            <ElementBrand size="md" />
+            <ElementBrand size="lg" />
           </div>
           <p className="text-[11px] font-semibold tracking-[0.28em] text-white/40 uppercase">
             Element · Sterk in verbinding
