@@ -1,10 +1,10 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, login } from '@/lib/auth';
+import ElementBrand from '@/components/ElementBrand';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,18 +52,11 @@ export default function LoginPage() {
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-center px-4 py-10 md:px-8 lg:flex-row lg:items-center lg:gap-16">
         <section className="mb-10 max-w-xl lg:mb-0 lg:flex-1">
-          <p className="mb-4 text-sm font-semibold tracking-[0.2em] text-white/55 uppercase">
+          <p className="mb-5 text-sm font-semibold tracking-[0.2em] text-white/55 uppercase">
             Element · Sterk in verbinding
           </p>
-          <div className="mb-6 inline-flex rounded-2xl border border-white/15 bg-white/5 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-md">
-            <Image
-              src="/logo.jpg"
-              alt="Element"
-              width={280}
-              height={120}
-              priority
-              className="h-auto w-[220px] object-contain md:w-[280px]"
-            />
+          <div className="mb-7">
+            <ElementBrand size="lg" />
           </div>
           <h1 className="text-4xl font-black leading-tight tracking-tight text-white md:text-5xl">
             Welkom bij het

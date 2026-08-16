@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -13,6 +12,7 @@ import {
 import { getVisiblePortals, type PortalDef } from '@/lib/portals';
 import { getDetentionsAccessScope } from '@/lib/users';
 import PortalMark from '@/components/PortalMark';
+import ElementBrand from '@/components/ElementBrand';
 import type { User } from '@/lib/users';
 
 export default function PortalsPage() {
@@ -152,15 +152,8 @@ export default function PortalsPage() {
 
       <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-20 pt-2 md:px-8">
         <div className="mb-10 flex flex-col items-center text-center">
-          <div className="mb-5 rounded-3xl border border-white/12 bg-white/[0.07] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.45)] backdrop-blur-md md:p-6">
-            <Image
-              src="/logo.jpg"
-              alt="Element"
-              width={320}
-              height={140}
-              priority
-              className="h-auto w-[200px] object-contain md:w-[280px]"
-            />
+          <div className="mb-4">
+            <ElementBrand size="md" />
           </div>
           <p className="text-[11px] font-semibold tracking-[0.28em] text-white/40 uppercase">
             Element · Sterk in verbinding
