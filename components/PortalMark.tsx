@@ -13,83 +13,71 @@ export default function PortalMark({ id, className = 'h-16 w-16' }: PortalMarkPr
   const uid = useId().replace(/:/g, '');
 
   if (id === 'chillouts') {
-    // Leesbare chill-ruimte: zitzak + ontspannen persoon (duidelijk silhouet)
+    // Ultra-clear: classic beanbag + calm face (few shapes, high contrast)
     const g = `co-${uid}`;
     return (
       <svg className={className} viewBox="0 0 64 64" fill="none" aria-hidden>
         <defs>
-          <linearGradient id={g} x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#C8F0CB" />
-            <stop offset="0.55" stopColor="#ACE1AF" />
-            <stop offset="1" stopColor="#4fa35c" />
-          </linearGradient>
-          <linearGradient id={`${g}-soft`} x1="20" y1="20" x2="50" y2="52" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#E8FBE9" />
-            <stop offset="1" stopColor="#7ec98a" />
+          <linearGradient id={g} x1="12" y1="10" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#D4F5D7" />
+            <stop offset="0.45" stopColor="#ACE1AF" />
+            <stop offset="1" stopColor="#5fad6a" />
           </linearGradient>
         </defs>
 
-        {/* Soft room plate */}
-        <rect x="7" y="7" width="50" height="50" rx="16" fill={`url(#${g})`} opacity="0.16" />
-
-        {/* Floor shadow */}
-        <ellipse cx="32" cy="52" rx="18" ry="4.5" fill="#1a1a28" opacity="0.22" />
-
-        {/* Beanbag — big readable shape */}
-        <path
-          d="M12 44c1.5-11 10-18 22-17 10 .8 17 7 19 15 1 4-1 7-5 8H17c-4-1-6-3-5-6z"
-          fill={`url(#${g})`}
-        />
-        <path
-          d="M16 43c3-8 10-13 19-12"
-          stroke="#1a1a28"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          opacity="0.18"
-        />
-
-        {/* Person — clearer silhouette reclining */}
-        <circle cx="40" cy="24" r="7" fill={`url(#${g}-soft)`} />
-        {/* Closed calm eyes */}
-        <path
-          d="M36.5 23.5c1.2-1 2.5-1 3.7 0M41 23.5c1.2-1 2.5-1 3.7 0"
-          stroke="#1a1a28"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          opacity="0.45"
-        />
-        {/* Soft smile */}
-        <path
-          d="M38.5 27c1.2.9 2.8.9 4 0"
-          stroke="#1a1a28"
-          strokeWidth="1.3"
-          strokeLinecap="round"
-          opacity="0.35"
-        />
-        {/* Torso leaning back into bag */}
-        <path
-          d="M28 40c2-7 8-11 15-9 3 1 5 3 6 6"
-          stroke={`url(#${g}-soft)`}
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* Arm resting */}
-        <path
-          d="M33 36c4-1 8 0 11 3"
+        {/* Badge */}
+        <rect x="8" y="8" width="48" height="48" rx="15" fill={`url(#${g})`} opacity="0.18" />
+        <rect
+          x="11"
+          y="11"
+          width="42"
+          height="42"
+          rx="13"
           stroke={`url(#${g})`}
-          strokeWidth="3.2"
-          strokeLinecap="round"
+          strokeWidth="2.5"
           opacity="0.9"
         />
 
-        {/* Calm cue: small leaf / plant left */}
+        {/* Beanbag — classic pear/sack silhouette */}
         <path
-          d="M15 30c0-6 4-10 4-10s4 4 4 10c0 3-2 5-4 5s-4-2-4-5z"
+          d="M16 46c0-10 6-18 16-20 3-.4 5.5.6 7.5 2.5 2-3.5 6.5-5.5 11-3.5 6 2.5 9 9 8 17-1 6-6 9-14 9H24c-5 0-8-2-8-5z"
           fill={`url(#${g})`}
-          opacity="0.85"
         />
-        <path d="M19 30v10" stroke="#1a1a28" strokeWidth="1.4" strokeLinecap="round" opacity="0.25" />
+        {/* Seat crease so it reads as a beanbag */}
+        <path
+          d="M24 36c4-3 9-4 14-2"
+          stroke="#1a1a28"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          opacity="0.2"
+        />
+
+        {/* Calm face resting on the beanbag */}
+        <circle cx="33" cy="24" r="8.5" fill={`url(#${g})`} />
+        <circle cx="33" cy="24" r="8.5" fill="#EAFBEB" opacity="0.35" />
+        {/* Closed eyes */}
+        <path
+          d="M28.2 23.2c1.4-1.2 2.9-1.2 4.3 0"
+          stroke="#1a1a28"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          opacity="0.55"
+        />
+        <path
+          d="M33.5 23.2c1.4-1.2 2.9-1.2 4.3 0"
+          stroke="#1a1a28"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          opacity="0.55"
+        />
+        {/* Smile */}
+        <path
+          d="M30 27.2c1.6 1.4 4.4 1.4 6 0"
+          stroke="#1a1a28"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          opacity="0.45"
+        />
       </svg>
     );
   }
