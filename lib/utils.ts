@@ -460,36 +460,93 @@ export function calculateWeeklyTotalsByStudent(
   return studentTotals;
 }
 
-// Función para ordenar clases de manera inteligente (1ste jaar, 2de jaar, etc.)
-export function sortKlassen(klassen: string[]): string[] {
-  const sorted = [...klassen].sort((a, b) => {
-    // Extraer números de patrones como "1ste jaar", "2de jaar", etc.
-    const getYearNumber = (klas: string): number => {
-      const match = klas.match(/(\d+)(ste|de|e)\s+jaar/i);
-      if (match) {
-        return parseInt(match[1], 10);
-      }
-      // Si no coincide con el patrón, devolver un número muy alto para ponerlo al final
-      return 9999;
+const STREAM_ORDER = ['aarde', 'water', 'lucht', 'vuur'];
+
+function parseKlasSortKey(klas: string): { year: number; streamRank: number; stream: string } {
+  const t = klas.trim();
+  const jaarMatch = t.match(/^(\d+)\s*(?:ste|de|e)\s+jaar$/i);
+  if (jaarMatch) {
+    return { year: parseInt(jaarMatch[1], 10), streamRank: -1, stream: 'jaar' };
+  }
+
+  const numbered = t.match(/^(\d+)\s*(.*)$/);
+  if (numbered) {
+    const stream = numbered[2].trim();
+    const idx = STREAM_ORDER.indexOf(stream.toLowerCase());
+    return {
+      year: parseInt(numbered[1], 10),
+      streamRank: idx === -1 ? STREAM_ORDER.length : idx,
+      stream: stream || t,
     };
-    
-    const yearA = getYearNumber(a);
-    const yearB = getYearNumber(b);
-    
-    // Si ambos tienen año, ordenar por año
-    if (yearA !== 9999 && yearB !== 9999) {
-      return yearA - yearB;
-    }
-    
-    // Si solo uno tiene año, el que tiene año va primero
-    if (yearA !== 9999) return -1;
-    if (yearB !== 9999) return 1;
-    
-    // Si ninguno tiene año, ordenar alfabéticamente
-    return a.localeCompare(b, 'nl');
+  }
+
+  return { year: 9999, streamRank: 9999, stream: t };
+}
+
+/** Sorteer klassen op jaar, daarna Aarde → Water → Lucht → Vuur, daarna alfabetisch. */
+export function sortKlassen(klassen: string[]): string[] {
+  return [...klassen].sort((a, b) => {
+    const ka = parseKlasSortKey(a);
+    const kb = parseKlasSortKey(b);
+    if (ka.year !== kb.year) return ka.year - kb.year;
+    if (ka.streamRank !== kb.streamRank) return ka.streamRank - kb.streamRank;
+    return ka.stream.localeCompare(kb.stream, 'nl', { sensitivity: 'base' });
   });
-  
-  return sorted;
+}
+
+/** Zet "N Water" direct onder "N Aarde" als beide bestaan; de rest schuift door. */
+export function placeWaterAfterAarde(klassen: string[]): string[] {
+  const result = [...klassen];
+  const aardeNamen = result.filter((k) => /^\d+\s*aarde$/i.test(k.trim()));
+
+  for (const aarde of aardeNamen) {
+    const yearMatch = aarde.trim().match(/^(\d+)/);
+    if (!yearMatch) continue;
+    const year = yearMatch[1];
+    const waterIdx = result.findIndex((k) =>
+      new RegExp(`^${year}\\s*water$`, 'i').test(k.trim())
+    );
+    if (waterIdx < 0) continue;
+    if (waterIdx === result.indexOf(aarde) + 1) continue;
+    const [water] = result.splice(waterIdx, 1);
+    result.splice(result.indexOf(aarde) + 1, 0, water);
+  }
+
+  return result;
+}
+
+/**
+ * Verdeel klassen in twee kolommen met behoud van volgorde.
+ * Split op het punt waar het aantal leerlingen links/rechts het meest in balans is.
+ */
+export function splitKlassenIntoBalancedColumns(
+  klassen: string[],
+  students: Student[]
+): { left: string[]; right: string[] } {
+  if (klassen.length === 0) return { left: [], right: [] };
+  if (klassen.length === 1) return { left: klassen, right: [] };
+
+  const sizes = klassen.map((klas) => students.filter((s) => s.klas === klas).length);
+  const total = sizes.reduce((a, b) => a + b, 0);
+
+  let bestSplit = 1;
+  let bestDiff = Infinity;
+  let leftSum = 0;
+
+  for (let i = 0; i < klassen.length - 1; i++) {
+    leftSum += sizes[i];
+    const rightSum = total - leftSum;
+    const diff = Math.abs(leftSum - rightSum);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestSplit = i + 1;
+    }
+  }
+
+  return {
+    left: klassen.slice(0, bestSplit),
+    right: klassen.slice(bestSplit),
+  };
 }
 
 export type PruneChilloutRegistrationOptions = {

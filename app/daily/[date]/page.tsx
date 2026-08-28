@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
@@ -14,19 +14,17 @@ import {
   parseRecordDate,
   sanitizeStudentEntries,
   sortKlassen,
+  splitKlassenIntoBalancedColumns,
 } from '@/lib/utils';
 import { loadKlassenOrder, saveKlassenOrder } from '@/lib/app-settings';
 import { isAdmin } from '@/lib/auth';
 import {
   loadTimetables,
   getSchoolYear,
-  getTeacherForSlot,
   indexTimetablesByKlas,
-  findTimetableInMap,
 } from '@/lib/timetables';
 import type { Timetable } from '@/types';
-import LesuurColumnHeader from '@/components/daily/LesuurColumnHeader';
-import StickyTableWrap from '@/components/StickyTableWrap';
+import KlasDailyCard from '@/components/daily/KlasDailyCard';
 
 export default function DailyPage() {
   const params = useParams();
@@ -206,7 +204,14 @@ export default function DailyPage() {
       return;
     }
     loadKlassenOrder(uniqueKlassen)
-      .then(setKlassen)
+      .then(async (ordered) => {
+        setKlassen(ordered);
+        try {
+          await saveKlassenOrder(ordered);
+        } catch {
+          // Weergave is al correct; opslaan van de volgorde is optioneel
+        }
+      })
       .catch(() => setKlassen(sortKlassen(uniqueKlassen)));
   }, [uniqueKlassen]);
   
@@ -227,11 +232,6 @@ export default function DailyPage() {
   if (!record) return null;
 
   const totals = calculateTotals();
-  
-  // Verdeel klassen in twee groepen om naast elkaar te tonen
-  const midPoint = Math.ceil(klassen.length / 2);
-  const leftKlassen = klassen.slice(0, midPoint);
-  const rightKlassen = klassen.slice(midPoint);
   
   const handleMoveKlas = (index: number, direction: 'up' | 'down') => {
     const newOrder = [...orderedKlassen];
@@ -281,6 +281,24 @@ export default function DailyPage() {
     ? klassen.filter(k => k === filterKlas)
     : klassen;
 
+  const { left: leftKlassen, right: rightKlassen } = useMemo(
+    () => splitKlassenIntoBalancedColumns(filteredKlassen, students),
+    [filteredKlassen, students]
+  );
+
+  const klasCardProps = {
+    students,
+    dateStr,
+    timetableMap,
+    selectedHour,
+    isReadOnlyPast,
+    onHourHover: setSelectedHour,
+    getChillOutCount,
+    getGenericChillOutCount,
+    getTotalChillOuts,
+    onCheckboxChange: handleCheckboxChange,
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -303,13 +321,13 @@ export default function DailyPage() {
                 onClick={() => navigateDate(-1)}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-white"
               >
-                ← Vorige
+                â† Vorige
               </button>
               <button
                 onClick={() => navigateDate(1)}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-white"
               >
-                Volgende →
+                Volgende â†’
               </button>
               <Link
                 href="/daily"
@@ -408,322 +426,17 @@ export default function DailyPage() {
           </div>
         </div>
 
-        {/* Registratie per klas - Twee kolommen */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Linker kolom */}
-          <div>
-            {filteredKlassen.slice(0, Math.ceil(filteredKlassen.length / 2)).map(klas => {
-              const klasStudents = students.filter(s => s.klas === klas);
-              return (
-                <div key={klas} className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-white/20">
-                  <h3 className="text-xl font-semibold mb-4 text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 p-3 rounded-lg border-l-4 border-yellow-400/50">
-                    {klas}
-                  </h3>
-                  <StickyTableWrap>
-                    <table className="w-full border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-white/10">
-                          <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam</th>
-                          {[1, 2, 3, 4, 5, 6, 7].map((hour) => (
-                            <LesuurColumnHeader
-                              key={hour}
-                              hour={hour}
-                              teacher={getTeacherForSlot(
-                                findTimetableInMap(timetableMap, klas)?.slots || {},
-                                new Date(`${dateStr}T12:00:00`),
-                                hour
-                              )}
-                            />
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {klasStudents.map(student => (
-                          <tr key={student.id} className="hover:bg-white/10 transition-colors">
-                            <td className="border border-white/20 px-2 py-1 font-medium text-xs text-white">{student.name}</td>
-                            {[1, 2, 3, 4, 5, 6, 7].map(hour => {
-                              const vrCount = getChillOutCount(student.id, hour, 'VR');
-                              const vlCount = getChillOutCount(student.id, hour, 'VL');
-                              const total = getTotalChillOuts(student.id, hour);
-                              const maxReached = total >= 3;
-
-                              return (
-                                <td 
-                                  key={hour} 
-                                  className={`border border-white/20 px-0.5 py-0.5 transition-all ${
-                                    selectedHour === hour ? 'bg-white/10 border-blue-400/50' : 'hover:bg-white/10'
-                                  }`}
-                                  onMouseEnter={() => setSelectedHour(hour)}
-                                  onMouseLeave={() => setSelectedHour(null)}
-                                >
-                                  <div className="flex flex-col gap-0.5 items-center py-1">
-                                    {/* Compacte checkboxes in één rij met labels */}
-                                    <div className="flex flex-col gap-0.5">
-                                      {/* VR rij - Maximum 1 VR per student per lesuur */}
-                                      <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-blue-200 w-4 text-right">VR</span>
-                                        {[1].map(count => {
-                                          const isChecked = vrCount >= count;
-                                          const vlCountCurrent = getChillOutCount(student.id, hour, 'VL');
-                                          const genericCount = getGenericChillOutCount(student.id, hour);
-                                          // Maximum 3 totalen: 1 VR + VL + generieke chill-outs
-                                          const canCheck = (count + vlCountCurrent + genericCount) <= 3;
-                                          return (
-                                            <label 
-                                              key={`vr-${count}`} 
-                                              className={`flex items-center cursor-pointer ${isChecked ? 'opacity-100' : 'opacity-40'}`}
-                                              title={`VR ${count}`}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={(e) => handleCheckboxChange(student.id, hour, 'VR', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
-                                                className="w-3 h-3 text-blue-600 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                                              />
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
-                                      
-                                      {/* VL rij - Maximum 1 VL per student per lesuur */}
-                                      <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-emerald-200 w-4 text-right">VL</span>
-                                        {[1].map(count => {
-                                          const isChecked = vlCount >= count;
-                                          const vrCountCurrent = getChillOutCount(student.id, hour, 'VR');
-                                          const genericCount = getGenericChillOutCount(student.id, hour);
-                                          // Maximum 3 totalen: VR + 1 VL + generieke chill-outs
-                                          const canCheck = (count + vrCountCurrent + genericCount) <= 3;
-                                          return (
-                                            <label 
-                                              key={`vl-${count}`} 
-                                              className={`flex items-center cursor-pointer ${isChecked ? 'opacity-100' : 'opacity-40'}`}
-                                              title={`VL ${count}`}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={(e) => handleCheckboxChange(student.id, hour, 'VL', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
-                                                className="w-3 h-3 text-green-600 border border-gray-400 rounded focus:ring-1 focus:ring-green-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                                              />
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
-                                      
-                                      {/* Generieke chill-outs rij - Tot 3 mogelijk, maar respecteer maximum totaal van 3 */}
-                                      <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-white/85 w-4 text-right">CO</span>
-                                        {[1, 2, 3].map(count => {
-                                          const genericCount = getGenericChillOutCount(student.id, hour);
-                                          const isChecked = genericCount >= count;
-                                          const vrCountCurrent = getChillOutCount(student.id, hour, 'VR');
-                                          const vlCountCurrent = getChillOutCount(student.id, hour, 'VL');
-                                          // Maximum 3 totalen: VR + VL + generieke chill-outs
-                                          const canCheck = (count + vrCountCurrent + vlCountCurrent) <= 3;
-                                          return (
-                                            <label 
-                                              key={`gen-${count}`} 
-                                              className={`flex items-center cursor-pointer ${isChecked ? 'opacity-100' : 'opacity-40'}`}
-                                              title={`Chill-out ${count}`}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={(e) => handleCheckboxChange(student.id, hour, null, e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
-                                                className="w-3 h-3 text-gray-600 border border-gray-400 rounded focus:ring-1 focus:ring-gray-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                                              />
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Compacte totaalteller */}
-                                    {total > 0 && (
-                                      <span className={`text-[9px] font-bold px-1 py-0 rounded ${
-                                        total >= 3 
-                                          ? 'bg-red-500/30 text-red-200' 
-                                          : total >= 2
-                                          ? 'bg-yellow-500/30 text-yellow-200'
-                                          : 'bg-white/20 text-white/90'
-                                      }`}>
-                                        {total}/3
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </StickyTableWrap>
-                </div>
-              );
-            })}
+        {/* Registratie per klas - twee kolommen, evenwichtig op aantal leerlingen */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          <div className="flex flex-col gap-6 min-w-0">
+            {leftKlassen.map((klas) => (
+              <KlasDailyCard key={klas} klas={klas} {...klasCardProps} />
+            ))}
           </div>
-
-          {/* Rechter kolom */}
-          <div>
-            {filteredKlassen.slice(Math.ceil(filteredKlassen.length / 2)).map(klas => {
-              const klasStudents = students.filter(s => s.klas === klas);
-              return (
-                <div key={klas} className="glass-effect p-6 rounded-xl shadow-lg mb-6 border border-white/20">
-                  <h3 className="text-xl font-semibold mb-4 text-yellow-200 bg-gradient-to-r from-yellow-500/20 to-yellow-400/20 p-3 rounded-lg border-l-4 border-yellow-400/50">
-                    {klas}
-                  </h3>
-                  <StickyTableWrap>
-                    <table className="w-full border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-white/10">
-                          <th className="border border-white/20 px-2 py-1 text-left font-semibold text-xs text-white">Naam</th>
-                          {[1, 2, 3, 4, 5, 6, 7].map((hour) => (
-                            <LesuurColumnHeader
-                              key={hour}
-                              hour={hour}
-                              teacher={getTeacherForSlot(
-                                findTimetableInMap(timetableMap, klas)?.slots || {},
-                                new Date(`${dateStr}T12:00:00`),
-                                hour
-                              )}
-                            />
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {klasStudents.map(student => (
-                          <tr key={student.id} className="hover:bg-white/10 transition-colors">
-                            <td className="border border-white/20 px-2 py-1 font-medium text-xs text-white">{student.name}</td>
-                            {[1, 2, 3, 4, 5, 6, 7].map(hour => {
-                              const vrCount = getChillOutCount(student.id, hour, 'VR');
-                              const vlCount = getChillOutCount(student.id, hour, 'VL');
-                              const total = getTotalChillOuts(student.id, hour);
-                              const maxReached = total >= 3;
-
-                              return (
-                                <td 
-                                  key={hour} 
-                                  className={`border border-white/20 px-0.5 py-0.5 transition-all ${
-                                    selectedHour === hour ? 'bg-white/10 border-blue-400/50' : 'hover:bg-white/10'
-                                  }`}
-                                  onMouseEnter={() => setSelectedHour(hour)}
-                                  onMouseLeave={() => setSelectedHour(null)}
-                                >
-                                  <div className="flex flex-col gap-0.5 items-center py-1">
-                                    {/* Compacte checkboxes in één rij met labels */}
-                                    <div className="flex flex-col gap-0.5">
-                                      {/* VR rij - Maximum 1 VR per student per lesuur */}
-                                      <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-blue-200 w-4 text-right">VR</span>
-                                        {[1].map(count => {
-                                          const isChecked = vrCount >= count;
-                                          const vlCountCurrent = getChillOutCount(student.id, hour, 'VL');
-                                          const genericCount = getGenericChillOutCount(student.id, hour);
-                                          // Maximum 3 totalen: 1 VR + VL + generieke chill-outs
-                                          const canCheck = (count + vlCountCurrent + genericCount) <= 3;
-                                          return (
-                                            <label 
-                                              key={`vr-${count}`} 
-                                              className={`flex items-center cursor-pointer ${isChecked ? 'opacity-100' : 'opacity-40'}`}
-                                              title={`VR ${count}`}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={(e) => handleCheckboxChange(student.id, hour, 'VR', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
-                                                className="w-3 h-3 text-blue-600 border border-gray-400 rounded focus:ring-1 focus:ring-blue-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                                              />
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
-                                      
-                                      {/* VL rij - Maximum 1 VL per student per lesuur */}
-                                      <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-emerald-200 w-4 text-right">VL</span>
-                                        {[1].map(count => {
-                                          const isChecked = vlCount >= count;
-                                          const vrCountCurrent = getChillOutCount(student.id, hour, 'VR');
-                                          const genericCount = getGenericChillOutCount(student.id, hour);
-                                          // Maximum 3 totalen: VR + 1 VL + generieke chill-outs
-                                          const canCheck = (count + vrCountCurrent + genericCount) <= 3;
-                                          return (
-                                            <label 
-                                              key={`vl-${count}`} 
-                                              className={`flex items-center cursor-pointer ${isChecked ? 'opacity-100' : 'opacity-40'}`}
-                                              title={`VL ${count}`}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={(e) => handleCheckboxChange(student.id, hour, 'VL', e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
-                                                className="w-3 h-3 text-green-600 border border-gray-400 rounded focus:ring-1 focus:ring-green-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                                              />
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
-                                      
-                                      {/* Generieke chill-outs rij - Tot 3 mogelijk, maar respecteer maximum totaal van 3 */}
-                                      <div className="flex items-center gap-0.5 justify-center">
-                                        <span className="text-[9px] font-semibold text-white/85 w-4 text-right">CO</span>
-                                        {[1, 2, 3].map(count => {
-                                          const genericCount = getGenericChillOutCount(student.id, hour);
-                                          const isChecked = genericCount >= count;
-                                          const vrCountCurrent = getChillOutCount(student.id, hour, 'VR');
-                                          const vlCountCurrent = getChillOutCount(student.id, hour, 'VL');
-                                          // Maximum 3 totalen: VR + VL + generieke chill-outs
-                                          const canCheck = (count + vrCountCurrent + vlCountCurrent) <= 3;
-                                          return (
-                                            <label 
-                                              key={`gen-${count}`} 
-                                              className={`flex items-center cursor-pointer ${isChecked ? 'opacity-100' : 'opacity-40'}`}
-                                              title={`Chill-out ${count}`}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={(e) => handleCheckboxChange(student.id, hour, null, e.target.checked ? count : count - 1, e.target.checked)}
-                                                disabled={isReadOnlyPast || (!canCheck && !isChecked)}
-                                                className="w-3 h-3 text-gray-600 border border-gray-400 rounded focus:ring-1 focus:ring-gray-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                                              />
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Compacte totaalteller */}
-                                    {total > 0 && (
-                                      <span className={`text-[9px] font-bold px-1 py-0 rounded ${
-                                        total >= 3 
-                                          ? 'bg-red-500/30 text-red-200' 
-                                          : total >= 2
-                                          ? 'bg-yellow-500/30 text-yellow-200'
-                                          : 'bg-white/20 text-white/90'
-                                      }`}>
-                                        {total}/3
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </StickyTableWrap>
-                </div>
-              );
-            })}
+          <div className="flex flex-col gap-6 min-w-0">
+            {rightKlassen.map((klas) => (
+              <KlasDailyCard key={klas} klas={klas} {...klasCardProps} />
+            ))}
           </div>
         </div>
       </div>
