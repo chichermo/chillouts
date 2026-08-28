@@ -282,8 +282,8 @@ export default function DailyPage() {
     : klassen;
 
   const { left: leftKlassen, right: rightKlassen } = useMemo(
-    () => splitKlassenIntoBalancedColumns(filteredKlassen, students),
-    [filteredKlassen, students]
+    () => splitKlassenIntoBalancedColumns(filteredKlassen),
+    [filteredKlassen]
   );
 
   const klasCardProps = {
@@ -426,7 +426,7 @@ export default function DailyPage() {
           </div>
         </div>
 
-        {/* Registratie per klas — twee kolommen, jaargroepen blijven samen */}
+        {/* Registratie per klas — kolom 2: 3 MovePlay, 4 Art, 4 Business */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="flex flex-col gap-6 min-w-0">
             {leftKlassen.map((klas) => (

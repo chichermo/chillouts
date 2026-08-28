@@ -515,74 +515,30 @@ export function placeWaterAfterAarde(klassen: string[]): string[] {
   return result;
 }
 
-/**
- * Groepeer opeenvolgende klassen per schooljaar (1e jaar, 2 Aarde, …).
- * Splits nooit midden in een jaargroep.
- */
-function groupKlassenByYear(klassen: string[]): string[][] {
-  const groups: string[][] = [];
-  let currentYear: number | null = null;
-  let current: string[] = [];
+/** Klassen die in de rechterkolom op Dagelijks staan (rest = linkerkolom, volgorde behouden). */
+export const DAILY_COLUMN_2_KLASSEN = ['3 MovePlay', '4 Art', '4 Business'] as const;
 
-  for (const klas of klassen) {
-    const year = parseKlasSortKey(klas).year;
-    if (currentYear !== null && year !== currentYear) {
-      groups.push(current);
-      current = [];
-    }
-    currentYear = year;
-    current.push(klas);
-  }
-  if (current.length) groups.push(current);
-  return groups;
-}
-
-function countStudentsInKlassen(klassen: string[], students: Student[]): number {
-  return klassen.reduce(
-    (sum, klas) => sum + students.filter((s) => s.klas === klas).length,
-    0
-  );
+function normalizeKlasKey(klas: string): string {
+  return klas.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 /**
- * Verdeel klassen in twee kolommen met behoud van volgorde.
- * Jaargroepen blijven bij elkaar; split alleen tussen jaargroepen.
- * Bij één jaargroep: helft van het aantal klassen (volgorde behouden).
+ * Verdeel klassen in twee kolommen: vaste rechterkolom-lijst, overige links.
+ * Volgorde uit klassen_order blijft per kolom behouden.
  */
 export function splitKlassenIntoBalancedColumns(
   klassen: string[],
-  students: Student[]
+  _students?: Student[],
+  column2Klassen: readonly string[] = DAILY_COLUMN_2_KLASSEN
 ): { left: string[]; right: string[] } {
-  if (klassen.length === 0) return { left: [], right: [] };
-  if (klassen.length === 1) return { left: klassen, right: [] };
-
-  const groups = groupKlassenByYear(klassen);
-
-  if (groups.length === 1) {
-    const mid = Math.ceil(klassen.length / 2);
-    return { left: klassen.slice(0, mid), right: klassen.slice(mid) };
+  const col2 = new Set(column2Klassen.map(normalizeKlasKey));
+  const left: string[] = [];
+  const right: string[] = [];
+  for (const klas of klassen) {
+    if (col2.has(normalizeKlasKey(klas))) right.push(klas);
+    else left.push(klas);
   }
-
-  const groupSizes = groups.map((g) => countStudentsInKlassen(g, students));
-  const total = groupSizes.reduce((a, b) => a + b, 0);
-
-  let bestSplit = 1;
-  let bestDiff = Infinity;
-  let leftSum = 0;
-
-  for (let i = 0; i < groups.length - 1; i++) {
-    leftSum += groupSizes[i];
-    const diff = Math.abs(leftSum - (total - leftSum));
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      bestSplit = i + 1;
-    }
-  }
-
-  return {
-    left: groups.slice(0, bestSplit).flat(),
-    right: groups.slice(bestSplit).flat(),
-  };
+  return { left, right };
 }
 
 export type PruneChilloutRegistrationOptions = {
