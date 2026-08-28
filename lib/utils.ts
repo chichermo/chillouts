@@ -516,8 +516,38 @@ export function placeWaterAfterAarde(klassen: string[]): string[] {
 }
 
 /**
+ * Groepeer opeenvolgende klassen per schooljaar (1e jaar, 2 Aarde, …).
+ * Splits nooit midden in een jaargroep.
+ */
+function groupKlassenByYear(klassen: string[]): string[][] {
+  const groups: string[][] = [];
+  let currentYear: number | null = null;
+  let current: string[] = [];
+
+  for (const klas of klassen) {
+    const year = parseKlasSortKey(klas).year;
+    if (currentYear !== null && year !== currentYear) {
+      groups.push(current);
+      current = [];
+    }
+    currentYear = year;
+    current.push(klas);
+  }
+  if (current.length) groups.push(current);
+  return groups;
+}
+
+function countStudentsInKlassen(klassen: string[], students: Student[]): number {
+  return klassen.reduce(
+    (sum, klas) => sum + students.filter((s) => s.klas === klas).length,
+    0
+  );
+}
+
+/**
  * Verdeel klassen in twee kolommen met behoud van volgorde.
- * Split op het punt waar het aantal leerlingen links/rechts het meest in balans is.
+ * Jaargroepen blijven bij elkaar; split alleen tussen jaargroepen.
+ * Bij één jaargroep: helft van het aantal klassen (volgorde behouden).
  */
 export function splitKlassenIntoBalancedColumns(
   klassen: string[],
@@ -526,17 +556,23 @@ export function splitKlassenIntoBalancedColumns(
   if (klassen.length === 0) return { left: [], right: [] };
   if (klassen.length === 1) return { left: klassen, right: [] };
 
-  const sizes = klassen.map((klas) => students.filter((s) => s.klas === klas).length);
-  const total = sizes.reduce((a, b) => a + b, 0);
+  const groups = groupKlassenByYear(klassen);
+
+  if (groups.length === 1) {
+    const mid = Math.ceil(klassen.length / 2);
+    return { left: klassen.slice(0, mid), right: klassen.slice(mid) };
+  }
+
+  const groupSizes = groups.map((g) => countStudentsInKlassen(g, students));
+  const total = groupSizes.reduce((a, b) => a + b, 0);
 
   let bestSplit = 1;
   let bestDiff = Infinity;
   let leftSum = 0;
 
-  for (let i = 0; i < klassen.length - 1; i++) {
-    leftSum += sizes[i];
-    const rightSum = total - leftSum;
-    const diff = Math.abs(leftSum - rightSum);
+  for (let i = 0; i < groups.length - 1; i++) {
+    leftSum += groupSizes[i];
+    const diff = Math.abs(leftSum - (total - leftSum));
     if (diff < bestDiff) {
       bestDiff = diff;
       bestSplit = i + 1;
@@ -544,8 +580,8 @@ export function splitKlassenIntoBalancedColumns(
   }
 
   return {
-    left: klassen.slice(0, bestSplit),
-    right: klassen.slice(bestSplit),
+    left: groups.slice(0, bestSplit).flat(),
+    right: groups.slice(bestSplit).flat(),
   };
 }
 

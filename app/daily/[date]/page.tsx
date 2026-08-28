@@ -426,7 +426,7 @@ export default function DailyPage() {
           </div>
         </div>
 
-        {/* Registratie per klas - twee kolommen, evenwichtig op aantal leerlingen */}
+        {/* Registratie per klas — twee kolommen, jaargroepen blijven samen */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="flex flex-col gap-6 min-w-0">
             {leftKlassen.map((klas) => (
