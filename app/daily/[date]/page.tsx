@@ -222,6 +222,16 @@ export default function DailyPage() {
     }
   }, [showOrderModal, orderedKlassen.length, klassen]);
 
+  const filteredKlassen = useMemo(
+    () => (filterKlas ? klassen.filter((k) => k === filterKlas) : klassen),
+    [filterKlas, klassen]
+  );
+
+  const { left: leftKlassen, right: rightKlassen } = useMemo(
+    () => splitKlassenIntoBalancedColumns(filteredKlassen),
+    [filteredKlassen]
+  );
+
   if (loading) {
     return <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
       <Navigation />
@@ -276,15 +286,6 @@ export default function DailyPage() {
     newDate.setDate(newDate.getDate() + days);
     window.location.href = `/daily/${formatDate(newDate)}`;
   };
-
-  const filteredKlassen = filterKlas 
-    ? klassen.filter(k => k === filterKlas)
-    : klassen;
-
-  const { left: leftKlassen, right: rightKlassen } = useMemo(
-    () => splitKlassenIntoBalancedColumns(filteredKlassen),
-    [filteredKlassen]
-  );
 
   const klasCardProps = {
     students,
