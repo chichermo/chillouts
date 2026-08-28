@@ -322,13 +322,13 @@ export default function DailyPage() {
                 onClick={() => navigateDate(-1)}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-white"
               >
-                â† Vorige
+                Vorige
               </button>
               <button
                 onClick={() => navigateDate(1)}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors text-white"
               >
-                Volgende â†’
+                Volgende
               </button>
               <Link
                 href="/daily"
