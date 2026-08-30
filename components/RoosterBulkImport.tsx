@@ -1,8 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { parseRoosterPdfBytes, type RoosterPdfParseResult } from '@/lib/roosterPdfImport';
-import { DAY_NAMES, HOURS } from '@/lib/timetables';
+import { parseRoosterPdfBytes } from '@/lib/roosterPdfImport';
+import {
+  parseRoosterExcelBytes,
+  type RoosterImportResult,
+} from '@/lib/roosterExcelImport';
+import { DAY_NAMES, HOURS, slotKey } from '@/lib/timetables';
 import type { TimetableSlots } from '@/types';
 
 type Props = {
@@ -11,12 +15,28 @@ type Props = {
   onClose?: () => void;
 };
 
+function isExcelFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return (
+    name.endsWith('.xlsx') ||
+    name.endsWith('.xls') ||
+    file.type.includes('spreadsheet') ||
+    file.type === 'application/vnd.ms-excel' ||
+    file.type ===
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  );
+}
+
+function isPdfFile(file: File): boolean {
+  return file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+}
+
 export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: Props) {
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState('');
-  const [result, setResult] = useState<RoosterPdfParseResult | null>(null);
+  const [result, setResult] = useState<RoosterImportResult | null>(null);
   const [expandedKlas, setExpandedKlas] = useState<string | null>(null);
 
   const totalSlots = useMemo(
@@ -37,17 +57,33 @@ export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: 
     setParsing(true);
     try {
       const buf = await file.arrayBuffer();
-      const parsed = await parseRoosterPdfBytes(buf);
-      if (!parsed.timetables.length) {
-        throw new Error(
-          parsed.warnings[0] ||
-            'Geen roosters gevonden in deze PDF. Verwacht Untis/Stamina klasrooster.'
-        );
+      let parsed: RoosterImportResult;
+
+      if (isExcelFile(file)) {
+        parsed = await parseRoosterExcelBytes(buf);
+        if (!parsed.timetables.length) {
+          throw new Error(
+            parsed.warnings[0] ||
+              'Geen roosters gevonden in dit Excel-bestand. Verwacht één blad per klas (Lesuur + weekdagen).'
+          );
+        }
+      } else if (isPdfFile(file)) {
+        const pdf = await parseRoosterPdfBytes(buf);
+        parsed = { ...pdf, source: 'pdf' };
+        if (!parsed.timetables.length) {
+          throw new Error(
+            parsed.warnings[0] ||
+              'Geen roosters gevonden in deze PDF. Verwacht Untis/Stamina klasrooster.'
+          );
+        }
+      } else {
+        throw new Error('Kies een PDF (.pdf) of Excel-bestand (.xlsx).');
       }
+
       setResult(parsed);
       setExpandedKlas(parsed.timetables[0]?.klas || null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'PDF kon niet gelezen worden');
+      setError(err instanceof Error ? err.message : 'Bestand kon niet gelezen worden');
     } finally {
       setParsing(false);
       event.target.value = '';
@@ -74,16 +110,20 @@ export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: 
     }
   };
 
+  const sourceLabel =
+    result?.source === 'excel' ? 'Excel' : result?.source === 'pdf' ? 'PDF' : null;
+
   return (
     <div className="glass-effect rounded-xl p-5 border border-white/20 mb-6">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
         <div>
-          <h2 className="text-lg font-bold text-white">Bulk import roosters (PDF)</h2>
+          <h2 className="text-lg font-bold text-white">Bulk import roosters</h2>
           <p className="text-sm text-white/70 mt-1">
-            Voor een nieuw schooljaar: upload een Untis/Stamina PDF met meerdere
-            klaspagina&apos;s. Alles wordt opgeslagen onder{' '}
-            <span className="text-white font-medium">{selectedYear || '…'}</span>.
-            Eerst preview, daarna bevestigen.
+            Upload een Untis/Stamina <strong className="text-white/90">PDF</strong> of het
+            geëxporteerde <strong className="text-white/90">Excel</strong>-rooster. Alles
+            wordt opgeslagen onder{' '}
+            <span className="text-white font-medium">{selectedYear || '…'}</span>. Eerst
+            preview, daarna bevestigen.
           </p>
         </div>
         {onClose && (
@@ -99,10 +139,10 @@ export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: 
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-500">
-          {parsing ? 'PDF lezen…' : 'PDF selecteren'}
+          {parsing ? 'Bestand lezen…' : 'PDF of Excel selecteren'}
           <input
             type="file"
-            accept="application/pdf,.pdf"
+            accept=".pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
             className="hidden"
             disabled={parsing || saving || !selectedYear}
             onChange={handleFile}
@@ -120,8 +160,15 @@ export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: 
       {result && (
         <div className="mt-4 space-y-3">
           <div className="flex flex-wrap gap-3 text-sm text-white/85">
+            {sourceLabel && (
+              <span className="px-2.5 py-1 rounded bg-indigo-500/25 border border-indigo-400/30 text-indigo-100">
+                Bron: {sourceLabel}
+              </span>
+            )}
             <span className="px-2.5 py-1 rounded bg-white/10 border border-white/15">
-              {result.pageCount} pagina&apos;s
+              {result.source === 'excel'
+                ? `${result.pageCount} bladen`
+                : `${result.pageCount} pagina's`}
             </span>
             <span className="px-2.5 py-1 rounded bg-white/10 border border-white/15">
               {result.timetables.length} klassen
@@ -132,6 +179,11 @@ export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: 
             <span className="px-2.5 py-1 rounded bg-emerald-500/20 border border-emerald-400/30 text-emerald-100">
               Doeljaar: {selectedYear}
             </span>
+            {result.year && result.year !== selectedYear && (
+              <span className="px-2.5 py-1 rounded bg-amber-500/20 border border-amber-400/30 text-amber-50">
+                Bestandjaar: {result.year}
+              </span>
+            )}
           </div>
 
           {result.warnings.length > 0 && (
@@ -154,16 +206,23 @@ export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: 
                     onClick={() => setExpandedKlas(open ? null : t.klas)}
                   >
                     <span className="font-medium">{t.klas}</span>
-                    <span className="text-white/55">{count} slots {open ? '▴' : '▾'}</span>
+                    <span className="text-white/55">
+                      {count} slots {open ? '▴' : '▾'}
+                    </span>
                   </button>
                   {open && (
                     <div className="px-3 pb-3 overflow-x-auto">
                       <table className="w-full text-[11px] border-collapse">
                         <thead>
                           <tr>
-                            <th className="border border-white/15 px-1 py-1 text-white/60">Uur</th>
+                            <th className="border border-white/15 px-1 py-1 text-white/60">
+                              Uur
+                            </th>
                             {DAY_NAMES.map((d) => (
-                              <th key={d} className="border border-white/15 px-1 py-1 text-white/60">
+                              <th
+                                key={d}
+                                className="border border-white/15 px-1 py-1 text-white/60"
+                              >
                                 {d}
                               </th>
                             ))}
@@ -172,13 +231,15 @@ export default function RoosterBulkImport({ selectedYear, onConfirm, onClose }: 
                         <tbody>
                           {HOURS.map((h) => (
                             <tr key={h}>
-                              <td className="border border-white/15 px-1 py-1 text-white/70">{h}</td>
+                              <td className="border border-white/15 px-1 py-1 text-white/70">
+                                {h}
+                              </td>
                               {DAY_NAMES.map((_, di) => (
                                 <td
                                   key={di}
                                   className="border border-white/15 px-1 py-1 text-white/90"
                                 >
-                                  {t.slots[`${di}-${h}`] || '—'}
+                                  {t.slots[slotKey(di, h)] || '—'}
                                 </td>
                               ))}
                             </tr>

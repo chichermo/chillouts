@@ -1,25 +1,20 @@
 /**
  * Parse Untis/Stamina klasrooster-PDF (meerdere pagina's) → Timetable slots.
- * Slot key = `${dayIndex}-${hour}` met dayIndex 0=Ma … 4=Vr, hour 1–7.
+ * Slot key = `${dayIndex}_${hour}` met dayIndex 0=Ma … 4=Vr, hour 1–7.
  */
 
 import type { Timetable, TimetableSlots } from '@/types';
 import { cleanPersonNameText } from './studentImport';
+import { slotKey } from './timetables';
+import type { RoosterImportResult } from './roosterExcelImport';
 
-export type RoosterPdfParseResult = {
-  year: string | null;
-  timetables: Array<Pick<Timetable, 'klas' | 'slots'>>;
-  warnings: string[];
-  pageCount: number;
+export type RoosterPdfParseResult = Omit<RoosterImportResult, 'source'> & {
+  source?: 'pdf';
 };
 
 type PdfTextItem = { str: string; x: number; y: number };
 
 const DAY_HEADERS = ['Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag'] as const;
-
-function slotKey(dayIndex: number, hour: number): string {
-  return `${dayIndex}-${hour}`;
-}
 
 function isRoomLabel(s: string): boolean {
   const t = s.trim();
@@ -209,5 +204,6 @@ export async function parseRoosterPdfBytes(
     timetables,
     warnings,
     pageCount: doc.numPages,
+    source: 'pdf',
   };
 }

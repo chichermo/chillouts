@@ -547,7 +547,7 @@ export default function TimetablesPage() {
                 onClick={() => setShowBulkImport((v) => !v)}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500"
               >
-                {showBulkImport ? 'Verberg PDF-import' : 'Bulk import PDF'}
+                {showBulkImport ? 'Verberg bulk-import' : 'Bulk import PDF / Excel'}
               </button>
               {showAddKlas && (
                 <div className="flex gap-2 items-center">
