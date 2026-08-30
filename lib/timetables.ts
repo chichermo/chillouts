@@ -141,12 +141,36 @@ export function normalizeKlasForLookup(klas: string): string {
     .replace(/\s+/g, ''); // "3 Move & Play" / "3 MovePlay" → "3MOVEPLAY"
 }
 
+/** Extra sleutels: Untis "3 Move&Play" ↔ app "3 MovePlay". */
+export function klasLookupKeys(klas: string): string[] {
+  const raw = String(klas || '').trim();
+  if (!raw) return [];
+  const keys = new Set<string>([raw, normalizeKlasForLookup(raw)]);
+
+  const asMovePlay = raw.replace(/Move\s*&\s*Play/gi, 'MovePlay');
+  const asMoveAndPlay = raw.replace(/MovePlay/gi, 'Move&Play');
+  keys.add(asMovePlay);
+  keys.add(asMoveAndPlay);
+  keys.add(normalizeKlasForLookup(asMovePlay));
+  keys.add(normalizeKlasForLookup(asMoveAndPlay));
+
+  const compact = normalizeKlasForLookup(raw);
+  const combined = compact.match(/^(\d)(?:\/(\d))?MOVEPLAY$/);
+  if (combined) {
+    keys.add(`${combined[1]}MOVEPLAY`);
+    if (combined[2]) keys.add(`${combined[2]}MOVEPLAY`);
+  }
+
+  return [...keys];
+}
+
 /** Indexeer roosters per klas + genormaliseerde sleutel */
 export function indexTimetablesByKlas(timetables: Timetable[]): Record<string, Timetable> {
   const map: Record<string, Timetable> = {};
   for (const t of timetables) {
-    map[t.klas] = t;
-    map[normalizeKlasForLookup(t.klas)] = t;
+    for (const key of klasLookupKeys(t.klas)) {
+      map[key] = t;
+    }
   }
   return map;
 }
@@ -157,11 +181,12 @@ export function findTimetableInMap(
   klas: string
 ): Timetable | undefined {
   if (!map || !klas) return undefined;
-  if (map[klas]) return map[klas];
-  const key = normalizeKlasForLookup(klas);
-  if (map[key]) return map[key];
+  for (const key of klasLookupKeys(klas)) {
+    if (map[key]) return map[key];
+  }
+  const want = new Set(klasLookupKeys(klas));
   for (const [k, t] of Object.entries(map)) {
-    if (normalizeKlasForLookup(k) === key) return t;
+    if (want.has(k) || want.has(normalizeKlasForLookup(k))) return t;
   }
   return undefined;
 }

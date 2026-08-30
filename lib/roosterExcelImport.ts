@@ -53,6 +53,14 @@ function findHourColumn(headerRow: unknown[]): number {
   return idx >= 0 ? idx : 0;
 }
 
+/** Untis "3 Move&Play" → app-klas "3 MovePlay". */
+function canonicalizeImportedKlas(name: string): string {
+  return String(name || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/Move\s*&\s*Play/gi, 'MovePlay');
+}
+
 export async function parseRoosterExcelBytes(
   data: ArrayBuffer | Uint8Array
 ): Promise<RoosterImportResult> {
@@ -122,7 +130,7 @@ export async function parseRoosterExcelBytes(
       continue;
     }
 
-    timetables.push({ klas: name, slots });
+    timetables.push({ klas: canonicalizeImportedKlas(name), slots });
   }
 
   timetables.sort((a, b) => a.klas.localeCompare(b.klas, 'nl'));
