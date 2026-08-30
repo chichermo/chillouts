@@ -532,8 +532,6 @@ export const DAILY_COLUMN_1_KLASSEN = [
   '3 Food',
   '3 Move',
   '3 MovePlay',
-  '4 Art',
-  '4 Business',
 ] as const;
 
 /** @deprecated Gebruik DAILY_COLUMN_1_KLASSEN; rechts = alle niet-linkerklassen. */
