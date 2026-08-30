@@ -130,9 +130,15 @@ export function getTeacherForSlot(
   return slots[slotKey(dayIndex, hour)] || '';
 }
 
-/** Normaliseer klasnaam voor lookup (spaties, hoofdletters) */
+/** Normaliseer klasnaam voor lookup (spaties, &, hoofdletters) */
 export function normalizeKlasForLookup(klas: string): string {
-  return klas.trim().replace(/\s+/g, ' ').toUpperCase();
+  return klas
+    .trim()
+    .replace(/&/g, ' ')
+    .replace(/[_./-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .toUpperCase()
+    .replace(/\s+/g, ''); // "3 Move & Play" / "3 MovePlay" → "3MOVEPLAY"
 }
 
 /** Indexeer roosters per klas + genormaliseerde sleutel */
@@ -145,7 +151,7 @@ export function indexTimetablesByKlas(timetables: Timetable[]): Record<string, T
   return map;
 }
 
-/** Zoek rooster ongeacht spaties / hoofdletters in de klasnaam */
+/** Zoek rooster ongeacht spaties / hoofdletters / & in de klasnaam */
 export function findTimetableInMap(
   map: Record<string, Timetable> | undefined,
   klas: string
@@ -158,6 +164,67 @@ export function findTimetableInMap(
     if (normalizeKlasForLookup(k) === key) return t;
   }
   return undefined;
+}
+
+/**
+ * Kies roosters voor een datum: schooljaar van de datum, in juli/augustus
+ * ook het aankomende schooljaar (meeste ingevulde slots wint).
+ */
+export async function loadTimetablesForDate(date: Date): Promise<{
+  year: string;
+  timetables: Timetable[];
+  map: Record<string, Timetable>;
+}> {
+  const primaryYear = getSchoolYear(date);
+  const calendarYear = date.getFullYear();
+  const month = date.getMonth();
+  const upcomingYear = `${calendarYear}-${calendarYear + 1}`;
+
+  const candidates = new Set<string>([primaryYear]);
+  // Juli/augustus: vaak al roosters voor het nieuwe schooljaar
+  if (month === 6 || month === 7) {
+    candidates.add(upcomingYear);
+  }
+
+  let bestYear = primaryYear;
+  let best: Timetable[] = [];
+  let bestFilled = -1;
+
+  const consider = async (year: string) => {
+    const list = await loadTimetables(year);
+    const filled = list.reduce(
+      (sum, t) =>
+        sum + Object.values(t.slots || {}).filter((v) => v && String(v).trim()).length,
+      0
+    );
+    if (filled > bestFilled) {
+      bestFilled = filled;
+      best = list;
+      bestYear = year;
+    }
+  };
+
+  for (const year of candidates) {
+    await consider(year);
+  }
+
+  if (bestFilled <= 0) {
+    try {
+      const years = await getTimetableYears();
+      for (const year of years) {
+        if (candidates.has(year)) continue;
+        await consider(year);
+      }
+    } catch {
+      /* behoud wat we hebben */
+    }
+  }
+
+  return {
+    year: bestYear,
+    timetables: best,
+    map: indexTimetablesByKlas(best),
+  };
 }
 
 /** Schooljaar van datum, daarna fallback naar andere jaren met rooster voor dezelfde klas */

@@ -19,9 +19,8 @@ import {
 import { loadKlassenOrder, saveKlassenOrder } from '@/lib/app-settings';
 import { isAdmin } from '@/lib/auth';
 import {
-  loadTimetables,
-  getSchoolYear,
-  indexTimetablesByKlas,
+  loadTimetablesForDate,
+  findTimetableInMap,
 } from '@/lib/timetables';
 import type { Timetable } from '@/types';
 import KlasDailyCard from '@/components/daily/KlasDailyCard';
@@ -39,6 +38,7 @@ export default function DailyPage() {
   const [orderedKlassen, setOrderedKlassen] = useState<string[]>([]);
   const [klassen, setKlassen] = useState<string[]>([]);
   const [timetableMap, setTimetableMap] = useState<Record<string, Timetable>>({});
+  const [timetableYear, setTimetableYear] = useState<string>('');
   const [saveError, setSaveError] = useState('');
   const pendingRecordRef = useRef<DailyRecord | null>(null);
   const saveInFlightRef = useRef(false);
@@ -95,16 +95,21 @@ export default function DailyPage() {
     loadDataAsync();
   }, [dateStr]);
 
-  // Laad roosters voor docentweergave
+  // Laad roosters voor docentweergave (juli/augustus → ook nieuw schooljaar)
   useEffect(() => {
     if (!dateStr || !record) return;
-    const dateObj = new Date(dateStr);
-    const year = getSchoolYear(dateObj);
-    loadTimetables(year)
-      .then((timetables) => {
-        setTimetableMap(indexTimetablesByKlas(timetables));
+    const dateObj = new Date(`${dateStr}T12:00:00`);
+    let cancelled = false;
+    loadTimetablesForDate(dateObj)
+      .then(({ year, map }) => {
+        if (cancelled) return;
+        setTimetableYear(year);
+        setTimetableMap(map);
       })
       .catch((err) => console.warn('Roosters niet geladen:', err));
+    return () => {
+      cancelled = true;
+    };
   }, [dateStr, record]);
 
   function migrateRecord(oldRecord: DailyRecord): DailyRecord {
@@ -280,6 +285,11 @@ export default function DailyPage() {
   const isPastDate = dateStr < todayLocal;
   const isReadOnlyPast = isPastDate && !isAdmin();
 
+  const linkedKlassenCount = useMemo(() => {
+    if (!klassen.length || !Object.keys(timetableMap).length) return 0;
+    return klassen.filter((klas) => findTimetableInMap(timetableMap, klas)).length;
+  }, [klassen, timetableMap]);
+
   // Datumnavigatie
   const navigateDate = (days: number) => {
     const newDate = new Date(dateObj);
@@ -316,6 +326,21 @@ export default function DailyPage() {
                 {displayDate}
               </h1>
               <p className="text-white/90">Registreer chill-outs voor deze dag</p>
+              {timetableYear && (
+                <p className="text-sm text-amber-100/90 mt-1">
+                  Docenten uit roosters {timetableYear}: {linkedKlassenCount}/{klassen.length}{' '}
+                  klassen gekoppeld
+                  {linkedKlassenCount < klassen.length && klassen.length > 0 ? (
+                    <>
+                      {' '}
+                      — pas klasnamen af via{' '}
+                      <Link href="/timetables" className="underline hover:text-white">
+                        Roosters
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button
