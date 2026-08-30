@@ -515,29 +515,65 @@ export function placeWaterAfterAarde(klassen: string[]): string[] {
   return result;
 }
 
-/** Klassen die in de rechterkolom op Dagelijks staan (rest = linkerkolom, volgorde behouden). */
-export const DAILY_COLUMN_2_KLASSEN = ['3 MovePlay', '4 Art', '4 Business'] as const;
+/**
+ * Vaste linkerkolom op Dagelijks (volgorde). Overige klassen → rechterkolom.
+ * Matching negeert spaties/hoofdletters/& (3 MovePlay ≈ 3 Move&Play).
+ */
+export const DAILY_COLUMN_1_KLASSEN = [
+  '1 Aarde',
+  '1 Water',
+  '1 Lucht',
+  '1 Vuur',
+  '2 Aarde',
+  '2 Lucht',
+  '2 Vuur',
+  '3 Art',
+  '3 Business',
+  '3 Food',
+  '3 Move',
+  '3 MovePlay',
+  '4 Art',
+  '4 Business',
+] as const;
+
+/** @deprecated Gebruik DAILY_COLUMN_1_KLASSEN; rechts = alle niet-linkerklassen. */
+export const DAILY_COLUMN_2_KLASSEN = [] as const;
 
 function normalizeKlasKey(klas: string): string {
-  return klas.trim().toLowerCase().replace(/\s+/g, ' ');
+  return klas
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, '')
+    .replace(/[_./-]+/g, '')
+    .replace(/\s+/g, '');
 }
 
 /**
- * Verdeel klassen in twee kolommen: vaste rechterkolom-lijst, overige links.
- * Volgorde uit klassen_order blijft per kolom behouden.
+ * Verdeel klassen in twee kolommen: vaste linkerkolom-lijst (in die volgorde),
+ * overige rechts (volgorde uit klassen_order behouden).
  */
 export function splitKlassenIntoBalancedColumns(
   klassen: string[],
   _students?: Student[],
-  column2Klassen: readonly string[] = DAILY_COLUMN_2_KLASSEN
+  column1Klassen: readonly string[] = DAILY_COLUMN_1_KLASSEN
 ): { left: string[]; right: string[] } {
-  const col2 = new Set(column2Klassen.map(normalizeKlasKey));
-  const left: string[] = [];
-  const right: string[] = [];
+  const byKey = new Map<string, string>();
   for (const klas of klassen) {
-    if (col2.has(normalizeKlasKey(klas))) right.push(klas);
-    else left.push(klas);
+    const key = normalizeKlasKey(klas);
+    if (!byKey.has(key)) byKey.set(key, klas);
   }
+
+  const used = new Set<string>();
+  const left: string[] = [];
+  for (const wanted of column1Klassen) {
+    const actual = byKey.get(normalizeKlasKey(wanted));
+    if (actual && !used.has(actual)) {
+      left.push(actual);
+      used.add(actual);
+    }
+  }
+
+  const right = klassen.filter((klas) => !used.has(klas));
   return { left, right };
 }
 

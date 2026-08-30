@@ -452,7 +452,7 @@ export default function DailyPage() {
           </div>
         </div>
 
-        {/* Registratie per klas — kolom 2: 3 MovePlay, 4 Art, 4 Business */}
+        {/* Registratie per klas — links vaste lijst, rechts overige */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="flex flex-col gap-6 min-w-0">
             {leftKlassen.map((klas) => (
