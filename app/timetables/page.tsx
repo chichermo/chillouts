@@ -11,6 +11,7 @@ import {
   seedTimetablesForKlassen,
   clearAllTimetableSlots,
   deleteTimetableForKlas,
+  renameTimetableKlas,
   getSchoolYear,
   timetableId,
   DAY_NAMES,
@@ -114,6 +115,9 @@ export default function TimetablesPage() {
   const [hiddenKlassen, setHiddenKlassen] = useState<string[]>([]);
   const [deletingKlas, setDeletingKlas] = useState<string | null>(null);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [editingKlas, setEditingKlas] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
+  const [renamingKlas, setRenamingKlas] = useState<string | null>(null);
 
   useEffect(() => {
     setUserIsAdmin(isAdmin());
@@ -344,6 +348,62 @@ export default function TimetablesPage() {
       alert('Fout bij verwijderen: ' + (e instanceof Error ? e.message : 'Onbekend'));
     } finally {
       setDeletingKlas(null);
+    }
+  };
+
+  const startRenameKlas = (klas: string) => {
+    setEditingKlas(klas);
+    setRenameDraft(klas);
+  };
+
+  const cancelRenameKlas = () => {
+    setEditingKlas(null);
+    setRenameDraft('');
+  };
+
+  const handleRenameKlas = async (oldKlas: string) => {
+    const next = renameDraft.trim().replace(/\s+/g, ' ');
+    if (!next) {
+      alert('Klasnaam mag niet leeg zijn.');
+      return;
+    }
+    if (next === oldKlas) {
+      cancelRenameKlas();
+      return;
+    }
+    if (allKlassen.includes(next) && next !== oldKlas) {
+      alert(`Er is al een klas "${next}" op deze pagina.`);
+      return;
+    }
+
+    setRenamingKlas(oldKlas);
+    try {
+      const savedName = await renameTimetableKlas(selectedYear, oldKlas, next);
+      setTimetables((prev) => {
+        const withoutOld = prev.filter((t) => t.klas !== oldKlas);
+        const existingNew = withoutOld.find((t) => t.klas === savedName);
+        if (existingNew) return withoutOld;
+        const oldRow = prev.find((t) => t.klas === oldKlas);
+        return [
+          ...withoutOld,
+          {
+            id: timetableId(selectedYear, savedName),
+            year: selectedYear,
+            klas: savedName,
+            slots: oldRow?.slots || {},
+          },
+        ];
+      });
+      setHiddenKlassen((prev) => {
+        const nextHidden = prev.filter((k) => k !== savedName);
+        return nextHidden.includes(oldKlas) ? nextHidden : [...nextHidden, oldKlas];
+      });
+      setSeedMsg(`Klas hernoemd: "${oldKlas}" → "${savedName}" (alleen in roosters).`);
+      cancelRenameKlas();
+    } catch (e) {
+      alert('Fout bij hernoemen: ' + (e instanceof Error ? e.message : 'Onbekend'));
+    } finally {
+      setRenamingKlas(null);
     }
   };
 
@@ -600,17 +660,66 @@ export default function TimetablesPage() {
                     key={klas}
                     className="glass-effect rounded-lg p-6 border border-white/20 overflow-x-auto"
                   >
-                    <div className="flex items-center justify-between gap-3 mb-4">
-                      <h2 className="text-xl font-bold text-white">{klas}</h2>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteKlas(klas)}
-                        disabled={deletingKlas === klas}
-                        className="px-3 py-1.5 text-sm rounded-lg bg-red-600/80 text-white hover:bg-red-600 disabled:opacity-50 border border-red-400/30"
-                        title="Klas uit roosters verwijderen"
-                      >
-                        {deletingKlas === klas ? 'Bezig…' : 'Klas wissen'}
-                      </button>
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                      {editingKlas === klas ? (
+                        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[200px]">
+                          <input
+                            type="text"
+                            value={renameDraft}
+                            onChange={(e) => setRenameDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                void handleRenameKlas(klas);
+                              }
+                              if (e.key === 'Escape') cancelRenameKlas();
+                            }}
+                            autoFocus
+                            className="px-3 py-1.5 rounded bg-white/10 text-white border border-white/30 text-lg font-bold min-w-[160px] flex-1 max-w-md"
+                            disabled={renamingKlas === klas}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void handleRenameKlas(klas)}
+                            disabled={renamingKlas === klas}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+                          >
+                            {renamingKlas === klas ? 'Bezig…' : 'Opslaan'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelRenameKlas}
+                            disabled={renamingKlas === klas}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-white/10 text-white border border-white/20"
+                          >
+                            Annuleren
+                          </button>
+                        </div>
+                      ) : (
+                        <h2 className="text-xl font-bold text-white">{klas}</h2>
+                      )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {editingKlas !== klas && (
+                          <button
+                            type="button"
+                            onClick={() => startRenameKlas(klas)}
+                            disabled={!!renamingKlas || !!deletingKlas}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-blue-600/80 text-white hover:bg-blue-600 disabled:opacity-50 border border-blue-400/30"
+                            title="Klasnaam in roosters bewerken"
+                          >
+                            Naam bewerken
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteKlas(klas)}
+                          disabled={deletingKlas === klas || renamingKlas === klas}
+                          className="px-3 py-1.5 text-sm rounded-lg bg-red-600/80 text-white hover:bg-red-600 disabled:opacity-50 border border-red-400/30"
+                          title="Klas uit roosters verwijderen"
+                        >
+                          {deletingKlas === klas ? 'Bezig…' : 'Klas wissen'}
+                        </button>
+                      </div>
                     </div>
                     <table className="w-full text-sm border-collapse">
                       <thead>

@@ -281,6 +281,37 @@ export async function deleteTimetableForKlas(year: string, klas: string): Promis
   }
 }
 
+/**
+ * Hernoem een rooster-klas in één schooljaar (alleen timetables, niet students).
+ * Bewaart slots; faalt als de nieuwe naam al bestaat.
+ */
+export async function renameTimetableKlas(
+  year: string,
+  oldKlas: string,
+  newKlas: string
+): Promise<string> {
+  const from = String(oldKlas || '').trim().replace(/\s+/g, ' ');
+  const to = String(newKlas || '').trim().replace(/\s+/g, ' ');
+  if (!from) throw new Error('Oude klasnaam ontbreekt.');
+  if (!to) throw new Error('Nieuwe klasnaam mag niet leeg zijn.');
+  if (to === from) return to;
+
+  const existing = await loadTimetables(year);
+  if (existing.some((t) => t.klas === to)) {
+    throw new Error(`Er bestaat al een rooster voor "${to}". Kies een andere naam.`);
+  }
+
+  const current = existing.find((t) => t.klas === from);
+  await saveTimetable({
+    id: timetableId(year, to),
+    year,
+    klas: to,
+    slots: current?.slots || {},
+  });
+  await deleteTimetableForKlas(year, from);
+  return to;
+}
+
 /** Haal schooljaren op die roosters hebben in Supabase */
 /** Maak lege rooster-rijen aan voor alle klassen (slots invullen in UI) */
 export async function seedTimetablesForKlassen(
