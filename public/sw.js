@@ -1,6 +1,6 @@
 // Service Worker — Element PWA
 // Increment CACHE_VERSION to force clients onto the new worker.
-const CACHE_VERSION = 'v4-element';
+const CACHE_VERSION = 'v5-excel-import';
 const CACHE_NAME = `element-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `element-runtime-${CACHE_VERSION}`;
 
