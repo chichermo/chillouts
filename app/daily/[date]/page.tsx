@@ -237,6 +237,11 @@ export default function DailyPage() {
     [filteredKlassen]
   );
 
+  const linkedKlassenCount = useMemo(() => {
+    if (!klassen.length || !Object.keys(timetableMap).length) return 0;
+    return klassen.filter((klas) => findTimetableInMap(timetableMap, klas)).length;
+  }, [klassen, timetableMap]);
+
   if (loading) {
     return <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
       <Navigation />
@@ -284,11 +289,6 @@ export default function DailyPage() {
   const todayLocal = new Date().toLocaleDateString('sv-SE');
   const isPastDate = dateStr < todayLocal;
   const isReadOnlyPast = isPastDate && !isAdmin();
-
-  const linkedKlassenCount = useMemo(() => {
-    if (!klassen.length || !Object.keys(timetableMap).length) return 0;
-    return klassen.filter((klas) => findTimetableInMap(timetableMap, klas)).length;
-  }, [klassen, timetableMap]);
 
   // Datumnavigatie
   const navigateDate = (days: number) => {
