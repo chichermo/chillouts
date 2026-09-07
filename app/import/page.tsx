@@ -46,12 +46,38 @@ if (typeof window !== 'undefined') {
 
 interface FilterState {
   klas: string;
-  student: string;
+  student: string[];
   dateFrom: string;
   dateTo: string;
   generatedBy: string;
   hour: string; // Filtro de hora (1-7 o vacío para todas)
   weekday: string; // Filtro por dag: Ma, Di, Wo, Do, Vr...
+}
+
+function namesForStudentIds(
+  studentIds: string[],
+  students: { id: string; name: string }[]
+): string[] {
+  const byId = new Map(students.map((s) => [s.id, s.name]));
+  return studentIds
+    .map((id) => byId.get(id))
+    .filter((name): name is string => Boolean(name));
+}
+
+function formatStudentNames(names: string[]): string {
+  if (names.length === 0) return '';
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} en ${names[1]}`;
+  if (names.length <= 4) {
+    return `${names.slice(0, -1).join(', ')} en ${names[names.length - 1]}`;
+  }
+  return `${names.length} leerlingen`;
+}
+
+function studentFilenameSuffix(names: string[]): string {
+  if (names.length === 1) return `_${names[0].replace(/\s+/g, '_')}`;
+  if (names.length > 1) return `_${names.length}_leerlingen`;
+  return '';
 }
 
 interface CapturedChart {
@@ -84,7 +110,7 @@ export default function ReportsPage() {
   const [mounted, setMounted] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     klas: '',
-    student: '',
+    student: [],
     dateFrom: '',
     dateTo: '',
     generatedBy: '',
@@ -179,13 +205,17 @@ export default function ReportsPage() {
     if (filters.klas) {
       const filtered = allStudents.filter(s => s.klas === filters.klas);
       setFilteredStudents(filtered);
-      if (filters.student && !filtered.find(s => s.id === filters.student)) {
-        setFilters(prev => ({ ...prev, student: '' }));
+      const allowedIds = new Set(filtered.map((s) => s.id));
+      if (filters.student.some((id) => !allowedIds.has(id))) {
+        setFilters((prev) => ({
+          ...prev,
+          student: prev.student.filter((id) => allowedIds.has(id)),
+        }));
       }
     } else {
       setFilteredStudents(allStudents);
-      if (filters.student) {
-        setFilters(prev => ({ ...prev, student: '' }));
+      if (filters.student.length > 0) {
+        setFilters((prev) => ({ ...prev, student: [] }));
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -224,7 +254,7 @@ export default function ReportsPage() {
     const studentsToProcess = data.students.filter((student: any) => {
       if (student.status !== 'Actief') return false;
       if (currentFilters.klas && student.klas !== currentFilters.klas) return false;
-      if (currentFilters.student && student.id !== currentFilters.student) return false;
+      if (currentFilters.student.length > 0 && !currentFilters.student.includes(student.id)) return false;
       return true;
     });
 
@@ -525,9 +555,9 @@ export default function ReportsPage() {
     
     // Blad 1: Algemeen Overzicht
     let reportTitle = 'Rapport Chill-outs';
-    if (filters.student) {
-      const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
-      reportTitle = `Rapport Chill-outs - ${studentName}`;
+    const selectedNames = namesForStudentIds(filters.student, filteredStudents);
+    if (selectedNames.length > 0) {
+      reportTitle = `Rapport Chill-outs - ${formatStudentNames(selectedNames)}`;
     } else if (filters.klas) {
       reportTitle = `Rapport Chill-outs - ${filters.klas}`;
     }
@@ -541,7 +571,7 @@ export default function ReportsPage() {
       [''],
       ['Filter Instellingen'],
       ['Klas filter:', filters.klas || 'Alle klassen'],
-      ['Student filter:', filters.student ? filteredStudents.find(s => s.id === filters.student)?.name || '' : 'Alle studenten'],
+      ['Student filter:', selectedNames.length > 0 ? selectedNames.join(', ') : 'Alle studenten'],
       ['Lesuur filter:', filters.hour ? `Lesuur ${filters.hour}` : 'Alle lesuren'],
       ['Dag filter:', filters.weekday || 'Alle dagen'],
       ['Van datum:', filters.dateFrom || 'Geen'],
@@ -639,9 +669,8 @@ export default function ReportsPage() {
 
     // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
     let filenameSuffix = '';
-    if (filters.student) {
-      const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
-      filenameSuffix = `_${studentName.replace(/\s+/g, '_')}`;
+    if (selectedNames.length > 0) {
+      filenameSuffix = studentFilenameSuffix(selectedNames);
     } else if (filters.klas) {
       filenameSuffix = `_${filters.klas.replace(/\s+/g, '_')}`;
     }
@@ -671,9 +700,9 @@ export default function ReportsPage() {
       // Titel - incluir información de filtros si están aplicados
       doc.setFontSize(20);
       let reportTitle = 'Rapport Chill-outs';
-      if (filters.student) {
-        const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
-        reportTitle = `Rapport Chill-outs - ${studentName}`;
+      const selectedNames = namesForStudentIds(filters.student, filteredStudents);
+      if (selectedNames.length > 0) {
+        reportTitle = `Rapport Chill-outs - ${formatStudentNames(selectedNames)}`;
       } else if (filters.klas) {
         reportTitle = `Rapport Chill-outs - ${filters.klas}`;
       }
@@ -696,9 +725,11 @@ export default function ReportsPage() {
       yPos += 6;
       doc.text(`Klas: ${filters.klas || 'Alle klassen'}`, 14, yPos);
       yPos += 6;
-      if (filters.student) {
-        const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
-        doc.text(`Student: ${studentName}`, 14, yPos);
+      if (selectedNames.length > 0) {
+        const studentLine = selectedNames.length <= 3
+          ? selectedNames.join(', ')
+          : `${selectedNames.slice(0, 3).join(', ')} (+${selectedNames.length - 3})`;
+        doc.text(`Studenten: ${studentLine}`, 14, yPos);
         yPos += 6;
       }
       if (filters.weekday) {
@@ -815,7 +846,7 @@ export default function ReportsPage() {
       // Tabel per Student (als er ruimte is)
       if (stats.byStudent.length > 0 && yPos < 250) {
         doc.setFontSize(14);
-        doc.text(filters.student ? 'Statistieken per Student' : 'Top Studenten', 14, yPos);
+        doc.text(selectedNames.length > 0 ? 'Statistieken per Student' : 'Top Studenten', 14, yPos);
         yPos += 10;
         
         const studentHeaders = ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Chillouts'];
@@ -916,9 +947,8 @@ export default function ReportsPage() {
 
       // Agregar nombre del estudiante/clase al nombre del archivo si hay filtros
       let filenameSuffix = '';
-      if (filters.student) {
-        const studentName = filteredStudents.find(s => s.id === filters.student)?.name || '';
-        filenameSuffix = `_${studentName.replace(/\s+/g, '_')}`;
+      if (selectedNames.length > 0) {
+        filenameSuffix = studentFilenameSuffix(selectedNames);
       } else if (filters.klas) {
         filenameSuffix = `_${filters.klas.replace(/\s+/g, '_')}`;
       }
@@ -967,13 +997,31 @@ export default function ReportsPage() {
   const resetFilters = () => {
     setFilters({
       klas: '',
-      student: '',
+      student: [],
       dateFrom: '',
       dateTo: '',
       generatedBy: '',
       hour: '',
       weekday: '',
     });
+  };
+
+  const toggleStudent = (studentId: string) => {
+    setFilters((prev) => {
+      const selected = prev.student.includes(studentId)
+        ? prev.student.filter((id) => id !== studentId)
+        : [...prev.student, studentId];
+      const becameFiltered = prev.student.length === 0 && selected.length > 0;
+      return {
+        ...prev,
+        student: selected,
+        ...(becameFiltered ? { weekday: '', hour: '' } : {}),
+      };
+    });
+  };
+
+  const clearStudentSelection = () => {
+    setFilters((prev) => ({ ...prev, student: [] }));
   };
 
   if (!mounted) {
@@ -993,14 +1041,21 @@ export default function ReportsPage() {
     { name: 'Chillouts', value: stats.totalGeneric, color: COLORS.generic },
   ].filter(item => item.value > 0);
 
-  const hasActiveFilters = filters.klas || filters.student || filters.dateFrom || filters.dateTo || filters.hour || filters.weekday;
+  const hasStudentFilter = filters.student.length > 0;
+  const studentFilterLabel = formatStudentNames(
+    namesForStudentIds(filters.student, filteredStudents)
+  );
+  const hasActiveFilters = filters.klas || hasStudentFilter || filters.dateFrom || filters.dateTo || filters.hour || filters.weekday;
+  const sortedFilterStudents = [...filteredStudents].sort((a, b) =>
+    a.name.localeCompare(b.name, 'nl')
+  );
   const klasChartData = stats.byKlas;
   const maxKlasLabelLength = klasChartData.reduce((max, item) => Math.max(max, item.klas.length), 0);
   const klasYAxisWidth = Math.min(240, Math.max(120, maxKlasLabelLength * 9));
   const klasChartHeight = Math.max(320, klasChartData.length * 54);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-x-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
@@ -1036,7 +1091,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Filter sectie */}
-        <div className="glass-effect rounded-lg p-6 border border-white/20 mb-8">
+        <div className="glass-effect overflow-visible rounded-lg p-6 border border-white/20 mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white">Filters</h2>
             {hasActiveFilters && (
@@ -1058,7 +1113,7 @@ export default function ReportsPage() {
                   setFilters((prev) => ({
                     ...prev,
                     klas: e.target.value,
-                    student: '',
+                    student: [],
                     weekday: '',
                     hour: '',
                   }))
@@ -1073,26 +1128,69 @@ export default function ReportsPage() {
             </div>
 
             {/* Student filter */}
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-white/90 mb-2">Student</label>
-              <select
-                value={filters.student}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    student: e.target.value,
-                    weekday: '',
-                    hour: '',
-                  }))
-                }
-                disabled={!filters.klas}
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">Alle studenten</option>
-                {filteredStudents.map(student => (
-                  <option key={student.id} value={student.id} className="bg-blue-900">{student.name}</option>
-                ))}
-              </select>
+              {!filters.klas ? (
+                <p className="rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm text-white/70">
+                  Kies eerst een klas om leerlingen te zien.
+                </p>
+              ) : (
+                <div className="rounded-lg border border-white/20 bg-[#2f2f3d]">
+                  <p className="border-b border-white/15 px-3 py-2 text-sm text-white/80">
+                    {hasStudentFilter ? studentFilterLabel : 'Alle studenten'} — vink de vakjes aan
+                  </p>
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10">
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] border-2 border-neutral-800 ${
+                          !hasStudentFilter ? 'bg-[#ACE1AF]' : 'bg-white'
+                        }`}
+                      >
+                        {!hasStudentFilter && (
+                          <svg className="h-3.5 w-3.5 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={!hasStudentFilter}
+                        onChange={() => clearStudentSelection()}
+                        className="sr-only"
+                      />
+                      Alle studenten
+                    </label>
+                    {sortedFilterStudents.map((student) => {
+                      const selected = filters.student.includes(student.id);
+                      return (
+                        <label
+                          key={student.id}
+                          className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10"
+                        >
+                          <span
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[3px] border-2 border-neutral-800 ${
+                              selected ? 'bg-[#ACE1AF]' : 'bg-white'
+                            }`}
+                          >
+                            {selected && (
+                              <svg className="h-3.5 w-3.5 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() => toggleStudent(student.id)}
+                            className="sr-only"
+                          />
+                          {student.name}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Lesuur (Hora) filter */}
@@ -1164,7 +1262,7 @@ export default function ReportsPage() {
           </div>
           
           <p className="mt-4 text-xs text-white/55">
-            Filters worden direct toegepast. Bij het kiezen van een student worden dag- en lesuurfilters gewist.
+            Kies een klas. Daarna verschijnt onder Student een lijst met een vakje naast elke naam. Vink de leerlingen aan die je wilt bekijken.
           </p>
         </div>
 
@@ -1178,9 +1276,9 @@ export default function ReportsPage() {
                 Klas: {filters.klas}
               </span>
             )}
-            {filters.student && (
+            {hasStudentFilter && (
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/25 text-purple-100 border border-purple-400/30">
-                Student: {stats.byStudent.find((s) => s.name)?.name || filters.student}
+                Studenten: {studentFilterLabel}
               </span>
             )}
             {filters.hour && (
@@ -1224,7 +1322,7 @@ export default function ReportsPage() {
               )}
               {filters.hour && <> (alleen lesuur {filters.hour})</>}. Zonder dag-/lesuurfilters:{' '}
               <strong>{stats.baselineTotal}</strong> chill-outs in dezelfde periode.
-              {(filters.student || filters.klas) && (
+              {(hasStudentFilter || filters.klas) && (
                 <>
                   {' '}
                   <button
@@ -1306,8 +1404,8 @@ export default function ReportsPage() {
           {pieData.length > 0 && (
             <div id="chart-distributie" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">
-                {filters.student 
-                  ? `Distributie Chill-outs - ${stats.byStudent.find(s => s.name)?.name || 'Student'}`
+                {hasStudentFilter 
+                  ? `Distributie Chill-outs - ${studentFilterLabel}`
                   : filters.klas
                   ? `Distributie Chill-outs - ${filters.klas}`
                   : 'Distributie Chill-outs'}
@@ -1355,7 +1453,7 @@ export default function ReportsPage() {
           )}
 
           {/* Grafiek per klas - Solo mostrar si no hay filtro de estudiante específico */}
-          {!filters.student && stats.byKlas.length > 0 && (
+          {!hasStudentFilter && stats.byKlas.length > 0 && (
             <div id="chart-klas" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-4 text-white">Chill-outs per Klas</h2>
               <ResponsiveContainer width="100%" height={klasChartHeight}>
@@ -1384,8 +1482,8 @@ export default function ReportsPage() {
           {stats.trend.length > 0 && (
             <div id="chart-tendens" className="glass-effect rounded-lg p-6 border border-white/20">
               <h2 className="text-xl font-bold mb-1 text-white">
-                {filters.student
-                  ? `Tendens - ${stats.byStudent.find((s) => s.name)?.name || 'Student'}`
+                {hasStudentFilter
+                  ? `Tendens - ${studentFilterLabel}`
                   : filters.klas
                     ? `Tendens - ${filters.klas}`
                     : 'Tendens'}
@@ -1405,8 +1503,8 @@ export default function ReportsPage() {
           {stats.byDayAndHour && stats.byDayAndHour.length > 0 && (
             <div id="chart-lesuur-dag" className="glass-effect rounded-lg p-6 border border-white/20 lg:col-span-2">
               <h2 className="text-xl font-bold mb-1 text-white">
-                {filters.student
-                  ? `Chill-outs per Lesuur per Dag - ${stats.byStudent.find((s) => s.name)?.name || 'Student'}`
+                {hasStudentFilter
+                  ? `Chill-outs per Lesuur per Dag - ${studentFilterLabel}`
                   : filters.klas
                     ? `Chill-outs per Lesuur per Dag - ${filters.klas}`
                     : 'Chill-outs per Lesuur per Dag'}
@@ -1433,7 +1531,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Gedetailleerde tabel per klas - Solo mostrar si no hay filtro de estudiante específico */}
-        {!filters.student && stats.byKlas.length > 0 && (
+        {!hasStudentFilter && stats.byKlas.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20 mb-8">
             <h2 className="text-xl font-bold mb-4 text-white">Statistieken per Klas</h2>
             <StickyTableWrap>
@@ -1546,8 +1644,8 @@ export default function ReportsPage() {
         {stats.byStudent.length > 0 && (
           <div className="glass-effect rounded-lg p-6 border border-white/20">
             <h2 className="text-xl font-bold mb-1 text-white">
-              {filters.student 
-                ? `Statistieken - ${stats.byStudent[0]?.name || 'Student'}`
+              {hasStudentFilter 
+                ? `Statistieken - ${studentFilterLabel}`
                 : filters.klas
                 ? `Statistieken per Student - ${filters.klas}`
                 : 'Statistieken per Student'}
