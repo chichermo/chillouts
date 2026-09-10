@@ -305,12 +305,16 @@ export default function PortalsPage() {
                 </div>
               );
             })}
+          </div>
+        )}
 
-            {user?.role === 'admin' && (
-              <div
-                className="portal-card-float relative"
-                style={{ animationDelay: `${portals.length * 0.55}s` }}
-              >
+        {user?.role === 'admin' && (
+          <div className="mt-8 grid gap-8 xl:grid-cols-3">
+            <div className="hidden xl:block" aria-hidden />
+            <div
+              className="portal-card-float relative mx-auto w-full max-w-md xl:max-w-none"
+              style={{ animationDelay: `${portals.length * 0.55}s` }}
+            >
                 <div
                   className="pointer-events-none absolute -bottom-3 left-1/2 h-8 w-[78%] -translate-x-1/2 rounded-full blur-2xl"
                   style={{
@@ -369,8 +373,7 @@ export default function PortalsPage() {
                     </span>
                   </div>
                 </Link>
-              </div>
-            )}
+            </div>
           </div>
         )}
 
