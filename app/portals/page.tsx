@@ -16,6 +16,8 @@ import ElementBrand from '@/components/ElementBrand';
 import IosDownloadButton from '@/components/IosDownloadButton';
 import type { User } from '@/lib/users';
 
+const LEERLINGEN_ACCENT = '#C9B6E8';
+
 export default function PortalsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -146,7 +148,7 @@ export default function PortalsPage() {
         {user?.role === 'admin' && (
           <Link
             href="/directory"
-            className="rounded-xl border border-[#ACE1AF]/40 bg-[#ACE1AF]/15 px-3.5 py-2 text-sm font-semibold text-[#ACE1AF] transition hover:bg-[#ACE1AF]/25"
+            className="rounded-xl border border-[#C9B6E8]/40 bg-[#C9B6E8]/15 px-3.5 py-2 text-sm font-semibold text-[#C9B6E8] transition hover:bg-[#C9B6E8]/25"
           >
             Leerlingen
           </Link>
@@ -313,7 +315,7 @@ export default function PortalsPage() {
                   className="pointer-events-none absolute -bottom-3 left-1/2 h-8 w-[78%] -translate-x-1/2 rounded-full blur-2xl"
                   style={{
                     background:
-                      'radial-gradient(ellipse, #ACE1AF55 0%, rgba(0,0,0,0.65) 55%, transparent 75%)',
+                      `radial-gradient(ellipse, ${LEERLINGEN_ACCENT}55 0%, rgba(0,0,0,0.65) 55%, transparent 75%)`,
                     opacity: hovered === 'directory' ? 1 : 0.75,
                   }}
                 />
@@ -328,7 +330,7 @@ export default function PortalsPage() {
                       'linear-gradient(160deg, #2a2a36 0%, #16161f 45%, #0c0c12 100%)',
                     boxShadow:
                       hovered === 'directory'
-                        ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 22px rgba(0,0,0,0.45), 0 22px 48px rgba(0,0,0,0.55), 0 0 32px #ACE1AF22'
+                        ? `inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 22px rgba(0,0,0,0.45), 0 22px 48px rgba(0,0,0,0.55), 0 0 32px ${LEERLINGEN_ACCENT}22`
                         : 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -10px 22px rgba(0,0,0,0.5), 0 18px 40px rgba(0,0,0,0.5)',
                   }}
                 >
@@ -336,15 +338,18 @@ export default function PortalsPage() {
                   <div
                     className="pointer-events-none absolute inset-0 opacity-25"
                     style={{
-                      background: 'radial-gradient(circle at 18% 12%, #ACE1AF66, transparent 42%)',
+                      background: `radial-gradient(circle at 18% 12%, ${LEERLINGEN_ACCENT}66, transparent 42%)`,
                     }}
                   />
-                  <div className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 bg-[#ACE1AF] transition-transform duration-500 group-hover:scale-x-100" />
+                  <div
+                    className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 transition-transform duration-500 group-hover:scale-x-100"
+                    style={{ background: LEERLINGEN_ACCENT }}
+                  />
                   <div
                     className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl border border-white/10"
-                    style={{ background: 'linear-gradient(145deg, #ACE1AF33, transparent)' }}
+                    style={{ background: `linear-gradient(145deg, ${LEERLINGEN_ACCENT}33, transparent)` }}
                   >
-                    <svg className="h-10 w-10 text-[#ACE1AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-10 w-10" style={{ color: LEERLINGEN_ACCENT }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
@@ -355,7 +360,10 @@ export default function PortalsPage() {
                     Toevoegen of verwijderen in Chill-outs, Nablijven en O2 tegelijk.
                   </p>
                   <div className="relative mt-8">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-[#ACE1AF]/20 px-4 py-2 text-sm font-bold text-[#ACE1AF]">
+                    <span
+                      className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold"
+                      style={{ background: `${LEERLINGEN_ACCENT}33`, color: LEERLINGEN_ACCENT }}
+                    >
                       Openen
                       <span aria-hidden>→</span>
                     </span>
