@@ -13,6 +13,7 @@ import { getVisiblePortals, type PortalDef } from '@/lib/portals';
 import { getDetentionsAccessScope } from '@/lib/users';
 import PortalMark from '@/components/PortalMark';
 import ElementBrand from '@/components/ElementBrand';
+import IosDownloadButton from '@/components/IosDownloadButton';
 import type { User } from '@/lib/users';
 
 export default function PortalsPage() {
@@ -140,7 +141,16 @@ export default function PortalsPage() {
         />
       </div>
 
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-end px-4 pt-6 md:px-8">
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-end gap-2 px-4 pt-6 md:px-8">
+        <IosDownloadButton variant="header" />
+        {user?.role === 'admin' && (
+          <Link
+            href="/directory"
+            className="rounded-xl border border-[#ACE1AF]/40 bg-[#ACE1AF]/15 px-3.5 py-2 text-sm font-semibold text-[#ACE1AF] transition hover:bg-[#ACE1AF]/25"
+          >
+            Leerlingen
+          </Link>
+        )}
         <button
           type="button"
           onClick={handleLogout}
@@ -293,11 +303,71 @@ export default function PortalsPage() {
                 </div>
               );
             })}
+
+            {user?.role === 'admin' && (
+              <div
+                className="portal-card-float relative"
+                style={{ animationDelay: `${portals.length * 0.55}s` }}
+              >
+                <div
+                  className="pointer-events-none absolute -bottom-3 left-1/2 h-8 w-[78%] -translate-x-1/2 rounded-full blur-2xl"
+                  style={{
+                    background:
+                      'radial-gradient(ellipse, #ACE1AF55 0%, rgba(0,0,0,0.65) 55%, transparent 75%)',
+                    opacity: hovered === 'directory' ? 1 : 0.75,
+                  }}
+                />
+                <Link
+                  href="/directory"
+                  onMouseEnter={() => setHovered('directory')}
+                  onMouseLeave={() => setHovered(null)}
+                  className="group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 p-7 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 animate-[portalIn_0.55s_ease-out_both]"
+                  style={{
+                    animationDelay: `${portals.length * 0.1}s`,
+                    background:
+                      'linear-gradient(160deg, #2a2a36 0%, #16161f 45%, #0c0c12 100%)',
+                    boxShadow:
+                      hovered === 'directory'
+                        ? 'inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 22px rgba(0,0,0,0.45), 0 22px 48px rgba(0,0,0,0.55), 0 0 32px #ACE1AF22'
+                        : 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -10px 22px rgba(0,0,0,0.5), 0 18px 40px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-25"
+                    style={{
+                      background: 'radial-gradient(circle at 18% 12%, #ACE1AF66, transparent 42%)',
+                    }}
+                  />
+                  <div className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 bg-[#ACE1AF] transition-transform duration-500 group-hover:scale-x-100" />
+                  <div
+                    className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl border border-white/10"
+                    style={{ background: 'linear-gradient(145deg, #ACE1AF33, transparent)' }}
+                  >
+                    <svg className="h-10 w-10 text-[#ACE1AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h2 className="relative mt-6 text-2xl font-black tracking-tight text-white md:text-[1.75rem]">
+                    Leerlingen
+                  </h2>
+                  <p className="relative mt-2 min-h-[3rem] text-sm leading-relaxed text-white/60">
+                    Toevoegen of verwijderen in Chill-outs, Nablijven en O2 tegelijk.
+                  </p>
+                  <div className="relative mt-8">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-[#ACE1AF]/20 px-4 py-2 text-sm font-bold text-[#ACE1AF]">
+                      Openen
+                      <span aria-hidden>→</span>
+                    </span>
+                  </div>
+                </Link>
+              </div>
+            )}
           </div>
         )}
 
-        {hasPermission(user, 'students') && user?.role === 'admin' && (
-          <div className="mt-12">
+        {user?.role === 'admin' && (
+          <div className="mt-4">
             <Link
               href="/users"
               className="inline-flex items-center gap-2 rounded-2xl border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm text-white/65 transition hover:bg-white/10 hover:text-white"

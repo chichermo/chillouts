@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Navigation from '@/components/Navigation';
 import { Student } from '@/types';
 import { loadData, addStudent, addStudentsBulk, updateStudent, deleteStudent, saveData, renameKlas, deleteKlas } from '@/lib/storage';

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, login } from '@/lib/auth';
 import ElementBrand from '@/components/ElementBrand';
+import IosDownloadButton from '@/components/IosDownloadButton';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -140,6 +141,13 @@ export default function LoginPage() {
                 </Link>
               </div>
             </form>
+
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <p className="mb-3 text-center text-xs text-white/45">
+                Zet Element als app op je iPhone of iPad
+              </p>
+              <IosDownloadButton />
+            </div>
           </div>
         </section>
       </div>
