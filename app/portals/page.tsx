@@ -17,7 +17,7 @@ import IosDownloadButton from '@/components/IosDownloadButton';
 import type { User } from '@/lib/users';
 
 const LEERLINGEN_ACCENT = '#C9B6E8';
-const OPVOEDERS_ACCENT = '#7DCFC8';
+const OPVOEDERS_ACCENT = '#A09EA9';
 const OPVOEDERS_CALENDAR_URL =
   'https://kalender-ruby.vercel.app/calendar/cmvfekes30002l204wnx0yb5l';
 
