@@ -301,8 +301,9 @@ export default function PortalsPage() {
           </div>
         )}
 
-        {user?.role === 'admin' && (
+        {(user?.role === 'admin' || hasPermission(user, 'portal_opvoeders')) && (
           <div className="mt-8 grid gap-8 md:grid-cols-2">
+            {user?.role === 'admin' && (
             <div
               className="portal-card-float relative mx-auto w-full max-w-md md:max-w-none"
               style={{ animationDelay: `${portals.length * 0.55}s` }}
@@ -366,6 +367,8 @@ export default function PortalsPage() {
                   </div>
                 </Link>
             </div>
+            )}
+            {hasPermission(user, 'portal_opvoeders') && (
             <div
               className="portal-card-float relative mx-auto w-full max-w-md md:max-w-none"
               style={{ animationDelay: `${(portals.length + 1) * 0.55}s` }}
@@ -427,6 +430,7 @@ export default function PortalsPage() {
                 </div>
               </Link>
             </div>
+            )}
           </div>
         )}
 

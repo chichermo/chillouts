@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, refreshCurrentUserFromDb } from '@/lib/auth';
+import { getCurrentUser, hasPermission, refreshCurrentUserFromDb } from '@/lib/auth';
 import {
   LESSON_PERIODS,
   addDays,
@@ -39,7 +39,7 @@ export default function OpvoedersPage() {
     const init = async () => {
       const fresh = await refreshCurrentUserFromDb();
       const current = fresh || getCurrentUser();
-      if (!current || current.role !== 'admin') {
+      if (!current || !hasPermission(current, 'portal_opvoeders')) {
         router.replace('/portals');
         return;
       }

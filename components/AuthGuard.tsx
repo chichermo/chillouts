@@ -78,7 +78,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           router.push('/portals');
           return;
         }
-        if ((pathname === '/directory' || pathname === '/opvoeders') && (!user || user.role !== 'admin')) {
+        if (pathname === '/directory' && (!user || user.role !== 'admin')) {
+          router.push('/portals');
+          return;
+        }
+        if (pathname === '/opvoeders' && !hasPermission(user, 'portal_opvoeders')) {
           router.push('/portals');
           return;
         }

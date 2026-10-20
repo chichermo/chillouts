@@ -17,6 +17,7 @@ export interface User {
     /** true = volledig Nablijven; false = zonder leerlingen- en personeelslijsten */
     detentions_full?: boolean;
     portal_o2?: boolean;
+    portal_opvoeders?: boolean;
     students?: boolean;
     audit?: boolean;
   };
@@ -43,6 +44,7 @@ export interface UserPermissions {
   /** Volledig Nablijven; false = zonder leerlingen- en personeelslijsten */
   detentions_full: boolean;
   portal_o2: boolean;
+  portal_opvoeders: boolean;
   students: boolean;
   audit: boolean;
 }
@@ -61,6 +63,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     portal_detentions: true,
     detentions_full: true,
     portal_o2: true,
+    portal_opvoeders: true,
     students: true,
     audit: true,
   },
@@ -75,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     portal_detentions: true,
     detentions_full: false,
     portal_o2: false,
+    portal_opvoeders: false,
     students: true,
     audit: false,
   },
@@ -89,6 +93,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     portal_detentions: true,
     detentions_full: false,
     portal_o2: false,
+    portal_opvoeders: false,
     students: false,
     audit: false,
   },
@@ -103,6 +108,7 @@ export const ROLE_PERMISSIONS: Record<string, UserPermissions> = {
     portal_detentions: true,
     detentions_full: false,
     portal_o2: false,
+    portal_opvoeders: false,
     students: false,
     audit: false,
   },

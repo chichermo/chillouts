@@ -18,6 +18,7 @@ import { isAdmin, getCurrentUser, refreshCurrentUserFromDb } from '@/lib/auth';
 const PERMISSION_LABELS: { key: keyof UserPermissions; label: string; group: string }[] = [
   { key: 'portal_chillouts', label: 'App Chill-outs', group: 'Element apps' },
   { key: 'portal_o2', label: 'App O2', group: 'Element apps' },
+  { key: 'portal_opvoeders', label: 'Kaart Opvoeders', group: 'Element apps' },
   { key: 'dagelijks', label: 'Dagelijks', group: 'Chill-outs' },
   { key: 'weekoverzicht', label: 'Weekoverzicht', group: 'Chill-outs' },
   { key: 'statistieken', label: 'Statistieken', group: 'Chill-outs' },
