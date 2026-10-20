@@ -22,8 +22,6 @@ const LOGO_GREEN = '#ACE0AF';
 const LOGO_BLUE = '#C2E0FC';
 const LOGO_PEACH = '#FFDFB9';
 const LOGO_FAN = `linear-gradient(90deg, ${LOGO_PINK}, ${LOGO_GREEN}, ${LOGO_BLUE}, ${LOGO_PEACH})`;
-const OPVOEDERS_CALENDAR_URL =
-  'https://kalender-ruby.vercel.app/calendar/cmvfekes30002l204wnx0yb5l';
 
 export default function PortalsPage() {
   const router = useRouter();
@@ -383,8 +381,8 @@ export default function PortalsPage() {
                   opacity: hovered === 'opvoeders' ? 1 : 0.75,
                 }}
               />
-              <a
-                href={OPVOEDERS_CALENDAR_URL}
+              <Link
+                href="/opvoeders"
                 onMouseEnter={() => setHovered('opvoeders')}
                 onMouseLeave={() => setHovered(null)}
                 className="group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 p-7 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 animate-[portalIn_0.55s_ease-out_both]"
@@ -431,7 +429,7 @@ export default function PortalsPage() {
                     <span aria-hidden>→</span>
                   </span>
                 </div>
-              </a>
+              </Link>
             </div>
           </div>
         )}

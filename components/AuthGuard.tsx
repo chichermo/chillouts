@@ -25,6 +25,7 @@ function isChilloutsAppPath(pathname: string | null): boolean {
     pathname === '/' ||
     pathname === '/portals' ||
     pathname === '/directory' ||
+    pathname === '/opvoeders' ||
     pathname === '/o2' ||
     pathname === '/login'
   ) {
@@ -72,12 +73,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
       const user = getCurrentUser();
 
-      if (pathname === '/portals' || pathname === '/o2' || pathname === '/directory') {
+      if (pathname === '/portals' || pathname === '/o2' || pathname === '/directory' || pathname === '/opvoeders') {
         if (pathname === '/o2' && (!user || !hasPermission(user, 'portal_o2'))) {
           router.push('/portals');
           return;
         }
-        if (pathname === '/directory' && (!user || user.role !== 'admin')) {
+        if ((pathname === '/directory' || pathname === '/opvoeders') && (!user || user.role !== 'admin')) {
           router.push('/portals');
           return;
         }
