@@ -145,7 +145,7 @@ export default function OpvoedersPage() {
           </p>
         ) : null}
 
-        <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-2 gap-4 lg:grid-cols-2 lg:grid-rows-1">
+        <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-2 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-1">
           <div className="flex min-h-0 flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#16161f]">
             <div className="grid shrink-0 grid-cols-[6.75rem_repeat(5,minmax(0,1fr))] border-b border-white/10">
               <div className="px-3 py-3 text-sm font-semibold uppercase tracking-wide text-white/50">
