@@ -17,6 +17,9 @@ import IosDownloadButton from '@/components/IosDownloadButton';
 import type { User } from '@/lib/users';
 
 const LEERLINGEN_ACCENT = '#C9B6E8';
+const OPVOEDERS_ACCENT = '#6DB877';
+const OPVOEDERS_CALENDAR_URL =
+  'https://kalender-ruby.vercel.app/calendar/cmvfekes30002l204wnx0yb5l';
 
 export default function PortalsPage() {
   const router = useRouter();
@@ -145,14 +148,6 @@ export default function PortalsPage() {
 
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-end gap-2 px-4 pt-6 md:px-8">
         <IosDownloadButton variant="header" />
-        {user?.role === 'admin' && (
-          <Link
-            href="/directory"
-            className="rounded-xl border border-[#C9B6E8]/40 bg-[#C9B6E8]/15 px-3.5 py-2 text-sm font-semibold text-[#C9B6E8] transition hover:bg-[#C9B6E8]/25"
-          >
-            Leerlingen
-          </Link>
-        )}
         <button
           type="button"
           onClick={handleLogout}
@@ -309,10 +304,9 @@ export default function PortalsPage() {
         )}
 
         {user?.role === 'admin' && (
-          <div className="mt-8 grid gap-8 xl:grid-cols-3">
-            <div className="hidden xl:block" aria-hidden />
+          <div className="mt-8 grid gap-8 md:grid-cols-2">
             <div
-              className="portal-card-float relative mx-auto w-full max-w-md xl:max-w-none"
+              className="portal-card-float relative mx-auto w-full max-w-md md:max-w-none"
               style={{ animationDelay: `${portals.length * 0.55}s` }}
             >
                 <div
@@ -373,6 +367,67 @@ export default function PortalsPage() {
                     </span>
                   </div>
                 </Link>
+            </div>
+            <div
+              className="portal-card-float relative mx-auto w-full max-w-md md:max-w-none"
+              style={{ animationDelay: `${(portals.length + 1) * 0.55}s` }}
+            >
+              <div
+                className="pointer-events-none absolute -bottom-3 left-1/2 h-8 w-[78%] -translate-x-1/2 rounded-full blur-2xl"
+                style={{
+                  background: `radial-gradient(ellipse, ${OPVOEDERS_ACCENT}55 0%, rgba(0,0,0,0.65) 55%, transparent 75%)`,
+                  opacity: hovered === 'opvoeders' ? 1 : 0.75,
+                }}
+              />
+              <a
+                href={OPVOEDERS_CALENDAR_URL}
+                onMouseEnter={() => setHovered('opvoeders')}
+                onMouseLeave={() => setHovered(null)}
+                className="group relative block w-full overflow-hidden rounded-[1.75rem] border border-white/10 p-7 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 animate-[portalIn_0.55s_ease-out_both]"
+                style={{
+                  animationDelay: `${(portals.length + 1) * 0.1}s`,
+                  background: 'linear-gradient(160deg, #2a2a36 0%, #16161f 45%, #0c0c12 100%)',
+                  boxShadow:
+                    hovered === 'opvoeders'
+                      ? `inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 22px rgba(0,0,0,0.45), 0 22px 48px rgba(0,0,0,0.55), 0 0 32px ${OPVOEDERS_ACCENT}22`
+                      : 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -10px 22px rgba(0,0,0,0.5), 0 18px 40px rgba(0,0,0,0.5)',
+                }}
+              >
+                <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-25"
+                  style={{
+                    background: `radial-gradient(circle at 18% 12%, ${OPVOEDERS_ACCENT}66, transparent 42%)`,
+                  }}
+                />
+                <div
+                  className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 transition-transform duration-500 group-hover:scale-x-100"
+                  style={{ background: OPVOEDERS_ACCENT }}
+                />
+                <div
+                  className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl border border-white/10"
+                  style={{ background: `linear-gradient(145deg, ${OPVOEDERS_ACCENT}33, transparent)` }}
+                >
+                  <svg className="h-10 w-10" style={{ color: OPVOEDERS_ACCENT }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="relative mt-6 text-2xl font-black tracking-tight text-white md:text-[1.75rem]">
+                  Opvoeders
+                </h2>
+                <p className="relative mt-2 min-h-[3rem] text-sm leading-relaxed text-white/60">
+                  Weekkalender per lesuur.
+                </p>
+                <div className="relative mt-8">
+                  <span
+                    className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold"
+                    style={{ background: `${OPVOEDERS_ACCENT}33`, color: OPVOEDERS_ACCENT }}
+                  >
+                    Openen
+                    <span aria-hidden>→</span>
+                  </span>
+                </div>
+              </a>
             </div>
           </div>
         )}
