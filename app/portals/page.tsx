@@ -17,7 +17,7 @@ import IosDownloadButton from '@/components/IosDownloadButton';
 import type { User } from '@/lib/users';
 
 const LEERLINGEN_ACCENT = '#C9B6E8';
-const OPVOEDERS_ACCENT = '#6DB877';
+const OPVOEDERS_ACCENT = '#F0A8C0';
 const OPVOEDERS_CALENDAR_URL =
   'https://kalender-ruby.vercel.app/calendar/cmvfekes30002l204wnx0yb5l';
 
@@ -416,7 +416,7 @@ export default function PortalsPage() {
                   Opvoeders
                 </h2>
                 <p className="relative mt-2 min-h-[3rem] text-sm leading-relaxed text-white/60">
-                  Weekkalender per lesuur.
+                  Kalender per lesuur.
                 </p>
                 <div className="relative mt-8">
                   <span
