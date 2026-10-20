@@ -159,7 +159,7 @@ export default function OpvoedersPage() {
                       </div>
                       <div
                         className={`mx-auto mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full text-sm ${
-                          today ? 'bg-[#ACE0AF] font-bold text-[#1a1a1a]' : 'text-white'
+                          today ? 'bg-[#EA98A6] font-bold text-[#1a1a1a]' : 'text-white'
                         }`}
                       >
                         {formatDayNumber(dayKey)}
@@ -183,7 +183,7 @@ export default function OpvoedersPage() {
                     return (
                       <div
                         key={key}
-                        className={`border-l border-white/10 ${today ? 'bg-[#ACE0AF]/10' : ''}`}
+                        className={`border-l border-white/10 ${today ? 'bg-[#EA98A6]/10' : ''}`}
                       >
                         <textarea
                           value={data.remarks[key] ?? ''}

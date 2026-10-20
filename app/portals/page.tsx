@@ -17,7 +17,7 @@ import IosDownloadButton from '@/components/IosDownloadButton';
 import type { User } from '@/lib/users';
 
 const LEERLINGEN_ACCENT = '#C9B6E8';
-const OPVOEDERS_ACCENT = '#ACE0AF';
+const OPVOEDERS_ACCENT = '#EA98A6';
 
 export default function PortalsPage() {
   const router = useRouter();

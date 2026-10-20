@@ -1,6 +1,6 @@
 // Service Worker — Element PWA
 // Increment CACHE_VERSION to force clients onto the new worker.
-const CACHE_VERSION = 'v17-opvoeders-mint';
+const CACHE_VERSION = 'v18-opvoeders-petal';
 const CACHE_NAME = `element-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `element-runtime-${CACHE_VERSION}`;
 
