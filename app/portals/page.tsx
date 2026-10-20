@@ -17,11 +17,7 @@ import IosDownloadButton from '@/components/IosDownloadButton';
 import type { User } from '@/lib/users';
 
 const LEERLINGEN_ACCENT = '#C9B6E8';
-const LOGO_PINK = '#EA98A6';
-const LOGO_GREEN = '#ACE0AF';
-const LOGO_BLUE = '#C2E0FC';
-const LOGO_PEACH = '#FFDFB9';
-const LOGO_FAN = `linear-gradient(90deg, ${LOGO_PINK}, ${LOGO_GREEN}, ${LOGO_BLUE}, ${LOGO_PEACH})`;
+const OPVOEDERS_ACCENT = '#ACE0AF';
 
 export default function PortalsPage() {
   const router = useRouter();
@@ -377,7 +373,7 @@ export default function PortalsPage() {
               <div
                 className="pointer-events-none absolute -bottom-3 left-1/2 h-8 w-[78%] -translate-x-1/2 rounded-full blur-2xl"
                 style={{
-                  background: `radial-gradient(ellipse, ${LOGO_GREEN}55 0%, rgba(0,0,0,0.65) 55%, transparent 75%)`,
+                  background: `radial-gradient(ellipse, ${OPVOEDERS_ACCENT}55 0%, rgba(0,0,0,0.65) 55%, transparent 75%)`,
                   opacity: hovered === 'opvoeders' ? 1 : 0.75,
                 }}
               />
@@ -391,7 +387,7 @@ export default function PortalsPage() {
                   background: 'linear-gradient(160deg, #2a2a36 0%, #16161f 45%, #0c0c12 100%)',
                   boxShadow:
                     hovered === 'opvoeders'
-                      ? `inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 22px rgba(0,0,0,0.45), 0 22px 48px rgba(0,0,0,0.55), 0 0 32px ${LOGO_PEACH}22`
+                      ? `inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -10px 22px rgba(0,0,0,0.45), 0 22px 48px rgba(0,0,0,0.55), 0 0 32px ${OPVOEDERS_ACCENT}22`
                       : 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -10px 22px rgba(0,0,0,0.5), 0 18px 40px rgba(0,0,0,0.5)',
                 }}
               >
@@ -399,19 +395,19 @@ export default function PortalsPage() {
                 <div
                   className="pointer-events-none absolute inset-0 opacity-25"
                   style={{
-                    background: `radial-gradient(circle at 18% 12%, ${LOGO_PEACH}66, transparent 42%)`,
+                    background: `radial-gradient(circle at 18% 12%, ${OPVOEDERS_ACCENT}66, transparent 42%)`,
                   }}
                 />
                 <div
                   className="absolute inset-x-0 top-0 h-[3px] origin-left scale-x-50 transition-transform duration-500 group-hover:scale-x-100"
-                  style={{ background: LOGO_FAN }}
+                  style={{ background: OPVOEDERS_ACCENT }}
                 />
-                <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#1a1a22]">
-                  <svg className="h-12 w-12" viewBox="0 0 64 64" aria-hidden>
-                    <path d="M6 34a26 26 0 0 1 26-26v26H6z" fill={LOGO_PINK} />
-                    <path d="M34 8a26 26 0 0 1 26 26H34V8z" fill={LOGO_GREEN} />
-                    <path d="M8 36a24 24 0 0 0 24 24V36H8z" fill={LOGO_BLUE} />
-                    <path d="M34 36h24a24 24 0 0 1-24 24V36z" fill={LOGO_PEACH} />
+                <div
+                  className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-3xl border border-white/10"
+                  style={{ background: `linear-gradient(145deg, ${OPVOEDERS_ACCENT}33, transparent)` }}
+                >
+                  <svg className="h-10 w-10" style={{ color: OPVOEDERS_ACCENT }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <h2 className="relative mt-6 text-2xl font-black tracking-tight text-white md:text-[1.75rem]">
@@ -422,8 +418,8 @@ export default function PortalsPage() {
                 </p>
                 <div className="relative mt-8">
                   <span
-                    className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-[#1a1a1a]"
-                    style={{ background: LOGO_FAN }}
+                    className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold"
+                    style={{ background: `${OPVOEDERS_ACCENT}33`, color: OPVOEDERS_ACCENT }}
                   >
                     Openen
                     <span aria-hidden>→</span>
