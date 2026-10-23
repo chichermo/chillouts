@@ -19,7 +19,7 @@ import {
   type OpvoedersCalendar,
 } from '@/lib/opvoedersCalendar';
 
-const EMPTY: OpvoedersCalendar = { remarks: {}, weeks: {} };
+const EMPTY: OpvoedersCalendar = { remarks: {}, weeks: {}, note: '' };
 
 export default function OpvoedersPage() {
   const router = useRouter();
@@ -86,9 +86,12 @@ export default function OpvoedersPage() {
   }
 
   function setWeekNote(value: string) {
+    const weeks = { ...dataRef.current.weeks };
+    for (const key of Object.keys(weeks)) weeks[key] = value;
     scheduleSave({
       ...dataRef.current,
-      weeks: { ...dataRef.current.weeks, [weekStart]: value },
+      note: value,
+      weeks,
     });
   }
 
@@ -204,7 +207,7 @@ export default function OpvoedersPage() {
           <aside className="flex min-h-0 flex-col rounded-[1.5rem] border border-white/10 bg-[#16161f] p-4">
             <p className="shrink-0 text-base text-white">{formatWeekRange(weekStart)}</p>
             <textarea
-              value={data.weeks[weekStart] ?? ''}
+              value={data.note}
               readOnly={!ready}
               onChange={(event) => setWeekNote(event.target.value)}
               className="mt-3 min-h-0 flex-1 resize-none rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-base leading-relaxed text-white outline-none"
