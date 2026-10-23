@@ -20,8 +20,6 @@ const WEEKDAYS = ['ma', 'di', 'wo', 'do', 'vr'] as const;
 export type OpvoedersCalendar = {
   remarks: Record<string, string>;
   weeks: Record<string, string>;
-  /** Eén tekst voor het zijvenster, op elke week dezelfde. */
-  note: string;
 };
 
 const STORAGE_KEY = 'opvoeders_calendar';
@@ -85,34 +83,12 @@ export function formatWeekRange(monday: string): string {
   return `${start} – ${end}`;
 }
 
-function compactNote(value: string) {
-  return value.replace(/\s+/g, ' ').trim();
-}
-
-/** Langste weektekst, zonder kortere stukken die er al in staan. */
-export function noteFromWeeks(weeks: Record<string, string>): string {
-  const bodies = Object.values(weeks).filter((value) => value.trim());
-  bodies.sort((a, b) => b.length - a.length);
-  const kept: string[] = [];
-  for (const body of bodies) {
-    const folded = compactNote(body);
-    if (kept.some((item) => compactNote(item).includes(folded))) continue;
-    const covering = kept.findIndex((item) => folded.includes(compactNote(item)));
-    if (covering >= 0) {
-      kept[covering] = body;
-      continue;
-    }
-    kept.push(body);
-  }
-  return kept.join('\n\n');
-}
-
 export async function loadOpvoedersCalendar(): Promise<OpvoedersCalendar> {
-  const stored = await getAppSetting<Partial<OpvoedersCalendar>>(STORAGE_KEY);
-  const remarks = stored?.remarks && typeof stored.remarks === 'object' ? stored.remarks : {};
-  const weeks = stored?.weeks && typeof stored.weeks === 'object' ? stored.weeks : {};
-  const note = typeof stored?.note === 'string' ? stored.note : noteFromWeeks(weeks);
-  return { remarks, weeks, note };
+  const stored = await getAppSetting<OpvoedersCalendar>(STORAGE_KEY);
+  return {
+    remarks: stored?.remarks && typeof stored.remarks === 'object' ? stored.remarks : {},
+    weeks: stored?.weeks && typeof stored.weeks === 'object' ? stored.weeks : {},
+  };
 }
 
 export async function saveOpvoedersCalendar(data: OpvoedersCalendar): Promise<void> {
