@@ -1,65 +1,73 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
-import { WeeklyTotal } from '@/types';
-import { loadData } from '@/lib/storage';
-import { getWeekNumber, getWeekStartDate, formatDate, calculateWeeklyTotals, calculateWeeklyTotalsByStudent } from '@/lib/utils';
+import { Student, WeeklyTotal } from '@/types';
+import { loadWeeklyPageData } from '@/lib/weekly-data';
+import {
+  getWeekNumber,
+  getWeekStartForWeekNumber,
+  getWeekdayDateKeys,
+  formatDate,
+  calculateWeeklyTotals,
+  calculateWeeklyTotalsByStudent,
+  sortKlassen,
+} from '@/lib/utils';
+
+type StudentWeekTotals = {
+  [studentId: string]: {
+    name: string;
+    klas: string;
+    totals: { [day: string]: { total: number; vr: number; vl: number } };
+  };
+};
 
 export default function WeeklyPage() {
   const [selectedWeek, setSelectedWeek] = useState<number>(0);
   const [weeklyTotal, setWeeklyTotal] = useState<WeeklyTotal | null>(null);
   const [klassen, setKlassen] = useState<string[]>([]);
-  const [students, setStudents] = useState<any[]>([]);
-  const [studentTotals, setStudentTotals] = useState<{ [studentId: string]: { name: string; klas: string; totals: { [day: string]: { total: number; vr: number; vl: number } } } }>({});
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentTotals, setStudentTotals] = useState<StudentWeekTotals>({});
   const [mounted, setMounted] = useState(false);
   const [viewMode, setViewMode] = useState<'klas' | 'student'>('klas');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadWeek = useCallback(async (weekNumber: number) => {
+    setError(null);
+    const weekStart = getWeekStartForWeekNumber(weekNumber);
+    const data = await loadWeeklyPageData(getWeekdayDateKeys(weekStart));
+    setStudents(data.students);
+    setKlassen(sortKlassen([...new Set(data.students.map((s) => s.klas))]));
+    setWeeklyTotal(calculateWeeklyTotals(weekNumber, weekStart, data.dailyRecords, data.students));
+    setStudentTotals(
+      calculateWeeklyTotalsByStudent(weekNumber, weekStart, data.dailyRecords, data.students)
+    );
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-    const loadDataAsync = async () => {
-      const data = await loadData();
-      const allKlassen = [...new Set(data.students.map(s => s.klas))].sort();
-      setKlassen(allKlassen);
-      setStudents(data.students);
-
-      // Obtener semana actual
-      const today = new Date();
-      const currentWeek = getWeekNumber(today);
-      setSelectedWeek(currentWeek);
-      
-      // Calcular totales de la semana actual
-      const weekStart = getWeekStartDate(today);
-      const totals = calculateWeeklyTotals(currentWeek, weekStart, data.dailyRecords, data.students);
-      setWeeklyTotal(totals);
-      
-      // Calcular totales por estudiante
-      const byStudent = calculateWeeklyTotalsByStudent(currentWeek, weekStart, data.dailyRecords, data.students);
-      setStudentTotals(byStudent);
-    };
-    loadDataAsync();
-  }, []);
+    const currentWeek = getWeekNumber(new Date());
+    setSelectedWeek(currentWeek);
+    loadWeek(currentWeek)
+      .catch((err) => {
+        console.error('Weekoverzicht laden mislukt:', err);
+        setError('Kon het weekoverzicht niet laden. Probeer de pagina te vernieuwen.');
+      })
+      .finally(() => setLoading(false));
+  }, [loadWeek]);
 
   const handleWeekChange = async (weekNumber: number) => {
     setSelectedWeek(weekNumber);
-    const data = await loadData();
-    
-    // Calcular fecha de inicio de la semana
-    const today = new Date();
-    const currentWeek = getWeekNumber(today);
-    const weekDiff = weekNumber - currentWeek;
-    
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + (weekDiff * 7));
-    const weekStart = getWeekStartDate(targetDate);
-    
-    const totals = calculateWeeklyTotals(weekNumber, weekStart, data.dailyRecords, data.students);
-    setWeeklyTotal(totals);
-    
-    // Calcular totales por estudiante
-    const byStudent = calculateWeeklyTotalsByStudent(weekNumber, weekStart, data.dailyRecords, data.students);
-    setStudentTotals(byStudent);
+    setLoading(true);
+    try {
+      await loadWeek(weekNumber);
+    } catch (err) {
+      console.error('Weekoverzicht laden mislukt:', err);
+      setError('Kon deze week niet laden. Probeer een andere week of vernieuw de pagina.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const weekDays = ['Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag'];
@@ -67,7 +75,29 @@ export default function WeeklyPage() {
   const currentWeek = getWeekNumber(today);
   const weeks = Array.from({ length: 20 }, (_, i) => currentWeek - 10 + i);
 
-  if (!mounted || !weeklyTotal) {
+  if (!mounted || (loading && !weeklyTotal)) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-xl text-white">{error || 'Laden...'}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !weeklyTotal) {
+    return (
+      <div className="min-h-screen relative overflow-hidden">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <p className="text-xl text-white text-center">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!weeklyTotal) {
     return (
       <div className="min-h-screen relative overflow-hidden">
         <Navigation />
@@ -80,18 +110,18 @@ export default function WeeklyPage() {
 
   // Calcular totales por clase
   const klasTotals: { [klas: string]: { total: number; vr: number; vl: number; avg: number } } = {};
-  klassen.forEach(klas => {
+  klassen.forEach((klas) => {
     let total = 0;
     let vr = 0;
     let vl = 0;
-    
-    weekDays.forEach(day => {
+
+    weekDays.forEach((day) => {
       const dayData = weeklyTotal.totals[klas]?.[day] || { total: 0, vr: 0, vl: 0 };
       total += dayData.total;
       vr += dayData.vr;
       vl += dayData.vl;
     });
-    
+
     klasTotals[klas] = {
       total,
       vr,
@@ -101,14 +131,16 @@ export default function WeeklyPage() {
   });
 
   // Total general de la semana
-  const weekTotal = Object.values(klasTotals).reduce((acc, k) => ({
-    total: acc.total + k.total,
-    vr: acc.vr + k.vr,
-    vl: acc.vl + k.vl,
-  }), { total: 0, vr: 0, vl: 0 });
+  const weekTotal = Object.values(klasTotals).reduce(
+    (acc, k) => ({
+      total: acc.total + k.total,
+      vr: acc.vr + k.vr,
+      vl: acc.vl + k.vl,
+    }),
+    { total: 0, vr: 0, vl: 0 }
+  );
 
-  const weekStartDate = getWeekStartDate(new Date());
-  weekStartDate.setDate(weekStartDate.getDate() + ((selectedWeek - currentWeek) * 7));
+  const weekStartDate = getWeekStartForWeekNumber(selectedWeek);
   const weekStartStr = formatDate(weekStartDate);
 
   return (
@@ -123,6 +155,12 @@ export default function WeeklyPage() {
           <h1 className="text-3xl font-bold text-white">Weekoverzicht</h1>
         </div>
 
+        {error && (
+          <div className="mb-4 rounded-md border border-red-400/40 bg-red-500/20 px-4 py-3 text-sm text-red-100">
+            {error}
+          </div>
+        )}
+
         {/* Selector de semana y vista */}
         <div className="glass-effect p-4 rounded-lg shadow-md mb-4 border border-white/20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -133,16 +171,18 @@ export default function WeeklyPage() {
               <select
                 value={selectedWeek}
                 onChange={(e) => handleWeekChange(parseInt(e.target.value))}
-                className="px-3 py-2 text-sm bg-white/10 border border-white/20 rounded-md w-full text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none"
+                disabled={loading}
+                className="px-3 py-2 text-sm bg-white/10 border border-white/20 rounded-md w-full text-white focus:border-white/50 focus:ring-1 focus:ring-white/50 focus:outline-none disabled:opacity-60"
               >
-                {weeks.map(week => (
-                  <option key={week} value={week} className="bg-blue-900">
+                {weeks.map((week) => (
+                  <option key={week} value={week} className="bg-slate-900 text-white">
                     Week {week} {week === currentWeek ? '(Huidige week)' : ''}
                   </option>
                 ))}
               </select>
               <p className="mt-2 text-sm text-white/90">
                 Week {selectedWeek} ({weekStartStr})
+                {loading ? ' — laden…' : ''}
               </p>
             </div>
             <div>
@@ -350,4 +390,3 @@ export default function WeeklyPage() {
     </div>
   );
 }
-

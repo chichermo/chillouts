@@ -2,9 +2,13 @@ import { ChillOutEntry, DailyRecord, WeeklyTotal, Student, ChillOutType } from '
 
 export function formatDate(date: Date | string): string {
   if (typeof date === 'string') {
-    return date;
+    const match = String(date).match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : date;
   }
-  return date.toISOString().split('T')[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 export function getDayName(date: Date): string {
@@ -306,10 +310,40 @@ export function getWeekNumber(date: Date): number {
 }
 
 export function getWeekStartDate(date: Date): Date {
-  const d = new Date(date);
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0, 0);
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Aanpassen zodat maandag de eerste dag is
-  return new Date(d.setDate(diff));
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+export function getWeekStartForWeekNumber(weekNumber: number, reference: Date = new Date()): Date {
+  const currentWeek = getWeekNumber(reference);
+  const target = new Date(
+    reference.getFullYear(),
+    reference.getMonth(),
+    reference.getDate() + (weekNumber - currentWeek) * 7,
+    12,
+    0,
+    0,
+    0
+  );
+  return getWeekStartDate(target);
+}
+
+export function getWeekdayDateKeys(weekStart: Date): string[] {
+  return [0, 1, 2, 3, 4].map((offset) => {
+    const d = new Date(
+      weekStart.getFullYear(),
+      weekStart.getMonth(),
+      weekStart.getDate() + offset,
+      12,
+      0,
+      0,
+      0
+    );
+    return formatDate(d);
+  });
 }
 
 export function calculateDailyTotals(record: DailyRecord, students: Student[]): {
@@ -367,12 +401,11 @@ export function calculateWeeklyTotals(
     });
   });
 
+  const dateKeys = getWeekdayDateKeys(startDate);
+
   // Bereken totalen per dag
   for (let i = 0; i < 5; i++) {
-    const currentDate = new Date(startDate);
-    currentDate.setDate(startDate.getDate() + i);
-    const dateStr = formatDate(currentDate);
-    const record = dailyRecords[dateStr];
+    const record = dailyRecords[dateKeys[i]];
     
     if (record) {
       const dayName = weekDays[i];
@@ -431,12 +464,11 @@ export function calculateWeeklyTotalsByStudent(
     });
   });
 
+  const dateKeys = getWeekdayDateKeys(startDate);
+
   // Calcular totales por estudiante y día
   for (let i = 0; i < 5; i++) {
-    const currentDate = new Date(startDate);
-    currentDate.setDate(startDate.getDate() + i);
-    const dateStr = formatDate(currentDate);
-    const record = dailyRecords[dateStr];
+    const record = dailyRecords[dateKeys[i]];
     
     if (record) {
       const dayName = weekDays[i];
