@@ -21,7 +21,6 @@ const PERMISSION_LABELS: { key: keyof UserPermissions; label: string; group: str
   { key: 'portal_opvoeders', label: 'Kaart Opvoeders', group: 'Element apps' },
   { key: 'dagelijks', label: 'Dagelijks', group: 'Chill-outs' },
   { key: 'weekoverzicht', label: 'Weekoverzicht', group: 'Chill-outs' },
-  { key: 'statistieken', label: 'Statistieken', group: 'Chill-outs' },
   { key: 'rapporten', label: 'Rapporten', group: 'Chill-outs' },
   { key: 'rapporten_docenten', label: 'Rapporten per docent', group: 'Chill-outs' },
   { key: 'students', label: 'Studenten beheren', group: 'Chill-outs' },

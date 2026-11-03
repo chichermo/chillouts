@@ -25,7 +25,7 @@ export const PORTALS: PortalDef[] = [
     id: 'chillouts',
     permission: 'portal_chillouts',
     title: 'Chill-outs',
-    subtitle: 'Dagelijkse registratie, roosters, rapporten en statistieken.',
+    subtitle: 'Dagelijkse registratie, roosters en rapporten.',
     href: '/dashboard',
     accent: '#ACE1AF',
   },

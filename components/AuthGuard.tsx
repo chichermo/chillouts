@@ -10,7 +10,6 @@ const PUBLIC_PATHS = new Set(['/login', '/create-users', '/reset-password']);
 const ROUTE_PERMISSIONS: { [path: string]: keyof UserPermissions } = {
   '/daily': 'dagelijks',
   '/weekly': 'weekoverzicht',
-  '/stats': 'statistieken',
   '/import': 'rapporten',
   '/backup': 'backup',
   '/students': 'students',
