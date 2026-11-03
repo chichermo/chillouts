@@ -99,7 +99,7 @@ export default function ChilloutStackedBarChart({
           />
           <Bar
             dataKey="generic"
-            name="Chillouts"
+            name="CO"
             stackId="a"
             fill={CHILLOUT_CHART_COLORS.generic}
             radius={isVertical ? BAR_TOP_RADIUS : [0, 6, 6, 0]}

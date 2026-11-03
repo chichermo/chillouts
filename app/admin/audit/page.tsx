@@ -392,7 +392,7 @@ export default function AuditStudentPage() {
           <div className="glass-effect rounded-lg p-4 mb-6 border border-white/20">
             <p>
               <strong>Totaal:</strong> {totals.total} · <strong>VR:</strong> {totals.vr} ·{' '}
-              <strong>VL:</strong> {totals.vl} · <strong>Zonder VR/VL:</strong> {totals.generic}
+              <strong>VL:</strong> {totals.vl} · <strong>CO:</strong> {totals.generic}
               {rows.length > 0 && (
                 <span className="text-white/55 font-normal">
                   {' '}
@@ -401,7 +401,7 @@ export default function AuditStudentPage() {
               )}
             </p>
             <p className="text-xs text-white/50 mt-2">
-              &quot;Zonder VR/VL&quot; = chill-outs zonder VR/VL aangevinkt (niet hetzelfde als
+              &quot;CO&quot; = chill-outs zonder VR/VL aangevinkt (niet hetzelfde als
               &quot;fout&quot;). Totaal = VR + VL + zonder type. Reparatie fixeert alleen
               opslagfouten, niet te hoge aantallen.
             </p>
@@ -416,7 +416,7 @@ export default function AuditStudentPage() {
                 <th className="py-2 pr-2 text-center">Totaal</th>
                 <th className="py-2 pr-2 text-center">VR</th>
                 <th className="py-2 pr-2 text-center">VL</th>
-                <th className="py-2 pr-2 text-center">Z/VR/VL</th>
+                <th className="py-2 pr-2 text-center">CO</th>
                 <th className="py-2 pr-4">Formaat</th>
                 <th className="py-2">Actie</th>
               </tr>

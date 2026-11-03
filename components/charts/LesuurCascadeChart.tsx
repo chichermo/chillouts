@@ -52,7 +52,7 @@ export default function LesuurCascadeChart({
             { key: 'vl' as const, name: 'VL', value: d.vl, color: SEGMENT_COLORS.vl },
             {
               key: 'generic' as const,
-              name: 'Chillouts',
+              name: 'CO',
               value: d.generic,
               color: SEGMENT_COLORS.generic,
             },
@@ -135,7 +135,7 @@ export default function LesuurCascadeChart({
             [
               { name: 'VR', color: SEGMENT_COLORS.vr },
               { name: 'VL', color: SEGMENT_COLORS.vl },
-              { name: 'Chillouts', color: SEGMENT_COLORS.generic },
+              { name: 'CO', color: SEGMENT_COLORS.generic },
             ] as const
           ).map((item) => (
             <span

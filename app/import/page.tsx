@@ -661,19 +661,19 @@ export default function ReportsPage() {
       ['Totaal Chill-outs', stats.totalChillOuts],
       ['Totaal VR', stats.totalVR],
       ['Totaal VL', stats.totalVL],
-      ['Totaal Chillouts', stats.totalGeneric],
+      ['Totaal CO', stats.totalGeneric],
       [''],
       ['Per Lesuur'],
-      ['Lesuur', 'Totaal', 'VR', 'VL', 'Chillouts'],
+      ['Lesuur', 'Totaal', 'VR', 'VL', 'CO'],
       ...stats.byHour.map(h => [h.hour, h.total, h.vr, h.vl, h.generic]),
       [''],
       ['Per Klas'],
-      ['Klas', 'Totaal', 'VR', 'VL', 'Chillouts', 'Percentage'],
+      ['Klas', 'Totaal', 'VR', 'VL', 'CO', 'Percentage'],
       ...stats.byKlas.map(k => [k.klas, k.total, k.vr, k.vl, k.generic, `${k.percentage}%`]),
       ...(canSeeTeacherStats && stats.byTeacher.length > 0 ? [
         [''],
         ['Per Docent'],
-        ['Docent', 'Totaal', 'VR', 'VL', 'Chillouts'],
+        ['Docent', 'Totaal', 'VR', 'VL', 'CO'],
         ...stats.byTeacher.map(t => [t.teacher, t.total, t.vr, t.vl, t.generic]),
       ] : []),
     ];
@@ -683,7 +683,7 @@ export default function ReportsPage() {
 
     // Blad 2: Per Student
     const studentData = [
-      ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Chillouts'],
+      ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'CO'],
       ...stats.byStudent.map(s => [s.name, s.klas, s.total, s.vr, s.vl, s.generic]),
     ];
     const studentSheet = workbook.addWorksheet('Per Student');
@@ -692,7 +692,7 @@ export default function ReportsPage() {
 
     // Blad 3: Per Dag
     const dayData = [
-      ['Datum', 'Totaal', 'VR', 'VL', 'Chillouts'],
+      ['Datum', 'Totaal', 'VR', 'VL', 'CO'],
       ...stats.byDay.map(d => [d.date, d.total, d.vr, d.vl, d.generic]),
     ];
     const daySheet = workbook.addWorksheet('Per Dag');
@@ -838,7 +838,7 @@ export default function ReportsPage() {
       yPos += 7;
       doc.text(`Totaal VL: ${stats.totalVL}`, 14, yPos);
       yPos += 7;
-      doc.text(`Totaal Chillouts: ${stats.totalGeneric}`, 14, yPos);
+      doc.text(`Totaal CO: ${stats.totalGeneric}`, 14, yPos);
       yPos += 10;
 
       // Helper functie om tabellen handmatig te maken
@@ -892,7 +892,7 @@ export default function ReportsPage() {
         doc.text('Per Klas', 14, yPos);
         yPos += 10;
         
-        const klasHeaders = ['Klas', 'Totaal', 'VR', 'VL', 'Chillouts', 'Percentage'];
+        const klasHeaders = ['Klas', 'Totaal', 'VR', 'VL', 'CO', 'Percentage'];
         const klasRows = stats.byKlas.map(k => [
           k.klas.length > 15 ? k.klas.substring(0, 15) + '...' : k.klas,
           k.total.toString(),
@@ -911,7 +911,7 @@ export default function ReportsPage() {
         doc.text('Per Docent', 14, yPos);
         yPos += 10;
 
-        const teacherHeaders = ['Docent', 'Totaal', 'VR', 'VL', 'Chillouts'];
+        const teacherHeaders = ['Docent', 'Totaal', 'VR', 'VL', 'CO'];
         const teacherRows = stats.byTeacher.map(t => [
           t.teacher.length > 20 ? t.teacher.substring(0, 20) + '...' : t.teacher,
           t.total.toString(),
@@ -929,7 +929,7 @@ export default function ReportsPage() {
         doc.text(selectedNames.length > 0 ? 'Statistieken per Student' : 'Top Studenten', 14, yPos);
         yPos += 10;
         
-        const studentHeaders = ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'Chillouts'];
+        const studentHeaders = ['Student', 'Klas', 'Totaal', 'VR', 'VL', 'CO'];
         const studentRows = stats.byStudent
           .sort((a, b) => b.total - a.total)
           .slice(0, 20)
@@ -1054,7 +1054,7 @@ export default function ReportsPage() {
       yPos += 10;
       doc.text(`Totaal VL: ${stats.totalVL}`, 14, yPos);
       yPos += 10;
-      doc.text(`Totaal Chillouts: ${stats.totalGeneric}`, 14, yPos);
+      doc.text(`Totaal CO: ${stats.totalGeneric}`, 14, yPos);
       yPos += 15;
       
       doc.setFontSize(14);
@@ -1062,7 +1062,7 @@ export default function ReportsPage() {
       yPos += 10;
       doc.setFontSize(10);
       stats.byKlas.forEach(k => {
-        doc.text(`${k.klas}: Totaal=${k.total}, VR=${k.vr}, VL=${k.vl}, Chillouts=${k.generic} (${k.percentage}%)`, 14, yPos);
+        doc.text(`${k.klas}: Totaal=${k.total}, VR=${k.vr}, VL=${k.vl}, CO=${k.generic} (${k.percentage}%)`, 14, yPos);
         yPos += 7;
         if (yPos > 280) {
           doc.addPage();
@@ -1130,7 +1130,7 @@ export default function ReportsPage() {
   const pieData = [
     { name: 'VR', value: stats.totalVR, color: COLORS.vr },
     { name: 'VL', value: stats.totalVL, color: COLORS.vl },
-    { name: 'Chillouts', value: stats.totalGeneric, color: COLORS.generic },
+    { name: 'CO', value: stats.totalGeneric, color: COLORS.generic },
   ].filter(item => item.value > 0);
 
   const hasStudentFilter = filters.student.length > 0;
@@ -1429,7 +1429,7 @@ export default function ReportsPage() {
 
           <div className="glass-effect rounded-lg p-6 border border-white/20">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-medium text-white/85 uppercase">Chillouts</p>
+              <p className="text-xs font-medium text-white/85 uppercase">CO</p>
               <div className="w-10 h-10 rounded-lg bg-red-300/20 flex items-center justify-center">
                 <svg className="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1517,7 +1517,7 @@ export default function ReportsPage() {
                   <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }} />
                   <Bar dataKey="vr" fill={COLORS.vr} name="VR" radius={[0, 6, 6, 0]} maxBarSize={22} isAnimationActive={!isExportingCharts} />
                   <Bar dataKey="vl" fill={COLORS.vl} name="VL" radius={[0, 6, 6, 0]} maxBarSize={22} isAnimationActive={!isExportingCharts} />
-                  <Bar dataKey="generic" fill={COLORS.generic} name="Chillouts" radius={[0, 6, 6, 0]} maxBarSize={22} isAnimationActive={!isExportingCharts} />
+                  <Bar dataKey="generic" fill={COLORS.generic} name="CO" radius={[0, 6, 6, 0]} maxBarSize={22} isAnimationActive={!isExportingCharts} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1587,7 +1587,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Zonder VR/VL</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">CO</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">Percentage</th>
                   </tr>
                 </thead>
@@ -1666,7 +1666,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Zonder VR/VL</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">CO</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1696,7 +1696,7 @@ export default function ReportsPage() {
                 : 'Statistieken per Student'}
             </h2>
             <p className="text-xs text-white/55 mb-4">
-              Totaal = VR + VL + zonder type. Kolom &quot;Zonder VR/VL&quot; = chill-outs zonder VR of VL.
+              Totaal = VR + VL + CO. Kolom CO = chill-outs zonder VR of VL.
             </p>
             <StickyTableWrap maxHeight="600px">
               <table className="w-full text-sm">
@@ -1707,7 +1707,7 @@ export default function ReportsPage() {
                     <th className="px-4 py-3 text-center font-semibold text-white">Totaal</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VR</th>
                     <th className="px-4 py-3 text-center font-semibold text-white">VL</th>
-                    <th className="px-4 py-3 text-center font-semibold text-white">Zonder VR/VL</th>
+                    <th className="px-4 py-3 text-center font-semibold text-white">CO</th>
                   </tr>
                 </thead>
                 <tbody>
