@@ -50,7 +50,6 @@ interface FilterState {
   student: string[];
   dateFrom: string;
   dateTo: string;
-  generatedBy: string;
   hour: string; // Filtro de hora (1-7 o vacío para todas)
   weekday: string; // Filtro por dag: Ma, Di, Wo, Do, Vr...
 }
@@ -192,7 +191,6 @@ export default function ReportsPage() {
     student: [],
     dateFrom: '',
     dateTo: '',
-    generatedBy: '',
     hour: '',
     weekday: '',
   });
@@ -579,7 +577,7 @@ export default function ReportsPage() {
     return {
       date: dateStr,
       day: dayName,
-      generatedBy: filters.generatedBy || 'Systeem',
+      generatedBy: getCurrentUser()?.username || 'Systeem',
     };
   };
 
@@ -1082,7 +1080,6 @@ export default function ReportsPage() {
       student: [],
       dateFrom: '',
       dateTo: '',
-      generatedBy: '',
       hour: '',
       weekday: '',
     });
@@ -1311,23 +1308,7 @@ export default function ReportsPage() {
                 className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
-            {/* Gegenereerd door */}
-            <div>
-              <label className="block text-sm font-medium text-white/90 mb-2">Gegenereerd door</label>
-              <input
-                type="text"
-                value={filters.generatedBy}
-                onChange={(e) => setFilters(prev => ({ ...prev, generatedBy: e.target.value }))}
-                placeholder="Naam van gebruiker"
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
           </div>
-          
-          <p className="mt-4 text-xs text-white/55">
-            Vink één of meer klassen aan. Daarna kun je onder Student ook meerdere leerlingen aanvinken. Zonder vakjes zie je alles.
-          </p>
         </div>
 
         {hasActiveFilters && (
