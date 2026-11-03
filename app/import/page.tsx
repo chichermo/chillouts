@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import Navigation from '@/components/Navigation';
 import { loadData } from '@/lib/storage';
 import {
@@ -120,6 +120,45 @@ function CheckOption({
   );
 }
 
+function CollapsibleCheckList({
+  summary,
+  open,
+  onToggle,
+  children,
+}: {
+  summary: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-white/20 bg-[#2f2f3d]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
+      >
+        <span className="truncate">{summary}</span>
+        <svg
+          className={`h-4 w-4 shrink-0 text-white/50 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="max-h-72 overflow-y-auto border-t border-white/15 py-1">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface CapturedChart {
   id: string;
   title: string;
@@ -164,6 +203,8 @@ export default function ReportsPage() {
   const [rosterStatus, setRosterStatus] = useState<{ year: string; klasCount: number }[]>([]);
   const loadGenRef = useRef(0);
   const [canSeeTeacherStats, setCanSeeTeacherStats] = useState(false);
+  const [klasListOpen, setKlasListOpen] = useState(false);
+  const [studentListOpen, setStudentListOpen] = useState(false);
 
   const COLORS = {
     vr: '#3b82f6', // blue
@@ -1164,26 +1205,25 @@ export default function ReportsPage() {
             {/* Klas filter */}
             <div>
               <label className="block text-sm font-medium text-white/90 mb-2">Klas</label>
-              <div className="rounded-lg border border-white/20 bg-[#2f2f3d]">
-                <p className="border-b border-white/15 px-3 py-2 text-sm text-white/80">
-                  {hasKlasFilter ? klasFilterLabel : 'Alle klassen'} — vink de vakjes aan
-                </p>
-                <div className="max-h-72 overflow-y-auto py-1">
+              <CollapsibleCheckList
+                summary={hasKlasFilter ? klasFilterLabel : 'Alle klassen'}
+                open={klasListOpen}
+                onToggle={() => setKlasListOpen((open) => !open)}
+              >
+                <CheckOption
+                  checked={!hasKlasFilter}
+                  onChange={clearKlasSelection}
+                  label="Alle klassen"
+                />
+                {allKlassen.map((klas) => (
                   <CheckOption
-                    checked={!hasKlasFilter}
-                    onChange={clearKlasSelection}
-                    label="Alle klassen"
+                    key={klas}
+                    checked={filters.klas.includes(klas)}
+                    onChange={() => toggleKlas(klas)}
+                    label={klas}
                   />
-                  {allKlassen.map((klas) => (
-                    <CheckOption
-                      key={klas}
-                      checked={filters.klas.includes(klas)}
-                      onChange={() => toggleKlas(klas)}
-                      label={klas}
-                    />
-                  ))}
-                </div>
-              </div>
+                ))}
+              </CollapsibleCheckList>
             </div>
 
             {/* Student filter */}
@@ -1194,27 +1234,26 @@ export default function ReportsPage() {
                   Kies eerst één of meer klassen om leerlingen te zien.
                 </p>
               ) : (
-                <div className="rounded-lg border border-white/20 bg-[#2f2f3d]">
-                  <p className="border-b border-white/15 px-3 py-2 text-sm text-white/80">
-                    {hasStudentFilter ? studentFilterLabel : 'Alle studenten'} — vink de vakjes aan
-                  </p>
-                  <div className="max-h-72 overflow-y-auto py-1">
+                <CollapsibleCheckList
+                  summary={hasStudentFilter ? studentFilterLabel : 'Alle studenten'}
+                  open={studentListOpen}
+                  onToggle={() => setStudentListOpen((open) => !open)}
+                >
+                  <CheckOption
+                    checked={!hasStudentFilter}
+                    onChange={clearStudentSelection}
+                    label="Alle studenten"
+                  />
+                  {sortedFilterStudents.map((student) => (
                     <CheckOption
-                      checked={!hasStudentFilter}
-                      onChange={clearStudentSelection}
-                      label="Alle studenten"
+                      key={student.id}
+                      checked={filters.student.includes(student.id)}
+                      onChange={() => toggleStudent(student.id)}
+                      label={student.name}
+                      extra={filters.klas.length > 1 ? student.klas : undefined}
                     />
-                    {sortedFilterStudents.map((student) => (
-                      <CheckOption
-                        key={student.id}
-                        checked={filters.student.includes(student.id)}
-                        onChange={() => toggleStudent(student.id)}
-                        label={student.name}
-                        extra={filters.klas.length > 1 ? student.klas : undefined}
-                      />
-                    ))}
-                  </div>
-                </div>
+                  ))}
+                </CollapsibleCheckList>
               )}
             </div>
 
